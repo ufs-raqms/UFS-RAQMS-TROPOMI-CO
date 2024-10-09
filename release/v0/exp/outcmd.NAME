@@ -1,0 +1,1 @@
+sed -i s/JOBNAME/$NAME/ runjob.submit.tropomi.assim.scr

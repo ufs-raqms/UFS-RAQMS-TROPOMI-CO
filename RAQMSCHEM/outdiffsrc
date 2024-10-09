@@ -1,0 +1,490 @@
+diff -rBbw src/chem/raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+79c79
+<   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+---
+>   character *256 gsiscratch,base_data_disk,pathdata
+110c110
+<   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+---
+>   save nsecsave,nsecgsi,base_data_disk
+175d174
+<     base_data_disk_tropomico=' '
+177,178d175
+<     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+<      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+934,937d930
+<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+<                   exist=.true.
+<                 endif
+951,953d943
+<         if(mype==0)then
+<         write(6,*)'exist',exist
+<         endif
+diff -rBbw src/chem/shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+634a635,641
+>         if(inquire_file_var('ebu_co.tile1.nc','ebu_co',trim(config%fireemi_inname)))then
+> !          write(6,*)'use ebu_co'
+>           call chem_io_read(file,srcin,  &
+> !           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='bb_co',rc=localrc)
+>            path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+>         elseif(inquire_file_var('ebu_co.tile1.nc','bb_co',trim(config%fireemi_inname)))then
+> !          write(6,*)'use bb_co'
+636a644,647
+> !          path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+>         else
+>           write(6,*)'neither ebu_co nor bb_co in file ebu_co.nc'
+>         endif
+645a657,658
+>           write(300+iam,*)'ebu_co',maxval(srcin),minval(srcin)
+>           call flush(300+iam)
+665a679
+>           write(300+iam,*)'plume',maxval(srcin),minval(srcin)
+1297,1298c1311,1312
+< !        write(200+iam,*)'emi_outname',trim(config%emi_outname)
+< !        call flush(200+iam)
+---
+>         write(200+iam,*)'emi_outname',trim(config%emi_outname)
+>         call flush(200+iam)
+diff -rBbw src/chem/shr/raqmschem_io_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.F90
+148c148
+<   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread)
+---
+>   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,dowrite)
+153c153
+<     logical, optional :: doread
+---
+>     logical,optional, intent(in) :: dowrite
+156c156
+<     integer :: lstr
+---
+>     integer :: lstr,lstr2
+158c158
+<     logical :: exist
+---
+>     logical exist
+196c196,208
+< 
+---
+>     inquire(file=fullname,exist=exist)
+>     if(exist.or.present(dowrite))return
+>     lstr = len_trim(fullname)
+>     if (fullname(lstr-3:lstr) == '.dat')then
+>       fullname(lstr-3:lstr-1)='.nc'
+>       inquire(file=fullname,exist=exist)
+>       if(exist)return
+>       write(6,*)'neither .dat nor .nc are there',fullname
+>       call killit('neither')
+>     elseif(fullname(lstr-2:lstr)=='.nc')then
+>       write(6,*)'.nc not there',fullname
+> !      call killit('.nc')
+>     endif
+430a443
+>     write(6,*)'nf90_open datafile',trim(datafile)
+442a456,457
+>     write(6,*)'varname',varname
+>     call flush(6)
+445c460
+<       write(6,*)'error getting varid for ',trim(varname),' file ',trim(datafile)
+---
+>       write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+1936,1937c1951,1952
+< !        write(6,*)'varname',varname,'shape',shape(buffer2d)
+< !        call flush(6)
+---
+>         write(6,*)'varname',varname,'shape',shape(buffer2d)
+>         call flush(6)
+1939a1955,1956
+>          write(6,*)'datafile',trim(datafile)
+>          call flush(6)
+1940a1958,1959
+>          write(6,*)'exist',exist,trim(datafile)
+>          call system('pwd')
+1941a1961,1962
+>            write(6,*)'chem_io_file_reaD_2d_nc',trim(varname),'datafile',trim(datafile)
+>            call flush(6)
+2325a2347,2348
+>     logical dowrite
+>     dowrite=.true.
+2400c2423
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2458a2482
+>     logical dowrite
+2474a2499
+>     dowrite=.true.
+2555c2580,2581
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+2604a2631
+>     logical,parameter :: dowrite=.true.
+2669c2696
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2708a2736
+>     logical,parameter :: dowrite=.true.
+2800c2828,2829
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, & 
+>        dowrite=dowrite)
+2876a2906
+>     logical,parameter :: dowrite=.true.
+2963c2993,2994
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>         dowrite=dowrite)
+3021a3053
+>     logical,parameter :: dowrite=.true.
+3104c3136,3137
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+3317a3351
+>     logical,parameter :: dowrite=.true.
+3392c3426,3427
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>       dowrite=dowrite)
+diff -rBbw src/chem/shr/raqmschem_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_model_mod.F90
+99c99
+<          write(10,'(i10)')cdateat
+---
+>          write(10,'(a10)')cdateat
+< diff -rBbw chem/raqms/raq_dep_wet_ls_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_wet_ls_mod.F90
+< 539a540,542
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !              write(6,*)'smalla'
+< > !         endif
+< 543a547,549
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< >            !write(6,*)'adval',dval,'chem',nv,k,chem(i,j,k,nv)
+< > !         endif
+< 598a605,607
+< > !           if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !            write(6,*)'small b'
+< >            !endif
+< 599a609,611
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !           write(6,*)'bdval',dval,'chem',nv,k,chem(i,j,k,nv)
+< > !         endif
+< 628a641,643
+< > !           if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !            write(6,*)'small c'
+< > !           endif
+< 629a645,647
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !           write(6,*)'cdval',dval,'chem',nv,k,chem(i,j,k,nv)
+< > !         endif
+< 685a704,706
+< > !           if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !            write(6,*)'small z'
+< > !           endif
+< 686a708,710
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !           write(6,*)'ddval',dval,'chem',nv,k,chem(i,j,k,nv)
+< > !         endif
+< 719a744,746
+< > !           if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !            write(6,*)'small y'
+< > !           endif
+< 721a749,751
+< > !         if(i.eq.18.and.j.eq.38.and.tile.eq.3)then
+< > !           write(6,*)'fdval',dval,'chem',nv,k,chem(i,j,k,nv)
+< > !         endif
+< 724a755,757
+< > !           if(i.eq.57.and.j.eq.15)then
+< > !             write(6,*)'evap var_rvml',nv,k,var_rmvl(i,k,j)
+< >            !endif
+< 739c772
+< < !     if(tile.eq.3.and.i.eq.70.and.j.eq.37)then
+< ---
+< > !     if(i.eq.70.and.j.eq.37.and.tile.eq.3)then
+< 742c775
+< < !           write(6,*)'nv',nv,'var_rmvl',k,var_rmvl(i,k,j)
+< ---
+< > !           write(6,*)'var_rmvl',nv,'k',k,var_rmvl(i,k,j)
+< 750c783
+< <        write(200+iam,*)'var_rmvl',nv,maxval(var_rmv(:,:,nv))
+< ---
+< >      write(6,*)'var_rmv',nv,maxval(var_rmv(:,:,nv))
+< 769a804
+< > #ifdef WETDEPDIAG
+< 770a806
+< > #endif
+< diff -rBbw chem/raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+< 18d17
+< < #ifdef OLDCALC
+< 20,22d18
+< < #else
+< <   use calcvort_dgrid_mod, only : calcabsvort
+< < #endif
+< diff -rBbw chem/raqms/wetdep_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_mod.F90
+< 118c118,134
+< < !    if(advancecount <= 0 )then
+< ---
+< >     ncplprate=ncplprate+1
+< >     if(advancecount <= 0 )then
+< >         jp=0
+< >         do j=jts, jte
+< >         jp = jp + 1
+< >           ip = 0
+< >          do i= its, ite
+< >             ip = ip + 1
+< >       rcav(i,j) = rc2d(ip,jp)*1000.
+< >       rnav(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+< >       if(tile.eq.3.and.i.eq.90.and.j.eq.14)then
+< >         write(6,*)'rcav',i,j,rcav(i,j),'rnav',rnav(i,j)
+< >         call flush(6)
+---
+> diff -rBbw chem/raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+> 79c79
+> <   character *256 gsiscratch,base_data_disk,pathdata
+> ---
+> >   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+> 110c110
+> <   save nsecsave,nsecgsi,base_data_disk
+> ---
+> >   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+> 174a175
+> >     base_data_disk_tropomico=' '
+> 175a177,178
+> >     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+> >      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+> 930a934,937
+> >                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+> >                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+> >                   exist=.true.
+261,283c20,22
+< >          enddo
+< >         enddo
+< >     else
+< 125,126c141,142
+< <       rcav(i,j) = max(rc2d(ip,jp)*1000.,0._CHEM_KIND_R4)
+< <       rnav(i,j) = max((rn2d(ip,jp)-rc2d(ip,jp))*1000.,0._CHEM_KIND_R4)
+< ---
+< >       rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav_save(i,j))
+< >       rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav_save(i,j))
+< 133,144c149,151
+< < !    else
+< < !        jp=0
+< < !        do j=jts, jte
+< < !        jp = jp + 1
+< < !          ip = 0
+< < !         do i= its, ite
+< < !            ip = ip + 1
+< < !      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav_save(i,j))
+< <       !rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav_save(i,j))
+< < !         enddo
+< < !        enddo
+< < !    end if
+< ---
+---
+> 943a951,953
+> >         if(mype==0)then
+> >         write(6,*)'exist',exist
+285,323c24,36
+< >       cprate=cprate+rcav
+< >       lprate=lprate+rnav
+< 149,169c156
+< < !        jp=0
+< < !        do j=jts, jte
+< < !        jp = jp + 1
+< < !          ip = 0
+< < !         do i= its, ite
+< < !            ip = ip + 1
+< < !      rcav_save(i,j) = rc2d(ip,jp)*1000.
+< < !      rnav_save(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+< < !         enddo
+< < !        enddo
+< <      ncplprate=ncplprate+1 
+< <      do j=jts,jte
+< <        do i=its,ite
+< <          cprate(i,j)=cprate(i,j)+rcav(i,j)
+< <          lprate(i,j)=lprate(i,j)+rnav(i,j)
+< <        end do
+< <      end do
+< <      if(tile.eq.3)then
+< <         write(6,*)'rnav',lbound(rnav),'ub',ubound(rnav)
+< <         write(6,*)'lprate',lbound(lprate),'ub',ubound(lprate)
+< <         write(6,*)'its',its,ite,'jts',jts,jte
+< ---
+< >         jp=0
+< 170a158,159
+< >         jp = jp + 1
+< >           ip = 0
+< 172,173c161,165
+< <            if(i.eq.69.and.j.eq.35)then
+< <               write(6,*)'lpraet add',lprate(i,j)
+< ---
+< >             ip = ip + 1
+< >       rcav_save(i,j) = rc2d(ip,jp)*1000.
+< >       rnav_save(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+< >       if(tile.eq.3.and.i.eq.69.and.j.eq.35)then
+< >          write(6,*)'lprate added',lprate(i,j)
+< 177d168
+---
+> diff -rBbw chem/shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+> 635,641d634
+> <         if(inquire_file_var('ebu_co.tile1.nc','ebu_co',trim(config%fireemi_inname)))then
+> < !          write(6,*)'use ebu_co'
+> <           call chem_io_read(file,srcin,  &
+> < !           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='bb_co',rc=localrc)
+> <            path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+> <         elseif(inquire_file_var('ebu_co.tile1.nc','bb_co',trim(config%fireemi_inname)))then
+> < !          write(6,*)'use bb_co'
+> 644,647d636
+> < !          path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+> <         else
+> <           write(6,*)'neither ebu_co nor bb_co in file ebu_co.nc'
+325,410c38,75
+< 181,182d171
+< < !    write(6,*)'rc2d',maxval(rc2d),maxval(rn2d)
+< < !    write(6,*)'rcav',maxval(rcav),' rnav ',maxval(rnav)
+< diff -rBbw chem/raqms/wetdep_prep_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_prep_mod.F90
+< 166a167
+< >             call flush(200+iam)
+< diff -rBbw chem/shr/calcvort-dgrid_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcvort-dgrid_mod.F90
+< 64d63
+< < #ifdef OLDCALC
+< 356d354
+< < #endif
+< diff -rBbw chem/shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.8.8.ivy/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+< 818a819,820
+< > !        !diffrc=statein%rc2d-rcav_write
+< > !        diffrl=statein%rn2d-rnav_write-diffrc
+< 821,824d822
+< <         rcav_write=0.0
+< <         rnav_write=0.0
+---
+> 657,658d645
+> <           write(300+iam,*)'ebu_co',maxval(srcin),minval(srcin)
+> <           call flush(300+iam)
+> 679d665
+> <           write(300+iam,*)'plume',maxval(srcin),minval(srcin)
+> 1311,1312c1297,1298
+> <         write(200+iam,*)'emi_outname',trim(config%emi_outname)
+> <         call flush(200+iam)
+> ---
+> > !        write(200+iam,*)'emi_outname',trim(config%emi_outname)
+> > !        call flush(200+iam)
+> diff -rBbw chem/shr/raqmschem_io_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.F90
+> 148c148
+> <   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,dowrite)
+> ---
+> >   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname)
+> 153d152
+> <     logical,optional, intent(in) :: dowrite
+> 156c155
+> <     integer :: lstr,lstr2
+> ---
+> >     integer :: lstr
+> 158d156
+> <     logical exist
+> 196,208c194
+> <     inquire(file=fullname,exist=exist)
+> <     if(exist.or.present(dowrite))return
+> <     lstr = len_trim(fullname)
+> <     if (fullname(lstr-3:lstr) == '.dat')then
+> <       fullname(lstr-3:lstr-1)='.nc'
+> <       inquire(file=fullname,exist=exist)
+> <       if(exist)return
+> <       write(6,*)'neither .dat nor .nc are there',fullname
+> <       call killit('neither')
+> <     elseif(fullname(lstr-2:lstr)=='.nc')then
+> <       write(6,*)'.nc not there',fullname
+> < !      call killit('.nc')
+412,430c77,152
+< < !     convert to mm/day
+< 826a825
+< >       endif
+< 832,833c831,832
+< <       rcav_write=statein%rc2d+rcav_write
+< <       rnav_write=statein%rn2d+rnav_write
+< ---
+< >       rcav_write=statein%rc2d
+< >       rnav_write=statein%rn2d
+---
+> ---
+> > 
+> 443d428
+> <     write(6,*)'nf90_open datafile',trim(datafile)
+> 456,457d440
+> <     write(6,*)'varname',varname
+> <     call flush(6)
+> 460c443
+> <       write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+> ---
+> >       write(6,*)'error getting varid for ',trim(varname),' file ',trim(datafile)
+> 1951,1952c1934,1935
+> <         write(6,*)'varname',varname,'shape',shape(buffer2d)
+> <         call flush(6)
+> ---
+> > !        write(6,*)'varname',varname,'shape',shape(buffer2d)
+> > !        call flush(6)
+> 1955,1956d1937
+> <          write(6,*)'datafile',trim(datafile)
+> <          call flush(6)
+> 1958,1959d1938
+> <          write(6,*)'exist',exist,trim(datafile)
+> <          call system('pwd')
+> 1961,1962d1939
+> <            write(6,*)'chem_io_file_reaD_2d_nc',trim(varname),'datafile',trim(datafile)
+> <            call flush(6)
+> 2347,2348d2323
+> <     logical dowrite
+> <     dowrite=.true.
+> 2423c2398
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 2482d2456
+> <     logical dowrite
+> 2499d2472
+> <     dowrite=.true.
+> 2580,2581c2553
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+> <        dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 2631d2602
+> <     logical,parameter :: dowrite=.true.
+> 2696c2667
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 2736d2706
+> <     logical,parameter :: dowrite=.true.
+> 2828,2829c2798
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, & 
+> <        dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 2906d2874
+> <     logical,parameter :: dowrite=.true.
+> 2993,2994c2961
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+> <         dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 3053d3019
+> <     logical,parameter :: dowrite=.true.
+> 3136,3137c3102
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+> <        dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+> 3351d3315
+> <     logical,parameter :: dowrite=.true.
+> 3426,3427c3390
+> <       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+> <       dowrite=dowrite)
+> ---
+> >       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)

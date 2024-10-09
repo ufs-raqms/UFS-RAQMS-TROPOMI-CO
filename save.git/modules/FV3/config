@@ -1,0 +1,15 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	worktree = ../../../FV3
+[remote "origin"]
+	url = gerrit:FV3
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[submodule "atmos_cubed_sphere"]
+	active = true
+	url = https://github.com/NOAA-EMC/GFDL_atmos_cubed_sphere

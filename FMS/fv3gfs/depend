@@ -1,0 +1,79 @@
+../amip_interp/amip_interp.o : ../amip_interp/amip_interp.F90 ../mpp/mpp_io.o ../constants/constants.o ../fms/fms.o ../time_manager/get_cal_time.o ../platform/platform.o ../time_interp/time_interp.o ../fms/fms_io.o ../mpp/mpp.o ../horiz_interp/horiz_interp.o ../time_manager/time_manager.o  
+../astronomy/astronomy.o : ../astronomy/astronomy.F90 ../constants/constants.o ../fms/fms.o ../mpp/mpp.o ../time_manager/time_manager.o  
+../axis_utils/axis_utils.o : ../axis_utils/axis_utils.F90 ../mpp/mpp_io.o ../fms/fms.o ../mpp/mpp.o  
+../block_control/block_control.o : ../block_control/block_control.F90 ../mpp/mpp_domains.o ../mpp/mpp.o  
+../column_diagnostics/column_diagnostics.o : ../column_diagnostics/column_diagnostics.F90 ../mpp/mpp_io.o ../constants/constants.o ../fms/fms.o ../mpp/mpp.o ../time_manager/time_manager.o  
+../constants/constants.o : ../constants/constants.F90 ../platform/platform.o  
+../coupler/atmos_ocean_fluxes.o : ../coupler/atmos_ocean_fluxes.F90 ../coupler/coupler_types.o ../fms/fms.o ../field_manager/fm_util.o ../mpp/mpp.o ../field_manager/field_manager.o  
+../coupler/coupler_types.o : ../coupler/coupler_types.F90 ../fms/fms.o ../diag_manager/diag_manager.o ../data_override/data_override.o ../field_manager/fm_util.o ../fms/fms_io.o ../mpp/mpp.o ../mpp/mpp_domains.o ../time_manager/time_manager.o ../field_manager/field_manager.o  
+../coupler/ensemble_manager.o : ../coupler/ensemble_manager.F90 ../fms/fms.o ../fms/fms_io.o ../mpp/mpp.o  
+../data_override/data_override.o : ../data_override/data_override.F90 ../mpp/mpp_memutils.o ../time_interp/time_interp_external.o ../mpp/mpp_io.o ../constants/constants.o ../fms/fms.o ../diag_manager/diag_manager.o ../platform/platform.o ../axis_utils/axis_utils.o ../fms/fms_io.o ../mpp/mpp_domains.o ../horiz_interp/horiz_interp.o ../mpp/mpp.o ../time_manager/time_manager.o  
+../diag_manager/diag_axis.o : ../diag_manager/diag_axis.F90 ../diag_manager/diag_data.o ../fms/fms.o ../mpp/mpp_domains.o  
+../diag_manager/diag_data.o : ../diag_manager/diag_data.F90 ../mpp/mpp_io.o ../fms/fms.o ../mpp/mpp_domains.o ../time_manager/time_manager.o  
+../diag_manager/diag_grid.o : ../diag_manager/diag_grid.F90 ../constants/constants.o ../fms/fms.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../diag_manager/diag_manager.o : ../diag_manager/diag_manager.F90 ../diag_manager/diag_grid.o ../mpp/mpp_io.o ../mpp/mpp_parameter.o ../fms/fms.o ../time_manager/time_manager.o ../diag_manager/diag_data.o ../diag_manager/diag_output.o ../diag_manager/diag_manifest.o ../constants/constants.o ../fms/fms_io.o ../diag_manager/diag_util.o ../mpp/mpp.o ../mpp/mpp_domains.o ../diag_manager/diag_table.o ../diag_manager/diag_axis.o  
+../diag_manager/diag_manifest.o : ../diag_manager/diag_manifest.F90 ../fms/fms.o ../time_manager/time_manager.o ../diag_manager/diag_data.o ../fms/fms_io.o ../mpp/mpp.o  
+../diag_manager/diag_output.o : ../diag_manager/diag_output.F90 ../mpp/mpp_io.o ../fms/fms.o ../time_manager/time_manager.o ../diag_manager/diag_data.o ../mpp/mpp.o ../mpp/mpp_domains.o ../diag_manager/diag_axis.o  
+../diag_manager/diag_table.o : ../diag_manager/diag_table.F90 ../mpp/mpp_io.o ../fms/fms.o ../time_manager/time_manager.o ../diag_manager/diag_data.o ../constants/constants.o ../diag_manager/diag_util.o ../mpp/mpp.o  
+../diag_manager/diag_util.o : ../diag_manager/diag_util.F90 ../diag_manager/diag_grid.o ../mpp/mpp_io.o ../fms/fms.o ../time_manager/time_manager.o ../diag_manager/diag_data.o ../diag_manager/diag_output.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp.o ../mpp/mpp_domains.o ../diag_manager/diag_axis.o  
+../drifters/cloud_interpolator.o : ../drifters/cloud_interpolator.F90  
+../drifters/drifters.o : ../drifters/drifters.F90 ../drifters/drifters_input.o ../drifters/drifters_io.o ../drifters/drifters_comm.o ../drifters/drifters_core.o ../drifters/cloud_interpolator.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../drifters/drifters_comm.o : ../drifters/drifters_comm.F90 ../drifters/drifters_input.o ../drifters/drifters_core.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../drifters/drifters_core.o : ../drifters/drifters_core.F90  
+../drifters/drifters_input.o : ../drifters/drifters_input.F90  
+../drifters/drifters_io.o : ../drifters/drifters_io.F90  
+../drifters/quicksort.o : ../drifters/quicksort.F90  
+../exchange/stock_constants.o : ../exchange/stock_constants.F90 ../fms/fms.o ../diag_manager/diag_manager.o ../time_manager/time_manager.o ../mpp/mpp.o  
+../exchange/test_xgrid.o : ../exchange/test_xgrid.F90 ../mosaic/grid.o ../mpp/mpp_io.o ../fms/fms.o ../exchange/xgrid.o ../constants/constants.o ../coupler/ensemble_manager.o ../mosaic/gradient.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o ../mosaic/mosaic.o  
+../exchange/xgrid.o : ../exchange/xgrid.F90 ../mpp/mpp_io.o ../fms/fms.o ../diag_manager/diag_manager.o ../time_manager/time_manager.o ../constants/constants.o ../exchange/stock_constants.o ../mosaic/gradient.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o ../mosaic/mosaic.o  
+../fft/fft.o : ../fft/fft.F90 ../fms/fms.o ../platform/platform.o ../fft/fft99.o  
+../fft/fft99.o : ../fft/fft99.F90 ../constants/constants.o ../mpp/mpp.o  
+../field_manager/field_manager.o : ../field_manager/field_manager.F90 ../mpp/mpp_io.o ../fms/fms.o ../mpp/mpp.o  
+../field_manager/fm_util.o : ../field_manager/fm_util.F90 ../fms/fms.o ../field_manager/field_manager.o ../mpp/mpp.o  
+../fms/fms.o : ../fms/fms.F90 ../mpp/mpp_io.o ../memutils/memutils.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../fms/fms_io.o : ../fms/fms_io.F90 ../mpp/mpp_io.o ../mpp/mpp_parameter.o ../platform/platform.o ../mpp/mpp.o ../mpp/mpp_domains.o  
+../fms/test_fms_io.o : ../fms/test_fms_io.F90 ../mpp/mpp_io.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../horiz_interp/horiz_interp.o : ../horiz_interp/horiz_interp.F90 ../mpp/mpp_io.o ../horiz_interp/horiz_interp_conserve.o ../fms/fms.o ../horiz_interp/horiz_interp_type.o ../horiz_interp/horiz_interp_bicubic.o ../constants/constants.o ../horiz_interp/horiz_interp_bilinear.o ../mpp/mpp_domains.o ../mpp/mpp.o ../horiz_interp/horiz_interp_spherical.o  
+../horiz_interp/horiz_interp_bicubic.o : ../horiz_interp/horiz_interp_bicubic.F90 ../fms/fms.o ../horiz_interp/horiz_interp_type.o ../constants/constants.o ../mpp/mpp.o  
+../horiz_interp/horiz_interp_bilinear.o : ../horiz_interp/horiz_interp_bilinear.F90 ../fms/fms.o ../horiz_interp/horiz_interp_type.o ../constants/constants.o ../mpp/mpp.o  
+../horiz_interp/horiz_interp_conserve.o : ../horiz_interp/horiz_interp_conserve.F90 ../fms/fms.o ../horiz_interp/horiz_interp_type.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp.o  
+../horiz_interp/horiz_interp_spherical.o : ../horiz_interp/horiz_interp_spherical.F90 ../fms/fms.o ../horiz_interp/horiz_interp_type.o ../constants/constants.o ../mpp/mpp.o  
+../horiz_interp/horiz_interp_type.o : ../horiz_interp/horiz_interp_type.F90 ../mpp/mpp.o  
+../horiz_interp/test_horiz_interp.o : ../horiz_interp/test_horiz_interp.F90 ../mpp/mpp_io.o ../fms/fms.o ../axis_utils/axis_utils.o ../horiz_interp/horiz_interp.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o ../mosaic/mosaic.o  
+../interpolator/interpolator.o : ../interpolator/interpolator.F90 ../mpp/mpp_io.o ../fms/fms.o ../diag_manager/diag_manager.o ../horiz_interp/horiz_interp.o ../time_manager/time_manager.o ../constants/constants.o ../time_interp/time_interp.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../memutils/memutils.o : ../memutils/memutils.F90 ../mpp/mpp_io.o ../mpp/mpp.o  
+../mosaic/gradient.o : ../mosaic/gradient.F90 ../constants/constants.o ../mpp/mpp.o  
+../mosaic/grid.o : ../mosaic/grid.F90 ../fms/fms.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp_domains.o ../mpp/mpp.o ../mosaic/mosaic.o  
+../mosaic/mosaic.o : ../mosaic/mosaic.F90 ../mpp/mpp_io.o ../fms/fms.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp.o  
+../mpp/mpp.o : ../mpp/mpp.F90 ../mpp/mpp_parameter.o ../mpp/mpp_data.o  
+../mpp/mpp_data.o : ../mpp/mpp_data.F90 ../mpp/mpp_parameter.o  
+../mpp/mpp_domains.o : ../mpp/mpp_domains.F90 ../mpp/mpp_pset.o ../mpp/mpp_parameter.o ../mpp/mpp_efp.o ../mpp/mpp_memutils.o ../mpp/mpp_data.o ../mpp/mpp.o  
+../mpp/mpp_efp.o : ../mpp/mpp_efp.F90 ../mpp/mpp.o  
+../mpp/mpp_io.o : ../mpp/mpp_io.F90 ../mpp/mpp_parameter.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../mpp/mpp_memutils.o : ../mpp/mpp_memutils.F90 ../mpp/mpp.o  
+../mpp/mpp_parameter.o : ../mpp/mpp_parameter.F90  
+../mpp/mpp_pset.o : ../mpp/mpp_pset.F90 ../mpp/mpp.o  
+../mpp/mpp_utilities.o : ../mpp/mpp_utilities.F90 ../mpp/mpp.o  
+../mpp/test_mpp.o : ../mpp/test_mpp.F90 ../mpp/mpp_io.o ../mpp/mpp.o  
+../mpp/test_mpp_domains.o : ../mpp/test_mpp_domains.F90 ../mpp/mpp_memutils.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../mpp/test_mpp_io.o : ../mpp/test_mpp_io.F90 ../mpp/mpp_io.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../mpp/test_mpp_pset.o : ../mpp/test_mpp_pset.F90 ../mpp/mpp_pset.o ../mpp/mpp.o  
+../oda_tools/oda_core.o : ../oda_tools/oda_core.F90 ../mpp/mpp_io.o ../time_manager/get_cal_time.o ../fms/fms.o ../oda_tools/write_ocean_data.o ../axis_utils/axis_utils.o ../time_manager/time_manager.o ../field_manager/field_manager.o ../oda_tools/oda_types.o ../constants/constants.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../oda_tools/oda_core_ecda.o : ../oda_tools/oda_core_ecda.F90 ../mpp/mpp_io.o ../time_manager/get_cal_time.o ../fms/fms.o ../oda_tools/xbt_drop_rate_adjust.o ../axis_utils/axis_utils.o ../time_manager/time_manager.o ../horiz_interp/horiz_interp_type.o ../mpp/mpp_memutils.o ../oda_tools/oda_types.o ../constants/constants.o ../horiz_interp/horiz_interp_bilinear.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../oda_tools/oda_types.o : ../oda_tools/oda_types.F90 ../time_manager/time_manager.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../oda_tools/write_ocean_data.o : ../oda_tools/write_ocean_data.F90 ../mpp/mpp_io.o ../time_manager/time_manager.o ../oda_tools/oda_types.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../oda_tools/xbt_drop_rate_adjust.o : ../oda_tools/xbt_drop_rate_adjust.f90 ../oda_tools/oda_types.o  
+../platform/platform.o : ../platform/platform.F90  
+../random_numbers/MersenneTwister.o : ../random_numbers/MersenneTwister.F90  
+../random_numbers/random_numbers.o : ../random_numbers/random_numbers.F90 ../time_manager/time_manager.o ../random_numbers/MersenneTwister.o  
+../sat_vapor_pres/sat_vapor_pres.o : ../sat_vapor_pres/sat_vapor_pres.F90 ../mpp/mpp_io.o ../fms/fms.o ../constants/constants.o ../sat_vapor_pres/sat_vapor_pres_k.o ../mpp/mpp.o  
+../sat_vapor_pres/sat_vapor_pres_k.o : ../sat_vapor_pres/sat_vapor_pres_k.F90  
+../station_data/station_data.o : ../station_data/station_data.F90 ../mpp/mpp_io.o ../fms/fms.o ../diag_manager/diag_manager.o ../axis_utils/axis_utils.o ../time_manager/time_manager.o ../diag_manager/diag_output.o ../diag_manager/diag_util.o ../mpp/mpp_domains.o ../mpp/mpp.o ../diag_manager/diag_axis.o  
+../time_interp/time_interp.o : ../time_interp/time_interp.F90 ../fms/fms.o ../time_manager/time_manager.o ../mpp/mpp.o  
+../time_interp/time_interp_external.o : ../time_interp/time_interp_external.F90 ../mpp/mpp_io.o ../time_manager/get_cal_time.o ../fms/fms.o ../axis_utils/axis_utils.o ../horiz_interp/horiz_interp.o ../time_manager/time_manager.o ../constants/constants.o ../platform/platform.o ../time_interp/time_interp.o ../mpp/mpp_domains.o ../mpp/mpp.o  
+../time_manager/get_cal_time.o : ../time_manager/get_cal_time.F90 ../fms/fms.o ../time_manager/time_manager.o ../mpp/mpp.o  
+../time_manager/time_manager.o : ../time_manager/time_manager.F90 ../fms/fms.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp.o  
+../topography/gaussian_topog.o : ../topography/gaussian_topog.F90 ../fms/fms.o ../constants/constants.o ../mpp/mpp.o  
+../topography/topography.o : ../topography/topography.F90 ../fms/fms.o ../topography/gaussian_topog.o ../horiz_interp/horiz_interp.o ../constants/constants.o ../fms/fms_io.o ../mpp/mpp.o  
+../tracer_manager/tracer_manager.o : ../tracer_manager/tracer_manager.F90 ../mpp/mpp_io.o ../fms/fms.o ../field_manager/field_manager.o ../mpp/mpp.o  
+../tridiagonal/tridiagonal.o : ../tridiagonal/tridiagonal.F90  

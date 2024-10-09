@@ -1,0 +1,745 @@
+53a54
+>   use chemgsimod
+79c80
+<   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+---
+>   character *256 gsiscratch,base_data_disk,pathdata
+110c111
+<   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+---
+>   save nsecsave,nsecgsi,base_data_disk
+175d175
+<     base_data_disk_tropomico=' '
+177,180d176
+<     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+<     if(iam==0)then
+<      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+<     endif
+773,1497c769
+< !   here aerosols from gsdchem are in chem_pass_state%tr3d
+< !   stateout will be used by gsi increment and gsi write
+< !   call chemgsi(stateout,is,ie,js,je,nl
+<     Stateout%tr3d(:,:,:,p_bc1)=chem_pass_state%tr3d(:,:,:,p_bc1)
+<     Stateout%tr3d(:,:,:,p_bc2)=chem_pass_state%tr3d(:,:,:,p_bc2)
+<     Stateout%tr3d(:,:,:,p_oc1)=chem_pass_state%tr3d(:,:,:,p_oc1)
+<     Stateout%tr3d(:,:,:,p_oc2)=chem_pass_state%tr3d(:,:,:,p_oc2)
+<     Stateout%tr3d(:,:,:,p_sulf)=chem_pass_state%tr3d(:,:,:,p_sulf)
+<     Stateout%tr3d(:,:,:,p_dust1)=chem_pass_state%tr3d(:,:,:,p_dust1)
+<     Stateout%tr3d(:,:,:,p_dust2)=chem_pass_state%tr3d(:,:,:,p_dust2)
+<     Stateout%tr3d(:,:,:,p_dust3)=chem_pass_state%tr3d(:,:,:,p_dust3)
+<     Stateout%tr3d(:,:,:,p_dust4)=chem_pass_state%tr3d(:,:,:,p_dust4)
+<     Stateout%tr3d(:,:,:,p_dust5)=chem_pass_state%tr3d(:,:,:,p_dust5)
+<     Stateout%tr3d(:,:,:,p_seas1)=chem_pass_state%tr3d(:,:,:,p_seas1)
+<     Stateout%tr3d(:,:,:,p_seas2)=chem_pass_state%tr3d(:,:,:,p_seas2)
+<     Stateout%tr3d(:,:,:,p_seas3)=chem_pass_state%tr3d(:,:,:,p_seas3)
+<     Stateout%tr3d(:,:,:,p_seas4)=chem_pass_state%tr3d(:,:,:,p_seas4)
+< 
+< !    if(iam.eq.iamprn)then
+< !      write(6,*)'co 1 in',iprn,jprn,statein%tr3d(iprn,jprn,1,p_co)
+< !      write(6,*)'co 64 in',iprn,jprn,statein%tr3d(iprn,jprn,64,p_co)
+< !      write(6,*)'co out 1',stateout%tr3d(iprn,jprn,1,p_co),stateout%tr3d(iprn,jprn,1,p_co)-statein%tr3d(iprn,jprn,1,p_co)
+< !      write(6,*)'co out 64',stateout%tr3d(iprn,jprn,64,p_co),stateout%tr3d(iprn,jprn,64,p_co)-statein%tr3d(iprn,jprn,64,p_co)
+< !      call flush(6)
+< !    endif
+< !    if(maxval(statein%tr3d(:,:,:,p_olei))>0.0)then
+< !      write(6,*)'olei in',maxval(statein%tr3d(:,:,:,p_olei))
+< !    endif
+< !    if(maxval(stateout%tr3d(:,:,:,p_olei))>0.0)then
+< !      write(6,*)'olei out',maxval(stateout%tr3d(:,:,:,p_olei))
+< !    endif
+< !    write(6,*)'did call raqms_advance'
+< !    call flush(6)
+< !   ni should be second
+< !   put at hour
+<     write(cstep,'(i4.4)')icall
+<     filename='each'//trim(cstep)//'.nc'
+<     dims(1)=ie-is+1
+<     dims(2)=je-js+1
+<     dims(3)=nl
+<     dims2=dims(1:2)
+< !    write(6,*)'call calcaod',is,ie,js,je,nl,'de',de,'nchem',nchem
+< !    call flush(6)
+< !    write(6,*)'did calcaod'
+< !    call flush(6)
+<     cdateat=cdate
+<     if(GSIREMAPSH/=' ' )then
+< !      if(mod(nint(dts*float(icall)),nsecgsi).eq.0.or.icall<=1)then
+< !      call gsivar(numgsicem,gsicem,loccem)
+< !      write(6,*)'call gsivar'
+< !      call flush(6)
+<       call gsivar
+< !      if(iam.eq.0.and.tile.eq.1)then
+< !        write(6,*)'numgsicem',numgsicem
+< !        do n=1,numgsicem
+< !          write(6,*)n,gsicem(n),'loc',loccem(n)
+< !          call flush(6)
+< !        end do
+< !      endif
+<       if(iam.eq.0)then
+<         write(6,*)'ajl dts',dts,'icall',icall,'nsecgsi',nsecgsi
+<         call flush(6)
+<       endif
+<       if(mod(nint(dts*float(icall)),nsecgsi).eq.0)then
+<         cdateout=cdate
+<         if(iam.eq.0.and.tile.eq.1)then
+<           write(6,*)'findajl cdate',cdate
+<           write(6,*)'findajl icall',icall
+<           call flush(6)
+<           if(base_data_disk/=' ')then
+< !           check if OBSdir is there
+<             exist=.false.
+< !            write(6,*)'numgsicem',numgsicem
+< !            flush(6)
+<             if(numgsicem==14)then
+< !              write(6,*)'gsicem',gsicem(1:numgsicem)
+< !              flush(6)
+<               if(gsicem(1).eq.'sulf')then
+<                 if(dogsiname)then
+<                   write(6,*)'set up data path aerosol',ibegdate,ienddate,len_trim(gsiname)
+<                   flush(6)
+<                   if(gsiname(1:ibegdate-1)=='viirs.aod.')then
+< !                   make sure multiple of 3 hrs
+<                     read(cdateout(1:10),'(i10)')idate
+<                     write(6,*)'idate',idate
+<                     ihr=mod(idate,100)
+<                     imod=mod(ihr,3)
+<                     write(6,*)'ihr',ihr,'imod',imod
+<                     if(imod==1)then
+<                       idtsec=-3600
+<                       call advcdatehr(idate,idtsec,idate,julday,hrout)
+<                       write(cdateout(1:10),'(i10)')idate
+<                       write(6,*)'idate',idate
+<                     elseif(imod==2)then
+<                       idtsec=3600
+<                       call advcdatehr(idate,idtsec,idate,julday,hrout)
+<                       write(cdateout(1:10),'(i10)')idate
+<                       write(6,*)'idate',idate
+<                     endif 
+<               
+<                     pathdata=trim(gsidatapath)//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+<                   else
+<                     pathdata=trim(gsidatapath)//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+<                   endif
+<                   write(6,*)'aerosols path',trim(pathdata)
+<                   flush(6)
+<                  inquire(file=pathdata,exist=existt)
+<                  if(existt)then
+<                    exist=.true.
+<                  else
+<                    exist=.false.
+<                  endif
+<                 endif
+<               endif
+<               write(6,*)'ajl gsi name',exist
+<               flush(6)
+<             else
+<               do n=1,numgsicem
+<                 if(dogsiname)then
+<                   write(6,*)'set up data path ',ibegdate,ienddate,len_trim(gsiname)
+<                   flush(6)
+<                   pathdata=trim(gsidatapath)//'/'//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+<                   write(6,*)'path data',trim(pathdata)
+<                   flush(6)
+< !                 if(gsiinqscript/=' ')then
+< !                   call system('export CDATE='//cdateout(1:10)//'  )
+<                  !endif
+<                  inquire(file=pathdata,exist=existt)
+<                  write(6,*)'pathdata',pathdata,'exist',existt
+<                  if(existt)then
+<                    exist=.true.
+<                  else
+<                    exist=.false.
+<                  endif
+<                 else
+<                   if(gsicem(n).eq.'o3vmr')then
+<                     pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+<                     //cdateout(1:10)//'/'//'mlsbufr.'//cdateout(1:10)
+<                   else
+<                     pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+<                     //cdateout(1:10)//'/'//'tropomi.'//trim(gsicem(n))//'.bufr.'//cdateout(1:10)
+<                   endif
+<                 endif
+<                 write(6,*)'pathdata define ',trim(pathdata),'exist',exist
+<                 call flush(6)
+<                 inquire(file=pathdata,exist=existt)
+<                 if(existt)then
+<                   write(6,*)'exist',existt,' ',trim(pathdata)
+<                   exist=.true.
+< !                elseif(gsicem(m).eq.'o3vmr')then
+< !                fix 2/25/2021
+<                 elseif(gsicem(n).eq.'o3vmr')then
+<                   write(6,*)'check omi'
+<                 call flush(6)
+<                   pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+<                   //cdateout(1:10)//'/'//'omibufr.'//cdateout(1:10)
+<                   write(6,*)'pathdata omi ',trim(pathdata)
+<                 call flush(6)
+<                   inquire(file=pathdata,exist=existt)
+<                   if(existt)then
+<                     write(6,*)'exist omi'
+<                     exist=.true.
+<                   endif
+<                 endif
+<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+<                   exist=.true.
+<                 endif
+<                 if(gsicem(n).eq.'o3vmr')then
+<                   write(6,*)'mlsomi exist',exist
+<                   write(6,*)'pathdata',trim(pathdata)
+<                 endif
+<               end do
+<             endif
+<           else
+<             write(6,*)'base_data_disk blank'
+<             call flush(6)
+<             exist=.true.
+<           endif
+<         endif
+<         call raqmschem_comm_all_bcast(exist,rc=localrc)
+<         if(mype==0)then
+<         write(6,*)'exist',exist
+<         endif
+<       endif
+<       if(mod(nint(dts*float(icall)),nsecgsi).eq.0.and.exist)then
+<         if(.not.allocated(gsiinc))then
+<           if(mype==0)then
+<             write(6,*)'numgsicem',numgsicem
+<           endif
+<           allocate(gsiinc(is:ie,js:je,nl,numgsicem))
+<           gsiinc=0.0
+<         endif
+< #ifdef PERGSIV
+<         if(.not.allocated(pergsiv))then
+< !          allocate(percov(is:ie,js:je,nl),intco(is:ie,js:je,nl))
+<           allocate(pergsiv(is:ie,js:je,nl,numgsicem))
+<           allocate(colgsiinc(is:ie,js:je,nl,numgsicem))
+<         endif
+< #endif
+<         cdateout=cdate
+<           isave=1
+<           dims(1)=ie-is+1
+<           dims(2)=je-js+1
+<           dims(3)=nl
+<           dims2=dims(1:2)
+< !       write(cdateout(1:2),'(i2.2)')icall
+<         call raqmschem_model_get(modelcomm=modelcomm,rc=rc)
+< !        if(iam.eq.0.and.tile.eq.1)then
+< !        cmd='export SLURM_JOB_ID='//trim(slurm_job_id)//' ; env > /home/lenzen/testmpi/env.model.run ; /home/lenzen/testmpi/runinside.sh > /home/lenzen/testmpi/outruninside.model'
+< !        write(6,*)'call system',trim(cmd)
+< !        call flush(6)
+<         
+< !        call system(cmd)
+< !        write(6,*)'did system'
+< !        write(0,*)'did system'
+< !        call flush(6)
+< !        call flush(0)
+< !        else
+< !          call system('sleep 60')
+< !        endif
+< !        write(0,*)'did first system'
+< !        call flush(0)
+<         if(iam.eq.0.and.tile.eq.1)then
+<            write(6,*)'gsi_write',cdateout
+<            call flush(6)
+<         endif
+<         call raqmschem_gsi_write(stateout%tr3d,data,statein,dims,itime=isave,cdate=cdateout,rc=rc) 
+< !        ajl force some time for lustre
+<         call system('sleep 5')
+< !        call mpi_barrier(modelcomm,rc)
+<         if(iam.eq.0.and.tile.eq.1)then
+<           write(6,*)'done with raqmschem_gsi_write ',cdateout
+<           call flush(6)
+<         endif
+< !        datascratch='/scratch/users/lenzen/GSISCRATCH/'//trim(expname)//'/'//cdatestart//'/'
+<         datascratch='../../GSISCRATCH/'
+<  
+<         if(iam.eq.0.and.tile.eq.1)then
+<           write(6,*)'datascratch',trim(datascratch)
+<           write(6,*)'cdatestart',cdatestart
+<           call flush(6)
+< !          call system('mkdir -p ../../GSISCRATCH/'//trim(cdateout))
+<           call system('mkdir -p '//trim(datascratch))
+< !          open(40,file='../../GSISCRATCH/'//trim(cdateout)//'/cdate.inc',form='formatted')
+< !          call system('ls -l '//trim(datascratch)//'gsi.done')
+<           call system('/bin/rm -f '//trim(datascratch)//'gsi.done')
+<           call system('/bin/rm -f '//trim(datascratch)//'input.ready')
+<           call system('/bin/rm -f '//trim(datascratch)//'cdate.inc')
+<           write(6,*)'open cdate.inc',trim(datascratch)//'cdate.inc'
+<           call flush(6)
+<           write(6,*)'findajl cdatestart',cdatestart,'cdateout',cdateout
+<           call flush(6)
+<           open(40,file=trim(datascratch)//'/cdate.inc',form='formatted')
+<           write(40,'("export CDATE0=",a10)')trim(cdatestart)
+<           write(40,'("export CDATE=",a10)')trim(cdateout)
+<           forecast_hr=dts*float(icall)/3600.
+<           write(6,*)'forecast_hr',forecast_hr,'fhmax',fhmax
+<           call flush(6)
+< !          if(forecast_hr+.00001>fhmax)then
+<           if(cdateout(9:10).eq.'12')then
+<             write(6,*)'can end GSI part'
+<             call flush(6)
+<             write(40,'("export DONE=true")')
+<           else
+<             write(6,*)'keep running GSI'
+<             call flush(6)
+<             write(40,'("export DONE=false")')
+<           endif
+< !          write(40,'("export FHR=",i3)')nint(forecast_hr)
+< !          write(40,'("export FHMAX=",i1)')nint(fhmax)
+<           close(40)
+< !          open(40,file='../../GSISCRATCH/'//trim(cdateout)//'/input.ready',form='formatted') 
+<           write(6,*)'open input.ready ',trim(datascratch)//'input.ready'
+<           call flush(6)
+<           call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+<           call system('sleep 10')
+<           open(40,file=trim(datascratch)//'/input.ready',form='formatted')
+<           write(40,'(a10)')trim(cdateout)
+<           close(40)
+<           write(6,*)'input.ready'
+<           call flush(6)
+<           call system('date')
+<         endif
+< 1        call mpi_barrier(modelcomm,rc)
+< !        write(6,*)'did barrier'
+< !        call flush(6)
+< !        if(iam.eq.0.and.tile.eq.1)then
+< !          cmd='export CDATE0='//trim(cdatestart)//' ; '//'export CDATE='//cdateout//' ; '// trim(GSIREMAPSH)//' >& outgsiremap'
+< !          write(6,*)'cmd',trim(cmd)
+< !          call flush(6)
+< !          call system(cmd)
+< !          write(6,*)mype,'did cmd for gsi'
+< !          call flush(6)
+< !        else
+< !          write(6,*)mype,'sleep 300'
+< !          call flush(6)
+< !          call system('sleep 300')
+< !          write(6,*)mype,'didsleep 300'
+< !          call flush(6)
+< !        endif
+< !        inquire(file='../../GSISCRATCH/'//trim(cdateout)//'/gsi.done',exist=exist)
+<         countsleep=0
+<         exist=.false.
+<         do while (countsleep<100.and..not.exist)
+<           if(iam.eq.0.and.tile.eq.1)then
+<             write(6,*)'countsleep',countsleep
+<             write(6,*)'check gsi.done ',trim(datascratch)//'/gsi.done.'//trim(cdateout)
+<             call flush(6)
+<             inquire(file=trim(datascratch)//'/gsi.done.'//trim(cdateout),exist=exist)
+< !            if(exist)then
+< !              call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+< !            endif
+<           endif
+<           call raqmschem_comm_all_bcast(exist,rc=localrc)
+<           if(exist)then
+<             if(iam.eq.0.and.tile.eq.1)then
+<               write(6,*)'gsidone'  ,countsleep
+<             endif
+<           else
+<             !write(6,*)'gsi not done'
+<             call system('sleep 30')
+<             countsleep=countsleep+1
+<           endif
+<         end do
+<         call mpi_barrier(modelcomm,rc)
+<         if(iam.eq.0.and.tile.eq.1)then
+<           if(exist)then
+<             call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+<           endif
+<           write(6,*)'gsi done exist',exist,'countsleep',countsleep
+<           call flush(6)
+<           call system('date')
+<         endif
+<         call system('sleep 10')
+< !       now check for inc file
+< !        stop
+< !        write(6,*)'call gsivar'
+< !        call flush(6)
+< !        call gsivar(numgsicem,gsicem,loccem)
+< !        call gsivar
+< !        if(mype.eq.0)then
+< !          write(6,*)'numgsicem',numgsicem,gsicem(1:numgsicem)
+< !          call flush(6)
+< !        endif
+<         allocate (tempgsiinc(is:ie,js:je,nl,numgsicem))
+< !        write(6,*)'coinc',shape(coinc)
+< !        call flush(6)
+<         if(iam.eq.0.and.tile.eq.1)then
+< !         make sure don't goof up next time period
+<           call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+<         endif
+<         write(ctile,'(i1.1)')tile
+<         if(iam.eq.0.and.tile.eq.1)then
+<           call system('date')
+<  
+<           write(6,*)'read from ../../GSIINC/'//trim(cdatestart)//'/inc.' &
+<           //trim(cdateout)//'.tile'//ctile//'.nc'
+<           call flush(6)
+<         endif
+<         if(base_path/=' ')then
+<           call system(' sleep 5')
+<           inquire(file=trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<           if(iam.eq.0)then
+<              write(6,*)'GSIINC',trim(base_path)//'/GSIINC/'//trim(cdatestart)// &
+<              '/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+<           endif
+<           if(.not.exist)then
+< !           try to wait longer
+<             call system(' sleep 10')
+<             inquire(file=trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<             if(.not.exist)then
+<               call system(' data ; ls -l '//trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc') 
+<             endif
+<           endif
+<           if(exist)then
+<             GSIINC_PATH=trim(base_path)//'/GSIINC/'
+<           endif
+<         else
+<           call system(' sleep 5')
+<           inquire(file='../../GSIINC/'//trim(cdatestart)//'/'//'inc.'// &
+<            trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<           if(.not.exist)then
+< !           try to wait longer
+<             call system(' sleep 10')
+<             inquire(file='../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<             if(.not.exist)then
+<               call system(' data ; ls -l '//'../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc')
+<             endif
+<           endif
+<           if(exist)then
+<             GSIINC_PATH='../../GSIINC/'
+<           endif
+<          endif
+< !        if(exist)then
+< !          call getfsize('../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',fsize)
+< !          write(200+iam,*)'inc file exist','GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+< !          write(200+iam,*)'fsize ',fsize
+< !          call date_and_time(date,time,zone,ivalues)
+< !          write(200+iam,*)'time ',time
+< !          call flush(200+iam)
+< !        endif
+<         if(.not.exist)then
+<           write(6,*)'missing ',mype,'../../GSIINC/'//trim(cdatestart)//  &
+<            '/inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+<           call flush(6)
+<         endif
+< !        write(6,*)'numgsicem',numgsicem
+< !        call flush(6)
+<         if(gsicem(1).eq.'o3vmr')then
+<           allocate (tempincMLS(is:ie,js:je,nl),tempincOMI(is:ie,js:je,nl))
+<           if(.not.allocated(incMLS3d))then
+<              allocate(incMLS3d(is:ie,js:je,nl),incOMI3d(is:ie,js:je,nl))
+<              incMLS3d=0.0
+<              incOMI3d=0.0
+<           endif
+<           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incMLS', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincMLS, &
+< !            '../../GSIINC/'//trim(cdatestart)//'/', &
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='incMLS',rc=localrc)
+<           elseif(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','inco3lp', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<            call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincMLS, &
+< !           '../../GSIINC/'//trim(cdatestart)//'/', &
+<            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='inco3lp',rc=localrc)
+<             ompsgsi=.true.
+<           endif
+<           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incOMI', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincOMI, &
+< !            '../../GSIINC/'//trim(cdatestart)//'/', &
+<            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='incOMI',rc=localrc)
+<           elseif(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','inco3nm', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincOMI, &
+< !            '../../GSIINC/'//trim(cdatestart)//'/', &
+<            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='inco3nm',rc=localrc)
+<             ompsgsi=.true.
+<           endif
+<           write(6,*)'temp LP',maxval(tempincMLS),' NM ',maxval(tempincOMI)
+<         endif
+<         if(gsicem(1).eq.'co')then
+<           allocate (tempincTROPOMI(is:ie,js:je,nl),tempincNUCAPS(is:ie,js:je,nl))
+<           if(.not.allocated(incNUCAPSco3d))then
+<              allocate(incNUCAPSco3d(is:ie,js:je,nl),incTROPOMIco3d(is:ie,js:je,nl))
+< !             write(300+iam,*)'zero incnucapssco,tropomico'
+<              incNUCAPSco3d=0.0
+<              incTROPOMIco3d=0.0
+<           endif
+<           tempincNUCAPS=0.0
+<           tempincTROPOMI=0.0
+<           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incco_NU', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincNUCAPS, &
+< !            '../../GSIINC/'//trim(cdatestart)//'/', &
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='incco_NU',rc=localrc)
+<           endif
+<           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incco_TR', &
+< !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+<             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincTROPOMI, &
+< !            '../../GSIINC/'//trim(cdatestart)//'/', &
+<            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+<             de=de,varname='incco_TR',rc=localrc)
+<           endif
+<           write(6,*)'temp NUCAPS',maxval(tempincNUCAPS),' TROMI ',maxval(tempincTROPOMI)
+<           call flush(6)
+<         endif
+<         if(numgsicem==14)then
+< !         doing aod assimilation
+<           if(base_path/=' ')then
+<             if(.not.allocated(data%aodgsi))then
+<               allocate(data%aodgsi(is:ie,js:je),data%aodincgsi(is:ie,js:je))
+<             endif
+<             if(.not.allocated(data%aodgsibcoc))then
+<               allocate(data%aodgsibcoc(is:ie,js:je))
+<             endif
+<             if(.not.allocated(data%aodgsidust))then
+<               allocate(data%aodgsidust(is:ie,js:je))
+<             endif
+<             if(.not.allocated(data%aodgsissalt))then
+<               allocate(data%aodgsissalt(is:ie,js:je))
+<             endif
+<             if(.not.allocated(data%aodgsisulf))then
+<               allocate(data%aodgsisulf(is:ie,js:je))
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsi, &
+<               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<               de=de,varname='aod',rc=localrc)
+<             if(localrc/=0)then
+<               write(6,*)'error reading aodgsi'
+<               deallocate(data%aodgsi)
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsibcoc, &
+<               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<               de=de,varname='aodbcoc',rc=localrc)
+<             if(localrc/=0)then
+<               write(6,*)'error reading aodgsibcoc'
+<               deallocate(data%aodgsibcoc)
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsidust, &
+<               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<               de=de,varname='aoddust',rc=localrc)
+<             if(localrc/=0)then
+<               write(6,*)'error reading aodgsidust'
+<               deallocate(data%aodgsidust)
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsissalt, &
+<               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<               de=de,varname='aodssalt',rc=localrc)
+<             if(localrc/=0)then
+<               write(6,*)'error reading aodgsissalt'
+<               deallocate(data%aodgsissalt)
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsisulf, &
+<               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<               de=de,varname='aodsulf',rc=localrc)
+<             if(localrc/=0)then
+<               write(6,*)'error reading aodgsisulf'
+<               deallocate(data%aodgsisulf)
+<             endif
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodincgsi, &
+<             trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<             de=de,varname='incaod',rc=localrc)
+<             if(localrc/=0)then
+<                write(6,*)'error reading incaodgsi'
+<                deallocate(data%aodincgsi)
+<             endif
+<           endif
+<         endif
+<         do n=1,numgsicem
+<           if(iam.eq.0.and.tile.eq.1)then
+<             write(6,*)'read ',trim(gsicem(n))//'inc',n
+<             call flush(6)
+<             write(6,*)'read inc.'//trim(cdateout)//'.nc'
+<             if(base_path/=' ')then
+<               write(6,*)'path '//trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'
+<               call flush(6)
+<             else
+<               write(6,*)'path ../../GSIINC/'//trim(cdatestart)//'/'
+<               call flush(6)
+<             endif
+<           endif
+<           if(base_path/=' ')then
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempgsiinc(:,:,:,n), &
+<            trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+<           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+<           else
+<             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempgsiinc(:,:,:,n),'../../GSIINC/'//trim(cdatestart)//'/', &
+<           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+<           endif
+<           if(localrc/=0.0)then
+<             write(6,*)'localrc error',localrc
+<             flush(6)
+<           endif
+< #ifdef PERGSIV
+<           pergsiv(:,:,:,n)=0.0
+< #endif
+< !          numneg=0
+< !          negno2=1.e10
+<           do k=1,nl
+<             do j=js,je
+<               jj=j-js+1
+<               do i=is,ie
+<                 ii=i-is+1
+<                 if(tempgsiinc(i,j,k,n)==0.0)then
+<                 elseif(tempgsiinc(i,j,k,n)<0.0)then
+<                   if(gsicem(n).eq.'co')then
+<                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+<                     if(gsinew<1.e-10)then
+< !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-10-gsinew)
+<                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-10)
+<                       gsinew=1.e-10
+<                     endif
+<                     incNUCAPSco3d(i,j,k)=incNUCAPSco3d(i,j,k)+tempincNUCAPS(i,j,k)
+<                     incTROPOMIco3d(i,j,k)=incTROPOMIco3d(i,j,k)+tempincTROPOMI(i,j,k)
+< !                    if(ii==1.and.jj==1.and.k==1)then
+< !                      write(300+iam,*)'add in inc',maxval(tempincNUCAPS),maxval(tempincTROPOMI)
+< !                    endif
+<                   elseif(gsicem(n).eq.'no2')then
+<                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+<                     if(gsinew<1.e-15)then
+< !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-15-gsinew)
+< !                      if(gsinew<negno2)then
+< !                        negno2=gsinew
+< !  real*4 latnegno2,lonnegno2,no2bef,no2inc
+< !                        latnegno2=lat(ii,jj)
+< !                        lonnegno2=lon(ii,jj)
+< !                        no2bef=stateout%tr3d(ii,jj,k,loccem(n))
+< !                        no2inc=tempgsiinc(i,j,k,n)
+< !                      endif
+<                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+<                       gsinew=1.e-15
+< !                      numneg=numneg+1
+<                     endif
+<                   elseif(gsicem(n).eq.'o3vmr')then
+<                     gsinew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+<                     if(gsinew<1.e-11)then
+< !                     don't want to be lower than 1.e-11 unless input ozone is
+< !                     less than 1.e-11 but greater than zero
+< !                     gsinew2=max (1.e-15,min(1.e-11,input ozone))
+< !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-11-gsinew)
+<                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,p_ox)-1.e-11)
+<                       gsinew=1.e-11
+<                     endif
+< !                   need to update ox also
+< !                    gsioxnew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+< !                    stateout%tr3d(ii,jj,k,p_ox)=gsioxnew
+<                     incMLS3d(i,j,k)=incMLS3d(i,j,k)+tempincMLS(i,j,k)
+<                     incOMI3d(i,j,k)=incOMI3d(i,j,k)+tempincOMI(i,j,k)
+<                   elseif(gsicem(n).eq.'ch2o')then
+<                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+<                     if(gsinew<1.e-15)then
+< !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-15-gsinew)
+<                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+<                       gsinew=1.e-15
+<                     endif
+<                   elseif(numgsicem==14)then
+<                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+<                     if(aerosol_ugpkg)then
+<                       if(gsinew<1.e-6)then
+<                         tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-6)
+<                         gsinew=1.e-6
+<                       endif
+<                     else
+<                       if(gsinew<1.e-15)then
+<                         tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+<                         gsinew=1.e-15
+<                       endif
+<                     endif
+<                   endif
+< #ifdef PERGSIV
+<                   pergsiv(i,j,k,n)=tempgsiinc(i,j,k,n)/max(1.e-15,stateout%tr3d(ii,jj,k,loccem(n)))*100.
+< #endif
+< !                  if(abs(pergsiv(i,j,k,n))>200.)then
+< !                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+< !                    write(6,*)'p_ox',p_ox,'gsinew',gsinew
+< !                    write(6,*)'pergsiv',pergsiv(i,j,k,n),'temp',tempgsiinc(i,j,k,n),'orig', &
+< !                    stateout%tr3d(ii,jj,k,loccem(n)),stateout%tr3d(ii,jj,k,p_ox)
+< !                  endif
+<                   stateout%tr3d(ii,jj,k,loccem(n))=gsinew
+<                   gsiinc(i,j,k,n)=gsiinc(i,j,k,n)+tempgsiinc(i,j,k,n)
+<                 else
+<                   gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+<                   gsiinc(i,j,k,n)=gsiinc(i,j,k,n)+tempgsiinc(i,j,k,n)
+<                   stateout%tr3d(ii,jj,k,loccem(n))=gsinew
+< #ifdef PERGSIV
+<                   pergsiv(i,j,k,n)=tempgsiinc(i,j,k,n)/max(1.e-15,stateout%tr3d(ii,jj,k,loccem(n)))*100.
+< #endif
+< !                  if(gsicem(n).eq.'o3vmr')then
+< !!                   need to update ox also
+< !                    gsioxnew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+< !                    stateout%tr3d(ii,jj,k,p_ox)=gsioxnew
+< !                  refix 2/26/2021 ajl
+<                    if(gsicem(n).eq.'o3vmr')then
+<                      incMLS3d(i,j,k)=incMLS3d(i,j,k)+tempincMLS(i,j,k)
+<                      incOMI3d(i,j,k)=incOMI3d(i,j,k)+tempincOMI(i,j,k)
+<                    endif
+<                    if(gsicem(n).eq.'co')then
+<                      incNUCAPSco3d(i,j,k)=incNUCAPSco3d(i,j,k)+tempincNUCAPS(i,j,k)
+<                      incTROPOMIco3d(i,j,k)=incTROPOMIco3d(i,j,k)+tempincTROPOMI(i,j,k)
+<                    endif
+< !                  write(6,*)'missing positve',tempgsiinc(i,j,k,n),i,j,k,n
+<              
+< !                  if(stateout%tr3d(ii,jj,k,loccem(n))<1.e-16)then
+< !                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+< !                    if(k.lt.nl-1)then
+< !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+< !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+< !                    endif
+< !                  endif
+<                 endif
+< #ifdef PERGSIV
+<                 if(k.eq.1)then
+<  !                intco(i,j,k)=stateout%tr3d(ii,jj,k,p_co)*dpmgrd(ii,j,k)
+<                   colgsiinc(i,j,k,n)=stateout%tr3d(ii,jj,k,loccem(n))*dpmgrd(ii,j,k)
+<                 else
+< !                 intco(i,j,k)=intco(i,j,k-1)+stateout%tr3d(ii,jj,k,p_co)*dpmgrd(ii,j,k)
+<                   colgsiinc(i,j,k,n)=colgsiinc(i,j,k-1,n)+stateout%tr3d(ii,jj,k,loccem(n))*dpmgrd(ii,j,k)
+<                 endif
+< #endif
+<               end do ! i
+<             end do ! j
+<           end do ! k
+< !         write(6,*)'gsiinc',maxval(gsiinc(:,:,:,1))
+< !         write(6,*)'co after gsi ',maxval(stateout%tr3d(:,:,:,p_co)),minval(stateout%tr3d(:,:,:,p_co))
+< !         call flush(6)
+<         end do ! n
+< !        if(numneg/=0)then
+< !           write(6,*)mype,'numneg',numneg,'negno2',negno2
+< !  real*4 latnegno2,lonnegno2,no2bef,no2inc
+< !           write(6,*)'lat',latnegno2,lonnegno2,'bef',no2bef,'no2inc',no2inc
+< !           call flush(6)
+< !        endif
+<       endif
+< !     if aerosols
+<       if(numgsicem==14)then
+< !       return aerosol back to gdshcem tr3dout
+<         chem_pass_state%tr3d(:,:,:,p_bc1)=stateout%tr3d(:,:,:,p_bc1)
+<         chem_pass_state%tr3d(:,:,:,p_bc2)=stateout%tr3d(:,:,:,p_bc2)
+<         chem_pass_state%tr3d(:,:,:,p_oc1)=stateout%tr3d(:,:,:,p_oc1)
+<         chem_pass_state%tr3d(:,:,:,p_oc2)=stateout%tr3d(:,:,:,p_oc2)
+<         chem_pass_state%tr3d(:,:,:,p_sulf)=stateout%tr3d(:,:,:,p_sulf)
+<         chem_pass_state%tr3d(:,:,:,p_dust1)=stateout%tr3d(:,:,:,p_dust1)
+<         chem_pass_state%tr3d(:,:,:,p_dust2)=stateout%tr3d(:,:,:,p_dust2)
+<         chem_pass_state%tr3d(:,:,:,p_dust3)=stateout%tr3d(:,:,:,p_dust3)
+<         chem_pass_state%tr3d(:,:,:,p_dust4)=stateout%tr3d(:,:,:,p_dust4)
+<         chem_pass_state%tr3d(:,:,:,p_dust5)=stateout%tr3d(:,:,:,p_dust5)
+<         chem_pass_state%tr3d(:,:,:,p_seas1)=stateout%tr3d(:,:,:,p_seas1)
+<         chem_pass_state%tr3d(:,:,:,p_seas2)=stateout%tr3d(:,:,:,p_seas2)
+<         chem_pass_state%tr3d(:,:,:,p_seas3)=stateout%tr3d(:,:,:,p_seas3)
+<         chem_pass_state%tr3d(:,:,:,p_seas4)=stateout%tr3d(:,:,:,p_seas4)
+<       endif
+<     endif
+---
+>     call chemgsi(stateout,statein,is,ie,js,je,nl,icall,dts,nsecgsi,modelcomm)

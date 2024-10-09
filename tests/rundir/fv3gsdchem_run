@@ -1,0 +1,16 @@
+sfx=_NOT_FOUND
+if [ $NPX = 97 ]; then
+  sfx=
+elif [ $NPX = 193 ]; then
+  sfx=_c192
+elif [ $NPX = 385 ]; then
+  sfx=_c384
+elif [ $NPX = 769 ]; then
+  sfx=_c768
+fi
+
+# FV3
+inputdir=FV3_input_data${sfx}
+echo "inputdir=$inputdir,NPX=$NPX"
+if [ $WARM_START = .F. ]; then
+  cp -r evalaa

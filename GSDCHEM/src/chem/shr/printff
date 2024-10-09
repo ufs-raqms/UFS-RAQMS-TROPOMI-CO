@@ -1,0 +1,78 @@
+
+      ! -- emissions from burning biomass
+      if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
+        ! -- emissions
+            if(localpe==0)then
+              write(6,*)'read ebu_bc.dat from fireemi_inname ',trim(config % fireemi_inname)
+            endif
+        if(inquire_file_var('ebu_bc.tile1.nc','ebu_bc',trim(config%fireemi_inname)))then 
+          if(inquire_file_dim('ebu_bc.tile1.nc','nhr',trim(config%fireemi_inname)))then
+            allocate (srcinhr(ide-ids+1,jds:jde,24))
+            call chem_io_read(file,srcinhr,  &
+!           path=trim(config % fireemi_inname), de=de,
+!           recrange=recrange,varname='bb_co',rc=localrc)
+           call chem_io_read('ebu_bc.dat', shrinhr, &
+           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+           allocate (data%emiss_abu_hr(ide-ids+1,jds:jde,24))
+             data%emiss_abu_hr(:,:,:,config%species%p_e_bc)=srcinhr
+           else
+           endif
+        else
+
+           deallocate(srcinhr)
+           call chem_io_read('ebu_bc.dat', data % emiss_abu(:,:,config % species % p_e_bc), &
+          path=trim(config % fireemi_inname), de=de, varname='ebu_bc',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_bc - min/max = "2g16.6)') &
+          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_bc)), &
+          maxval(data % emiss_abu(:,:,config % species % p_e_bc))
+
+        call chem_io_read('ebu_oc.dat', data % emiss_abu(:,:,config % species % p_e_oc), &
+          path=trim(config % fireemi_inname), de=de, varname='ebu_oc',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_oc - min/max = "2g16.6)') &
+          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_oc)), &
+          maxval(data % emiss_abu(:,:,config % species % p_e_oc))
+
+        call chem_io_read('ebu_pm_25.dat', data % emiss_abu(:,:,config % species % p_e_pm_25), &
+          path=trim(config % fireemi_inname), de=de, varname='ebu_pm25',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_25 - min/max = "2g16.6)') &
+          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_25)), &
+          maxval(data % emiss_abu(:,:,config % species % p_e_pm_25))
+
+        call chem_io_read('ebu_so2.dat', data % emiss_abu(:,:,config % species % p_e_so2), &
+          path=trim(config % fireemi_inname), de=de, varname='ebu_so2',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') &
+          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_so2)), &
+          maxval(data % emiss_abu(:,:,config % species % p_e_so2))
+!        write(6,*)'plumerise_flag',config % plumerise_flag,'MODIS',FIRE_OPT_MODIS,'GBBEPX',FIRE_OPT_GBBEPx
+!        call flush(6)
+        select case (config % plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            call chem_io_read('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
+              path=trim(config % fireemi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
+              maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
+            call chem_io_read('plumestuff.dat', data % plume, recrange=(/ 1, config % num_plume_data /), &
+              path=trim(config % fireemi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % plume), maxval(data % plume)
+          case (FIRE_OPT_GBBEPx)
+            if (config % plumerisefire_frq > 0) then
+            if(localpe==0)then
+              write(6,*)'read plumefrp.dat from',trim(config % fireemi_inname)
+            endif
+            call chem_io_read('plumefrp.dat', data % plume, &
+              path=trim(config % fireemi_inname), de=de, varname='plumefrp',rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % plume), maxval(data % plume)
+            endif
+          case default
+            ! -- no further options available
+        end select

@@ -1,0 +1,64 @@
++ export REMAPSHTR=/home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
++ REMAPSHTR=/home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
++ export new_date=/home/lenzen/UTILS/da_advance_time.exe
++ new_date=/home/lenzen/UTILS/da_advance_time.exe
++ export INC=1
++ INC=1
++ echo INC FHMAX 6
+INC FHMAX 6
++ echo SCRATCH_OUT /scratch/users/mbruckner/FV3GFS.9.1.2019//TROPOMI.CO.ASSIM.limitocean/C192/
+SCRATCH_OUT /scratch/users/mbruckner/FV3GFS.9.1.2019//TROPOMI.CO.ASSIM.limitocean/C192/
++ sleep 5
++ echo CDATE 2019081512
+CDATE 2019081512
++ (( i=1  ))
++ (( i <= 6  ))
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 1h
++ export CDATEF=2019081513
++ CDATEF=2019081513
++ echo CDATEF 2019081513
+CDATEF 2019081513
++ (( i += 1 ))
++ (( i <= 6  ))
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 2h
++ export CDATEF=2019081514
++ CDATEF=2019081514
++ echo CDATEF 2019081514
+CDATEF 2019081514
++ (( i += 1 ))
++ (( i <= 6  ))
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 3h
++ export CDATEF=2019081515
++ CDATEF=2019081515
++ echo CDATEF 2019081515
+CDATEF 2019081515
++ (( i += 1 ))
++ (( i <= 6  ))
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 4h
++ export CDATEF=2019081516
++ CDATEF=2019081516
++ echo CDATEF 2019081516
+CDATEF 2019081516
++ (( i += 1 ))
++ (( i <= 6  ))
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 5h
++ export CDATEF=2019081517
++ CDATEF=2019081517
++ echo CDATEF 2019081517
+CDATEF 2019081517
++ (( i += 1 ))
++ (( i <= 6  ))
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019081512 6h
++ export CDATEF=2019081518
++ CDATEF=2019081518
++ echo CDATEF 2019081518
+CDATEF 2019081518
++ (( i += 1 ))
++ (( i <= 6  ))
++ wait
++ /home/mbruckner/FV3GFS-GSDCHEM.0.9.1/release/v0/exp/../ush/fv3gfs.5degll.only.sh

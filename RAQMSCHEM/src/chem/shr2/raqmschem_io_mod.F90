@@ -1,0 +1,3578 @@
+module raqmschem_io_mod
+
+  use mpi
+  use mpishorthand
+  use chem_rc_mod
+  use chem_types_mod
+  use chem_comm_mod
+  use raqmschem_model_mod,only : chem_model_get => raqmschem_model_get
+  use raqmschem_model_mod,only : chem_model_domain_get 
+  use raqmschem_model_mod,only : chem_model_set => raqmschem_model_set
+  use raqmschem_pmgrid_mod,only : raqms_localIOflag,masterproct
+
+  implicit none
+
+  integer, parameter :: ioUnit = 100
+!  integer raqms_localIOflag
+
+  interface chem_io_read
+    module procedure chem_io_read_2DR4
+    module procedure chem_io_read_2DR4angle
+    module procedure chem_io_read_3DR4
+  end interface chem_io_read
+
+  interface chem_io_write
+    module procedure chem_io_write_2DR4
+    module procedure chem_io_write_3DR4
+    module procedure chem_io_write_3DR8
+  end interface chem_io_write
+
+  interface chem_io_writenc
+    module procedure chem_io_writenc_2DR4
+    module procedure chem_io_writenc_3DR4
+!    module procedure chem_io_writenc_3DR4_debug
+!    module procedure chem_io_writenc_3DR8
+  end interface chem_io_writenc
+
+  private
+
+  public :: raqmschem_io_init
+  public :: chem_io_read
+  public :: chem_io_write
+  public :: chem_io_writenc
+  public :: inquire_file_var
+  public :: inquire_file_dim
+!  public raqms_localIOflag
+
+contains
+
+  subroutine raqmschem_io_init(rc)
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, tile, tileCount
+    integer :: pe, peCount
+    integer :: i, localpe, npe
+    integer :: comm, tileComm
+    integer, dimension(:), allocatable :: localTile, tileToPet, pes
+
+    ! -- begin
+    mpiint=mpi_INTEGER
+    mpichar=mpi_CHARACTER
+    mpireal=mpi_DOUBLE
+    mpir4=mpi_REAL
+    mpicom=MPI_COMM_WORLD
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(deCount=deCount, tileCount=tileCount, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- if no model on this PET, bail out
+    if (deCount < 1) return
+
+    call chem_comm_get(comm=comm, localpe=localpe, pecount=peCount, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(localTile(tileCount), tileToPet(tileCount*peCount), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to allocate memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- store which tiles are assigned to this PET
+    localTile = -1
+    do de = 0, deCount-1
+      call chem_model_get(de=de, tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      localTile(tile) = localpe
+    end do
+
+    ! -- build a global tile-to-PET map
+    call chem_comm_allgather(localTile, tileToPet, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    deallocate(localTile, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to free memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- extract the list of PETs assigned to each tile and create MPI groups
+    allocate(pes(peCount), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to allocate memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- gather PET list for each tile and create tile-specific communicator
+    pes = -1
+    do tile = 1, tileCount
+      npe = 0
+      do i = tile, tileCount*peCount, tileCount
+        if (tileToPet(i) > -1) then
+          npe = npe + 1
+          pes(npe) = tileToPet(i)
+        end if
+      end do
+
+      ! -- create new communicator
+      call chem_comm_create(tileComm, pes(1:npe), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      do de = 0, deCount-1
+        call chem_model_get(de=de, tile=i, rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (tile == i) then
+          call chem_model_set(de=de, tileComm=tileComm, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        end if
+      end do
+    end do
+
+    deallocate(pes, tileToPet, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to free memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- store I/O layout into model
+    masterproct=.false.
+    do de = 0, deCount-1
+      call chem_model_get(de=de, tile=tile, tileComm=tileComm, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      ! -- get local PET for tile 
+      call chem_comm_inquire(tileComm, localpe=pe, pecount=npe, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      ! -- mark local root PET as I/O PET
+      call chem_model_set(de=de, localIOflag=(pe == 0), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      write(6,'("chem_io_init: PET:",i2," DE:",i02," tile=",i0," - comm=",i0," PE:",i0,"/",i0)') &
+!        localpe, de, tile, tileComm, pe, npe
+!      flush(6)
+       if(pe==0)then
+         masterproct=.true.
+       endif
+    end do
+
+  end subroutine raqmschem_io_init
+
+
+  subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread,oldname)
+    character(len=*),           intent(out) :: fullname
+    character(len=*),           intent(in)  :: filename
+    integer,                    intent(in)  :: tile
+    character(len=*), optional, intent(in)  :: pathname
+    logical, optional :: doread
+    logical, optional :: oldname
+
+    ! -- local variables
+    integer :: lstr
+    character(len=CHEM_MAXSTR) :: fname
+    logical :: exist
+
+    ! -- begin
+    fname = ""
+    fullname = ""
+
+    lstr = len_trim(filename)
+!    write(6,*)'ajl top file_name io_file_name',trim(filename),'lstr',lstr
+!    call flush(6)
+    if (lstr > 4) then
+!      print *, 'filename = ', filename(lstr-3:lstr)
+!      write(6,*)'len',len(fname)
+!      call flush(6)
+!      write(6,*)'filename',lstr,trim(filename),tile
+!      call flush(6)
+      if (filename(lstr-3:lstr) == ".dat") then
+!        we have a different path for now
+!         write(6,*)'tile',tile
+!         call flush(6)
+         if(present(oldname))then
+           write(fname, '("tile",i0,"/",a)') tile, trim(filename)
+         else
+           write(fname,'(a,"_tile",i0,".dat")')filename(1:lstr-4),tile
+         endif
+      elseif(filename(lstr-2:lstr) == '.nc')then
+         write(fname,'(a,".tile",i0,".nc")')filename(1:lstr-3),tile
+
+      else
+        write(fname, '(a,".tile",i0,".dat")') trim(filename), tile
+      end if
+    else
+      write(fname, '(a,".tile",i0,".dat")') trim(filename), tile
+    end if
+!    write(6,*)'fname full',trim(fname)
+
+    if (present(pathname)) then
+      lstr = len_trim(pathname)
+      if (pathname(lstr:lstr) == "/") then
+        fullname = trim(pathname) // trim(fname)
+      else
+        fullname = trim(pathname) // "/" // trim(fname)
+      end if
+    else
+      fullname = trim(fname)
+    end if
+!    write(6,*)'bottom raqmschem_io_file_name fullname',trim(fullname)
+!    call flush(6)
+!   check for read to see if file is there
+    inquire(file=fullname,exist=exist)
+    if(exist.or. .not. present(doread))return
+    lstr = len_trim(fullname)
+    if (fullname(lstr-3:lstr) == '.dat')then
+      fullname(lstr-3:lstr)='.nc '
+      inquire(file=fullname,exist=exist)
+      if(exist)return
+      write(6,*)'neither .dat nor .nc are there',fullname
+      call killit('neither')
+    elseif(fullname(lstr-2:lstr)=='.nc')then
+      write(6,*)'.nc not there',fullname
+!      call killit('.nc')
+    endif
+
+  end subroutine raqmschem_io_file_name
+  subroutine chem_io_file_read_nc(datafile, buffer, recrange, recsize, recstride, varname,rc)
+    use chem_comm_mod, only : chem_comm_get
+    use netcdf
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    character(len=*), optional,  intent(in)  :: varname
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+    integer :: nc,nr
+    integer :: mype
+    integer :: ncid ! ncid for netcdf file
+    integer :: ierr ! netcdf error code
+    integer :: varid ! netcdf varid
+    if(.not.present(varname))then
+      rc=1
+      write(6,*)'varname must be present for reading netcdf file input'
+      call flush(6)
+      return
+    endif
+    call chem_comm_get(localpe=mype)
+!    write(6,*)'chem_io_filie_read mype',mype,shape(buffer)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    return ! for now
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+!    write(6,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    write(70+mype,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    call flush(70+mype)
+!    write(6,*)'prod ',rcount * max(rsize, rstride)
+!    call flush(6)
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+!    write(70+mype,*)'open',trim(datafile)
+!    call flush(70+mype)
+    ierr=nf90_open(trim(datafile),0,ncid)
+    if (ierr /= nf90_noerr)then
+       write(6,*)'error open ',trim(datafile)
+       call flush(6)
+       rc=1
+       return
+    endif
+    ierr=nf90_inq_varid(ncid,trim(varname),varid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting varid for variable',trim(varname),' file ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      rc=1
+      return
+    endif
+    ierr=nf90_get_var(ncid,varid,buffer)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting var size buffera',shape(buffer)
+      write(6,*)'var ',trim(varname)
+      write(6,*)'file ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+      rc=1
+      return
+    endif
+!    write(6,*)'var',trim(varname),maxval(buffer),minval(buffer)
+!    call flush(6)
+!    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='read', position='rewind', convert='big_endian',iostat=localrc)
+!    write(6,*)'open file ',trim(datafile),'localrc',localrc
+!    call flush(6)
+!    write(6,*)'rrange',rrange,'rsize',rsize
+!    call flush(6)
+!    read(iounit)nc,nr
+!    write(6,*)'nc',nc,nr
+!    call flush(6)
+!    return
+!    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+!        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- advance to first record
+!    write(6,*)'rrange',rrange
+!    call flush(6)
+!    write(72+mype,*)'rrange',rrange
+!    call flush(72+mype)
+!   we need to skip 2 records so rrange(1) should be 3
+!    do irec = 2, rrange(1)
+!      read(unit=ioUnit, iostat=localrc)
+!      if (chem_rc_test((localrc /= 0), msg="Unable to locate record in file: "//trim(datafile), &
+!          file=__FILE__, line=__LINE__, rc=rc)) then
+!        close(unit=iounit)
+!        return
+!      end if
+!    end do
+
+    ! -- read records
+!    is = 1
+!    ie = rsize
+!    write(6,*)'rcount',rcount,'rstride',rstride
+!    call flush(6)
+!    do irec = 1, rcount
+!      write(6,*)'read buffer',shape(buffer),'rsize',rsize
+!      call flush(6)
+!      write(72+mype,*)'read buffer',shape(buffer),ie
+!      call flush(72+mype)
+!      read(unit=iounit, iostat=localrc) buffer(is:ie)
+!      if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+!          file=__FILE__, line=__LINE__, rc=rc)) then
+!        close(unit=iounit)
+!        return
+!      end if
+!      is = is + rstride
+!      ie = ie + rstride
+!    end do
+
+    ! -- close file
+!    close(unit=ioUnit)
+     ierr=nf90_close(ncid)
+
+  end subroutine chem_io_file_read_nc
+  logical function inquire_file_var(datafile,varname,path)
+    use netcdf
+    use raqmschem_pmgrid_mod, only : iam
+    integer ncid,idvar,ierr
+    character(len=*),   intent(in)  :: datafile,path
+    character(len=*),  intent(in)  :: varname
+  
+      
+    ierr=nf90_open(trim(path)//trim(datafile),0,ncid)
+    if (ierr /= nf90_noerr)then
+       write(6,*)'error open ',trim(path)//trim(datafile)
+       call flush(6)
+!    else
+!      write(6,*)'did open',iam
+    endif
+    ierr=nf90_inq_varid(ncid,varname,idvar)
+    if(ierr==nf90_noerr)then
+      inquire_file_var=.true.
+    else
+      inquire_file_var=.false.
+    endif
+    ierr=nf90_close(ncid)
+  end function inquire_file_var
+  logical function inquire_file_dim(datafile,dimname,path)
+    use netcdf
+    use raqmschem_pmgrid_mod, only : iam
+    integer ncid,idvar,ierr
+    character(len=*),   intent(in)  :: datafile,path
+    character(len=*),  intent(in)  :: dimname
+  
+      
+    ierr=nf90_open(trim(path)//trim(datafile),0,ncid)
+    if (ierr /= nf90_noerr)then
+       write(6,*)'error open ',trim(path)//trim(datafile)
+       call flush(6)
+!    else
+!      write(6,*)'did open',iam
+    endif
+    ierr=nf90_inq_dimid(ncid,dimname,idvar)
+    if(ierr==nf90_noerr)then
+      inquire_file_dim=.true.
+    else
+      inquire_file_dim=.false.
+    endif
+    ierr=nf90_close(ncid)
+  end function inquire_file_dim
+  subroutine chem_io_file_read_2d_nc(datafile, buffer, recrange, recsize, recstride, varname,rc)
+    use chem_comm_mod, only : chem_comm_get
+    use netcdf
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:,:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    character(len=*), optional,  intent(in)  :: varname
+    character*120 namevar
+    integer, optional,  intent(out) :: rc
+     
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie,i
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+    integer :: nc,nr
+    integer :: mype
+    integer :: ncid ! ncid for netcdf file
+    integer :: ierr ! netcdf error code
+    integer :: varid ! netcdf varid
+    if(.not.present(varname))then
+      rc=1
+      write(6,*)'varname must be present for reading netcdf file input'
+      call flush(6)
+      return
+    endif
+!    write(6,*)'read_2d_nc var',trim(varname)
+!    call flush(6)
+    call chem_comm_get(localpe=mype)
+!    write(6,*)'chem_io_file_read_2d_nc mype',mype,shape(buffer)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    return ! for now
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+!    write(6,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    write(70+mype,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    call flush(70+mype)
+!    write(6,*)'prod ',rcount * max(rsize, rstride)
+!    call flush(6)
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+!    write(70+mype,*)'open',trim(datafile)
+!    call flush(70+mype)
+    ierr=nf90_open(trim(datafile),0,ncid)
+    if (ierr /= nf90_noerr)then
+       write(6,*)'error open ',trim(datafile)
+       call flush(6)
+       rc=1
+       return
+    else
+!      if(mype.eq.0)then
+!        write(6,*)'open 2d nc ',trim(datafile)
+!        call flush(6)
+!      endif
+    endif
+    ierr=nf90_inq_varid(ncid,trim(varname),varid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+      do i=1,3
+        ierr=nf90_inquire_variable(ncid,i,name=namevar)
+        write(6,*)'namevar',i,trim(namevar)
+        call flush(6)
+      end do
+      rc=1
+      return
+!    else
+!      write(6,*)'read id ',trim(varname),varid
+!      call flush(6)
+    endif
+    ierr=nf90_get_var(ncid,varid,buffer)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting var size bufferb',shape(buffer)
+      write(6,*)'var',trim(varname)
+      write(6,*)'file',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+      rc=1
+      return
+    else
+!      if(mype.eq.0)then
+!        write(6,*)'read var',maxval(buffer),minval(buffer)
+!        call flush(6)
+!      endif
+    endif
+
+
+    ! -- close file
+     ierr=nf90_close(ncid)
+
+  end subroutine chem_io_file_read_2d_nc
+  subroutine chem_io_file_read_3d_nc(datafile, buffer, recrange, recsize, recstride, varname,rc)
+    use chem_comm_mod, only : chem_comm_get
+    use netcdf
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:,:,:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    character(len=*), optional,  intent(in)  :: varname
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+    integer :: nc,nr
+    integer :: mype
+    integer :: ncid ! ncid for netcdf file
+    integer :: ierr ! netcdf error code
+    integer :: varid ! netcdf varid
+    if(.not.present(varname))then
+      rc=1
+      write(6,*)'varname must be present for reading netcdf file input'
+      call flush(6)
+      return
+    endif
+    call chem_comm_get(localpe=mype)
+!    write(6,*)'chem_io_filie_read mype',mype,shape(buffer)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    return ! for now
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+!    write(6,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    write(70+mype,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    call flush(70+mype)
+!    write(6,*)'prod ',rcount * max(rsize, rstride)
+!    call flush(6)
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+!    write(70+mype,*)'open',trim(datafile)
+!    call flush(70+mype)
+!    write(6,*)'open',trim(datafile)
+!    call flush(6)
+    ierr=nf90_open(trim(datafile),0,ncid)
+    if (ierr /= nf90_noerr)then
+       write(6,*)'error open ',trim(datafile)
+       call flush(6)
+       rc=1
+       return
+    endif
+    ierr=nf90_inq_varid(ncid,trim(varname),varid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      rc=1
+      return
+    endif
+!    write(6,*)'varname',trim(varname),'buffer',shape(buffer)
+!    call flush(6)
+    ierr=nf90_get_var(ncid,varid,buffer)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error getting var size bufferc',shape(buffer)
+      write(6,*)'var ',trim(varname)
+      write(6,*)'file ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+      rc=1
+      return
+    endif
+!    if(mype.eq.0)then
+!      write(6,*)'var read 3d',trim(varname),maxval(buffer),minval(buffer)
+!      call flush(6)
+!    endif
+!    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='read', position='rewind', convert='big_endian',iostat=localrc)
+!    write(6,*)'open file ',trim(datafile),'localrc',localrc
+!    call flush(6)
+!    write(6,*)'rrange',rrange,'rsize',rsize
+!    call flush(6)
+!    read(iounit)nc,nr
+!    write(6,*)'nc',nc,nr
+!    call flush(6)
+!    return
+!    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+!        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- advance to first record
+!    write(6,*)'rrange',rrange
+!    call flush(6)
+!    write(72+mype,*)'rrange',rrange
+!    call flush(72+mype)
+!   we need to skip 2 records so rrange(1) should be 3
+!    do irec = 2, rrange(1)
+!      read(unit=ioUnit, iostat=localrc)
+!      if (chem_rc_test((localrc /= 0), msg="Unable to locate record in file: "//trim(datafile), &
+!          file=__FILE__, line=__LINE__, rc=rc)) then
+!        close(unit=iounit)
+!        return
+!      end if
+!    end do
+
+    ! -- read records
+!    is = 1
+!    ie = rsize
+!    write(6,*)'rcount',rcount,'rstride',rstride
+!    call flush(6)
+!    do irec = 1, rcount
+!      write(6,*)'read buffer',shape(buffer),'rsize',rsize
+!      call flush(6)
+!      write(72+mype,*)'read buffer',shape(buffer),ie
+!      call flush(72+mype)
+!      read(unit=iounit, iostat=localrc) buffer(is:ie)
+!      if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+!          file=__FILE__, line=__LINE__, rc=rc)) then
+!        close(unit=iounit)
+!        return
+!      end if
+!      is = is + rstride
+!      ie = ie + rstride
+!    end do
+
+    ! -- close file
+!    close(unit=ioUnit)
+     ierr=nf90_close(ncid)
+
+  end subroutine chem_io_file_read_3d_nc
+  subroutine bigchem_io_file_read(datafile, buffer, recrange, recsize, recstride, rc)
+    use chem_comm_mod, only : chem_comm_get
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+    integer :: nc,nr
+    integer :: mype
+    call chem_comm_get(localpe=mype)
+!    write(6,*)'chem_io_filie_read mype',mype,shape(buffer)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    return ! for now
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+!    write(6,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    write(70+mype,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    call flush(70+mype)
+!    write(6,*)'prod ',rcount * max(rsize, rstride)
+!    call flush(6)
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+!    write(70+mype,*)'open',trim(datafile)
+!    call flush(70+mype)
+    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='read', position='rewind', convert='big_endian',iostat=localrc)
+!    write(6,*)'open file ',trim(datafile),'localrc',localrc
+!    call flush(6)
+!    write(6,*)'rrange',rrange,'rsize',rsize
+!    call flush(6)
+!    read(iounit)nc,nr
+!    write(6,*)'nc',nc,nr
+!    call flush(6)
+!    return
+    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- advance to first record
+!    write(6,*)'rrange',rrange
+!    call flush(6)
+!    write(72+mype,*)'rrange',rrange
+!    call flush(72+mype)
+!   we need to skip 2 records so rrange(1) should be 3
+    do irec = 2, rrange(1)
+      read(unit=ioUnit, iostat=localrc)
+      if (chem_rc_test((localrc /= 0), msg="big read file Unable to locate record in file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+    end do
+
+    ! -- read records
+    is = 1
+    ie = rsize
+!    write(6,*)'rcountbig endian',rcount,'rstride',rstride,'is',is,ie
+!    call flush(6)
+    do irec = 1, rcount
+!      write(6,*)'read buffer aa ',shape(buffer),'rsize',rsize
+!      call flush(6)
+!      write(72+mype,*)'read buffer',shape(buffer),ie
+!      call flush(72+mype)
+      read(unit=iounit, iostat=localrc) buffer(is:ie)
+      if (chem_rc_test((localrc /= 0), msg="Failure reading data g from file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+      is = is + rstride
+      ie = ie + rstride
+    end do
+
+    ! -- close file
+    close(unit=ioUnit)
+
+  end subroutine bigchem_io_file_read
+  
+
+  subroutine chem_io_file_read(datafile, buffer, recrange, recsize, recstride, rc)
+    use chem_comm_mod, only : chem_comm_get
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+    integer :: nc,nr
+    integer :: mype
+    call chem_comm_get(localpe=mype)
+!    write(6,*)'chem_io_filie_read mype',mype,shape(buffer)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    return ! for now
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+!    write(6,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+!    write(70+mype,*)'sizebuffer',size(buffer),'rcount',rcount,'rsize',rsize,'rstride',rstride
+    !call flush(70+mype)
+!    write(6,*)'prod ',rcount * max(rsize, rstride)
+!    call flush(6)
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+!    write(70+mype,*)'open',trim(datafile)
+!    call flush(70+mype)
+      open(unit=ioUnit, file=trim(datafile), form='unformatted', action='read', position='rewind', iostat=localrc)
+!    write(6,*)'open file ',trim(datafile),'localrc',localrc
+!    call flush(6)
+!    write(6,*)'rrange',rrange,'rsize',rsize
+!    call flush(6)
+!    read(iounit)nc,nr
+!    write(6,*)'nc',nc,nr
+!    call flush(6)
+!    return
+    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- advance to first record
+    write(6,*)'rrange',rrange
+    call flush(6)
+!    write(72+mype,*)'rrange',rrange
+!    call flush(72+mype)
+!   we need to skip 2 records so rrange(1) should be 3
+    do irec = 2, rrange(1)
+      read(unit=ioUnit, iostat=localrc)
+      if (chem_rc_test((localrc /= 0), msg="file_read Unable to locate record in file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+    end do
+
+    ! -- read records
+    is = 1
+    ie = rsize
+    write(6,*)'rcountbb',rcount,'rstride',rstride,'is',is,ie
+    call flush(6)
+    do irec = 1, rcount
+!      write(6,*)'read buffer',shape(buffer),'rsize',rsize
+!      call flush(6)
+!      write(72+mype,*)'read buffer',shape(buffer),ie
+!      call flush(72+mype)
+      read(unit=iounit, iostat=localrc) buffer(is:ie)
+      if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+      is = is + rstride
+      ie = ie + rstride
+    end do
+
+    ! -- close file
+    close(unit=ioUnit)
+
+  end subroutine chem_io_file_read
+
+
+  subroutine chem_io_file_write(datafile, buffer, pos, rc)
+    character(len=*),           intent(in)  :: datafile
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:)
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    character(len=6) :: filepos
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    filepos = 'rewind'
+    if (present(pos)) then
+      select case (trim(pos))
+        case ('a', 'append')
+          filepos = 'append'
+        case default
+          filepos = 'rewind'
+      end select
+    end if
+
+    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='write', &
+      position=trim(filepos), iostat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'chem_io_file_write buffer',shape(buffer),trim(datafile)
+!    call flush(6)
+    write(unit=ioUnit, iostat=localrc) buffer
+    if (chem_rc_test((localrc /= 0), msg="Failure writing data to file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    close(unit=ioUnit)
+
+  end subroutine chem_io_file_write
+
+  subroutine chem_io_file_writenc(datafile, filename,buffer, lat,lon, time,varname,units,attribute,rc)
+    use netcdf
+    use raqmschem_pmgrid_mod, only : forecast_hr,timestep,cdateat,juldayat
+    character(len=*),           intent(in)  :: datafile
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:,:)
+    real(CHEM_KIND_R4),         intent(in)  :: lat(:,:),lon(:,:)
+    integer,optional,intent(in)             :: time
+    character(len=*), optional, intent(in)  :: varname
+    character(len=*), optional, intent(in)  :: units
+    character(len=*), optional, intent(in)  :: attribute
+    integer,          optional, intent(out) :: rc
+    integer ncid,ierr,varid,dims(2),ilat,ilon,ierru,i
+    real(chem_kind_r4),allocatable :: out(:,:,:)
+    real(chem_kind_r4) :: oner4
+
+    ! -- local variables
+    integer :: localrc
+    real(CHEM_KIND_R4) :: atest
+    integer idimxt,idimyt,idims(3),itime,idims2(2),idtime,idgridxt,idgridyt,idgridzt
+    logical dodefine,exist
+    integer,allocatable :: gridxy(:),gridz(:)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    ierr=nf90_noerr
+
+    if(.not.present(time))then
+      ierr=nf90_create(trim(datafile),nf90_clobber+nf90_netcdf4,ncid)
+      dodefine=.true.
+    else
+    endif
+    if (ierr /= nf90_noerr)then
+      write(6,*)'error create ',trim(datafile)
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+    endif
+    dims=shape(buffer)
+    allocate (out(dims(1),dims(2),1))
+    allocate (gridxy(dims(1)))
+    do i=1,dims(1)
+       gridxy(i)=i
+    end do
+    out(:,:,1)=buffer(:,:)
+!    write(6,*)'dims',dims
+!    call flush(6)
+    ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define grid_xt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_dim(ncid,'grid_yt',dims(2),idimyt)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define grid_yt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_dim(ncid,'time',NF90_UNLIMITED,itime)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var time'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    idims(1)=idimxt
+    idims2(1)=idimxt
+    idims(2)=idimyt
+    idims2(2)=idimyt
+    idims(3)=itime
+    ierr=nf90_def_var(ncid,'time',nf90_float,itime,idtime)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var time'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_var(ncid,'grid_xt',nf90_int,idimxt,idgridxt)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var grid_xt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_var(ncid,'grid_yt',nf90_int,idimyt,idgridyt)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var grid_yt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_var(ncid,'grid_zt',nf90_int,idimyt,idgridzt)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var grid_zt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+
+    ierr=nf90_def_var(ncid,'grid_latt',nf90_float,idims2,ilat) 
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var grid_latt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_def_var(ncid,'grid_lont',nf90_float,idims2,ilon) 
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant define var grid_lont'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+!   ajl new code 5/22/2023
+      ierr=nf90_put_att(ncid,idtime,'long_name','time')
+!      ierr=nf90_put_att(ncid,idtime,'units','days since '//trim(cdatestr))
+      ierr=nf90_put_att(ncid,idtime,'cartesian_axis','T')
+      ierr=nf90_put_att(ncid,idgridxt,'long_name','T-cell longitude')
+      ierr=nf90_put_att(ncid,idgridxt,'units','degrees_E')
+      ierr=nf90_put_att(ncid,idgridxt,'cartesian_axis','X')
+      ierr=nf90_put_att(ncid,idgridyt,'long_name','T-cell latitude')
+      ierr=nf90_put_att(ncid,idgridyt,'units','degrees_N')
+      ierr=nf90_put_att(ncid,idgridyt,'cartesian_axis','Y')
+      ierr=nf90_put_att(ncid,idgridzt,'cartesian_axis','Z')
+!   ajl end new code 5/22/2023
+    ierru=nf90_noerr
+    if(present(varname))then
+      ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid)
+      if(present(units))then
+        ierru=nf90_put_att(ncid,varid,'units',trim(units))
+      endif
+      if(present(attribute))then
+        ierru=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+      endif
+    else
+      ierr=nf90_def_var(ncid,trim(filename),NF90_FLOAT,idims,varid)
+      if(present(units))then
+        ierru=nf90_put_att(ncid,varid,'units',trim(units))
+      endif
+      if(present(attribute))then
+        ierru=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+      endif
+    endif
+    if (ierru /= nf90_noerr)then
+      write(6,*)'error def_var'
+      write(6,*)trim(nf90_strerror(ierru))
+    endif
+    if (present(units).and.ierru /= nf90_noerr)then
+      write(6,*)'error put_attr 4',trim(units),'varid',varid
+      write(6,*)trim(nf90_strerror(ierru))
+    endif
+    ierr=nf90_put_att(ncid,NF90_GLOBAL,'forecast_hr',forecast_hr)
+    if (ierr /= nf90_noerr)then
+     write(6,*)'put att'
+      write(6,*)trim(nf90_strerror(ierru))
+    endif
+    ierr=nf90_put_att(ncid,NF90_GLOBAL,'timestep',timestep)
+    if (ierr /= nf90_noerr)then
+     write(6,*)'put att'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif 
+    ierr=nf90_enddef(ncid)
+    if (ierr /= nf90_noerr)then
+     write(6,*)'enddef'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,varid,out)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var out'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,ilon,lon)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var lon'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,ilat,lat)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var lat'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,idgridxt,gridxy)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var gridxt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,idgridyt,gridxy)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var gridyt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    ierr=nf90_put_var(ncid,idgridzt,gridz)
+    if(ierr/=nf90_noerr)then
+      write(6,*)'cant put_var gridzt'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+!    oner4=1.
+!    ierr=nf90_put_var(ncid,idtime,oner4)
+!    write(6,*)'juldayat',juldayat,'filename',trim(filename)
+    ierr=nf90_put_var(ncid,idtime,juldayat)
+    deallocate (out,gridxy)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'put_var lat 2'
+    endif
+    ierr=nf90_close(ncid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'close file_writenc'
+      write(6,*)trim(nf90_strerror(ierr))
+     call flush(6)
+    endif
+  
+
+
+  end subroutine chem_io_file_writenc
+  subroutine chem_io_file_writenc3d(datafile, filename,buffer, lat,lon,time,varname, units,attribute,rc)
+    use netcdf
+    use raqmschem_pmgrid_mod, only : cdatestr,fracday,forecast_hr,timestep,iam,cdateat
+    character(len=*),           intent(in)  :: datafile
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:,:,:)
+    real(CHEM_KIND_R4),         intent(in)  :: lat(:,:),lon(:,:)
+    integer,optional,intent(in)             :: time
+    integer,          optional, intent(out) :: rc
+    character (len=*), optional, intent(in) :: varname
+    character (len=*), optional, intent(in) :: units
+    character (len=*), optional, intent(in) :: attribute
+    integer ncid,ierr,varid,dims(3),ilat,ilon,idimzt,lenf
+    real(chem_kind_r4),allocatable :: out(:,:,:,:)
+!    character *19 datestr
+
+    ! -- local variables
+    integer :: localrc
+    real(CHEM_KIND_R4) :: atest
+    integer idimxt,idimyt,idims(4),itime,idims2(2),count(4),start(4),timeval,k
+    logical dodefine,exist,dotime
+
+    integer idgridxt,idgridyt,idtime,i,idgridzt
+    real(CHEM_KIND_R8),allocatable :: gridxy(:),gridz(:)
+    real(CHEM_KIND_R4) :: rtime(1)
+!    call setdatestr(datestr)
+    ! -- begin
+!    write(6,*)'deflate writenc3d',maxval(buffer),minval(buffer)
+!    write(6,*)'varname',present(varname),'filename',trim(filename),'varname',varname
+!    call flush(6)
+!    write(6,*)'shape buffer',shape(buffer),'filename',filename,' var ',varname
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    write(6,*)'writenc3d datafile ',trim(datafile),' varname ',trim(varname)
+!    write(6,*)'present time ',present(time)
+    dodefine=.false.
+    dims=shape(buffer)
+    if(present(time))then
+      timeval=time
+      dotime=.true.
+    else
+      timeval=1
+      dotime=.false.
+    endif
+!    call flush(6)
+
+    inquire(file=trim(datafile),exist=exist)
+    if(.not.present(time) .or. .not.exist)then
+!      write(6,*)'create',iam,trim(datafile)
+!      call flush(6)
+      ierr=nf90_create(trim(datafile),nf90_clobber+nf90_netcdf4,ncid)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'time ',present(time),'exist',exist
+           write(6,*)'zzzz ajl error create no time ',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+!       write(6,*)'create netcdf 3d ',trim(datafile),'ncid',ncid
+!       call flush(6)
+      dodefine=.true.
+    else
+!      write(6,*)'ajl time present',time
+!      call flush(6)
+      if(exist)then
+        dodefine=.false.
+        ierr=nf90_open(trim(datafile),nf90_write,ncid)
+        if (ierr /= nf90_noerr)then
+          write(6,*)'error open',trim(datafile)
+          write(6,*)trim(nf90_strerror(ierr))
+        endif
+        ierr=nf90_inq_varid(ncid,varname,varid)
+!        write(6,*)'ierr ',ierr,' nf90-noerr',nf90_noerr
+!        call flush(6)
+        if (ierr /= nf90_noerr)then
+!          write(6,*)'varname not  defined',varname
+!          call flush(6)
+!         ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+          ierr=nf90_inq_dimid(ncid,'grid_xt',idimxt)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error grid_xt inq'
+              write(6,*)trim(nf90_strerror(ierr))
+              call flush(6)
+          endif
+          ierr=nf90_inq_dimid(ncid,'grid_yt',idimyt)
+          if (ierr /= nf90_noerr)then
+             write(6,*)'error grid_yt inq'
+             write(6,*)trim(nf90_strerror(ierr))
+             call flush(6)
+          endif
+          
+!          ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+!          if (ierr /= nf90_noerr)then
+!             write(6,*)'aerror grid_zt inq'
+!             call flush(6)
+!          endif
+          ierr=nf90_inq_dimid(ncid,'time',itime)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error time inq'
+             write(6,*)trim(nf90_strerror(ierr))
+              call flush(6)
+          endif
+          ierr=nf90_redef(ncid)
+          if (ierr /= nf90_noerr)then
+             write(6,*)'error redef'
+              write(6,*)trim(nf90_strerror(ierr))
+          endif
+          ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+          if (ierr /= nf90_noerr)then
+!              write(6,*)'berror grid_zt inq' 
+!              call flush(6)
+            ierr=nf90_def_dim(ncid,'grid_zt',dims(3),idimzt)
+            if (ierr /= nf90_noerr)then
+              write(6,*)'zzzz second def dim of z failed'
+              write(6,*)trim(nf90_strerror(ierr))
+            endif
+          endif
+          idims(1)=idimxt
+          idims(2)=idimyt
+          idims(3)=idimzt
+          idims(4)=itime
+!          ierr=nf90_def_var(ncid,varname,nf90_float,idims,varid)
+          ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid,chunksizes=[dims(1),dims(2),1,1],shuffle=.true.,deflate_level=1)
+!          write(6,*)'now def_var deflate'
+!          call flush(6)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error define ',varname
+              write(6,*)'ncid',ncid,'idims',idims,'nf90_float',nf90_float
+              write(6,*)'dims',dims
+              write(6,*)trim(nf90_strerror(ierr))
+              flush(6)
+          endif
+          if(present(units))then
+            ierr=nf90_put_att(ncid,varid,'units',trim(units))
+            if (ierr /= nf90_noerr)then
+              write(6,*)'error put_att3 ',trim(varname),trim(units)
+              write(6,*)trim(nf90_strerror(ierr))
+              flush(6)
+            endif
+          endif
+          if(present(attribute))then
+            ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+          endif
+          ierr=nf90_put_att(ncid,NF90_GLOBAL,'forecast_hr',forecast_hr)
+          if (ierr /= nf90_noerr)then
+            write(6,*)'put att'
+            write(6,*)trim(nf90_strerror(ierr))
+          endif
+          ierr=nf90_put_att(ncid,NF90_GLOBAL,'timestep',timestep)
+          if (ierr /= nf90_noerr)then
+            write(6,*)'put att'
+            write(6,*)trim(nf90_strerror(ierr))
+          endif
+          ierr=nf90_put_att(ncid,NF90_GLOBAL,'CDATE',cdateat)
+          if (ierr /= nf90_noerr)then
+            write(6,*)'put att cdate'
+            write(6,*)trim(nf90_strerror(ierr))
+          endif
+          ierr=nf90_enddef(ncid)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error enddef ',varname
+              write(6,*)trim(nf90_strerror(ierr))
+          endif
+        endif 
+!        write(6,*)'ajl bottom if'
+!        call flush(6)
+
+      elseif(timeval<=1)then
+        inquire(file=trim(datafile),exist=exist)
+        if(exist)then
+          dodefine=.false.
+          ierr=nf90_open(trim(datafile),nf90_write,ncid)
+          ierr=nf90_inq_varid(ncid,varname,varid)
+          if (ierr /= nf90_noerr)then
+!            write(6,*)'varname not defined',varname
+!            ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+            ierr=nf90_inq_dimid(ncid,'grid_xt',idimxt)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error grid_xt inq'
+                call flush(6)
+            endif
+            ierr=nf90_inq_dimid(ncid,'grid_yt',idimyt)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error grid_yt inq'
+                call flush(6)
+            endif
+            ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'cerror grid_zt inq'
+                call flush(6)
+            endif
+            ierr=nf90_inq_dimid(ncid,'time',itime)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error time inq'
+                call flush(6)
+            endif
+            idims(1)=idimxt
+            idims(2)=idimyt
+            idims(3)=idimzt
+            idims(4)=itime
+            ierr=nf90_redef(ncid)
+            if (ierr /= nf90_noerr)then
+               write(6,*)'error redef'
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+            ierr=nf90_def_var(ncid,varname,nf90_float,idims,varid)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'erroro define ',varname
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+            if(present(units))then
+              ierr=nf90_put_att(ncid,varid,'units',trim(units))
+              if (ierr /= nf90_noerr)then
+                write(6,*)'error put att varname',trim(varname),'units',trim(units)
+                write(6,*)'ncid',ncid,'varid',varid
+                write(6,*)trim(nf90_strerror(ierr))
+                call flush(6)
+              endif
+            endif
+          if(present(attribute))then
+            ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+          endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'forecast_hr',forecast_hr)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'timestep',timestep)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'CDATE',cdateat)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att cdate'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_enddef(ncid)
+      if (ierr /= nf90_noerr)then
+       write(6,*)'zzzz ajl enddef'
+       write(6,*)trim(nf90_strerror(ierr))
+      endif
+            ierr=nf90_enddef(ncid)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error enddef ',varname
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+          endif
+        else
+!          ierr=nf90_create(trim(datafile),NF90_64BIT_OFFSET,ncid)
+          ierr=nf90_create(trim(datafile),NF90_clobber+nf90_netcdf4,ncid)
+          if (ierr /= nf90_noerr)then
+            write(6,*)'error create ',trim(datafile)
+            write(6,*)trim(nf90_strerror(ierr))
+          endif
+          dodefine=.true.
+        endif
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error create time',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+      else
+        ierr=nf90_open(trim(datafile),NF90_WRITE,ncid)
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error open time ',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+        dodefine=.false.
+      endif
+    endif
+    dims=shape(buffer)
+    allocate (out(dims(1),dims(2),dims(3),1))
+    out(:,:,:,1)=buffer(:,:,:)
+!    write(6,*)'dims',dims
+!    call flush(6)
+!    write(6,*)'dodefine',dodefine
+!    call flush(6)
+    if(dodefine)then
+!      write(6,*)'top define ncid ',ncid
+!      call flush(6)
+      ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_xt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_dim(ncid,'grid_yt',dims(2),idimyt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_yt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_dim(ncid,'grid_zt',dims(3),idimzt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_zt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_var(ncid,'grid_xt',nf90_double,idimxt,idgridxt)
+      ierr=nf90_def_var(ncid,'grid_yt',nf90_double,idimyt,idgridyt)
+      ierr=nf90_def_var(ncid,'grid_zt',nf90_double,idimzt,idgridzt)
+!      write(6,*)'idimxt',idimxt,idimyt,idimzt,'time',present(time)
+!      call flush(6)
+      if(present(time))then
+        ierr=nf90_def_dim(ncid,'time',NF90_UNLIMITED,itime)
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz3dall ajl error def_dim time'
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+      else
+!        write(6,*)'define time as one'
+!        call flush(6)
+        ierr=nf90_def_dim(ncid,'time',1,itime)
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz3dbb ajl error def_dim time'
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+      endif
+      ierr=nf90_def_var(ncid,'time',nf90_double,itime,idtime)
+      ierr=nf90_put_att(ncid,idtime,'long_name','time')
+!      ierr=nf90_put_att(ncid,idtime,'units','days since '//trim(cdatestr))
+      ierr=nf90_put_att(ncid,idtime,'cartesian_axis','T')
+!      !ierr=nf90_put_att(ncid,idtime,'calendar_type','JULIAN')
+!      !ierr=nf90_put_att(ncid,idtime,'calendar','JULIAN')
+      ierr=nf90_put_att(ncid,idgridxt,'long_name','T-cell longitude')
+      ierr=nf90_put_att(ncid,idgridxt,'units','degrees_E')
+      ierr=nf90_put_att(ncid,idgridxt,'cartesian_axis','X')
+      ierr=nf90_put_att(ncid,idgridyt,'long_name','T-cell latitude')
+      ierr=nf90_put_att(ncid,idgridyt,'units','degrees_N')
+      ierr=nf90_put_att(ncid,idgridyt,'cartesian_axis','Y')
+      ierr=nf90_put_att(ncid,idgridzt,'cartesian_axis','Z')
+      idims(1)=idimxt
+      idims(2)=idimyt
+      idims(3)=idimzt
+      idims(4)=itime
+!      write(6,*)'idims4 ',idims
+!      call flush(6)
+      idims2(1)=idimxt
+      idims2(2)=idimyt
+
+      ierr=nf90_def_var(ncid,'lat',nf90_float,idims2,ilat) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var write3dnc lat'
+           write(6,*)trim(nf90_strerror(ierr))
+           call flush(6)
+      endif
+      ierr=nf90_def_var(ncid,'lon',nf90_float,idims2,ilon) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var lon write3dnc'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      if(present(varname))then
+        ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid,chunksizes=[dims(1),dims(2),1,1],shuffle=.true.,deflate_level=1)
+      else
+        ierr=nf90_def_var(ncid,trim(filename),NF90_FLOAT,idims,varid)
+      endif
+      if (ierr /= nf90_noerr)then
+           if(present(varname))then
+           write(6,*)'zzzz3d ajl error def_var varname ',varname
+           endif
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      if(present(units))then
+        ierr=nf90_put_att(ncid,varid,'units',trim(units))
+        if (ierr /= nf90_noerr)then
+          write(6,*)'erro put_att'
+          write(6,*)trim(nf90_strerror(ierr))
+        endif
+      endif
+      if(present(attribute))then
+        ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+      endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'forecast_hr',forecast_hr)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'timestep',timestep)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_att(ncid,NF90_GLOBAL,'CDATE',cdateat)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put att cdate'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_enddef(ncid)
+      if (ierr /= nf90_noerr)then
+       write(6,*)'zzzz ajl enddef'
+       write(6,*)trim(nf90_strerror(ierr))
+      endif
+      rtime=fracday
+      ierr=nf90_put_var(ncid,idtime,rtime)
+      allocate (gridxy(dims(1)))
+      do i=1,dims(1)
+        gridxy(i)=i
+      end do
+      ierr=nf90_put_var(ncid,idgridxt,gridxy)
+      ierr=nf90_put_var(ncid,idgridyt,gridxy)
+      allocate (gridz(dims(3)))
+      do i=1,dims(3)
+        gridz(i)=i
+      end do
+      ierr=nf90_put_var(ncid,idgridzt,gridz)
+      deallocate(gridxy,gridz)
+    endif
+    if(present(time))then
+      start=1
+      start(4)=time
+      count(1)=dims(1)
+      count(2)=dims(2)
+      count(3)=dims(3)
+      count(4)=1
+      if(present(varname))then
+        ierr=nf90_inq_varid(ncid,trim(varname),varid)
+      else
+        ierr=nf90_inq_varid(ncid,trim(filename),varid)
+      endif
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error inq_varid aa'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+!      if(varname(1:3).eq.'n2o')then
+!        write(6,*)'put n2o',shape(out)
+!        do k=1,63
+!          write(6,*)'out ',trim(varname),k,maxval(out(:,:,k,1))
+!          call flush(6)
+!        end do
+!      endif
+      ierr=nf90_put_var(ncid,varid,out,start=start,count=count)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put var outtime ',time
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+    else
+      ierr=nf90_put_var(ncid,varid,out)
+      if (ierr /= nf90_noerr)then
+         write(6,*)'zzzz ajl put var out'
+         write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+    if(dodefine)then
+      ierr=nf90_put_var(ncid,ilon,lon)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lon'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_var(ncid,ilat,lat)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lat'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+    deallocate (out)
+    ierr=nf90_close(ncid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz3d ajl error close'
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+    endif
+
+  end subroutine chem_io_file_writenc3d
+  subroutine chem_io_file_writenc2d(datafile, filename,buffer, lat,lon,time,varname, units,attribute,rc)
+    use netcdf
+    use raqmschem_pmgrid_mod,only : cdatestr,fracday,iam
+    character(len=*),           intent(in)  :: datafile
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:,:)
+    real(CHEM_KIND_R4),         intent(in)  :: lat(:,:),lon(:,:)
+    integer,optional,intent(in)             :: time
+    integer,          optional, intent(out) :: rc
+    character (len=*), optional, intent(in) :: varname
+    character (len=*), optional, intent(in) :: units
+    character (len=*), optional, intent(in) :: attribute
+    integer ncid,ierr,varid,dims(2),ilat,ilon,idimzt,lenf,i
+    real(chem_kind_r4),allocatable :: out(:,:,:)
+
+    ! -- local variables
+    integer :: localrc
+    real(CHEM_KIND_R4) :: atest
+    integer idimxt,idimyt,idims(3),itime,idims2(2),count(3),start(3)
+    logical dodefine,exist
+    integer idgridxt,idgridyt,idtime
+    real(CHEM_KIND_R8),allocatable :: gridxy(:)
+    real(CHEM_KIND_R8) :: rtime(1)
+!    character *19 datestr
+!    call setdatestr(datestr)
+    
+
+    ! -- begin
+!    write(6,*)'writenc3d',maxval(buffer),minval(buffer)
+!    write(6,*)'shape buffer',shape(buffer),'filename',filename,' var ',varname
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    inquire(file=trim(datafile),exist=exist)
+!    write(6,*)'2d netcdf exist',exist,trim(datafile)
+!    call flush(6)
+    if(.not.present(time).and. .not.exist)then
+      ierr=nf90_create(trim(datafile),nf90_clobber+nf90_netcdf4,ncid)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error create no time',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+!      write(6,*)'ajl create'
+!      call flush(6)
+      dodefine=.true.
+    else
+!      if(present(time))then
+!        write(6,*)'ajl time present',time
+!        !call flush(6)
+!      endif
+      if(exist)then
+        dodefine=.false.
+        ierr=nf90_open(trim(datafile),nf90_write,ncid)
+        ierr=nf90_inq_varid(ncid,varname,varid)
+        if (ierr /= nf90_noerr)then
+!          write(6,*)'varname not defined',varname
+!          ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+          ierr=nf90_inq_dimid(ncid,'grid_xt',idimxt)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error grid_xt inq'
+              call flush(6)
+          endif
+          ierr=nf90_inq_dimid(ncid,'grid_yt',idimyt)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error grid_yt inq'
+              call flush(6)
+          endif
+!          ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+!          if (ierr /= nf90_noerr)then
+              !write(6,*)'derror grid_zt inq'
+!              call flush(6)
+!          endif
+          ierr=nf90_inq_dimid(ncid,'time',itime)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'error time inq'
+              call flush(6)
+          endif
+          idims(1)=idimxt
+          idims(2)=idimyt
+          idims(3)=itime
+          ierr=nf90_redef(ncid)
+          if (ierr /= nf90_noerr)then
+             write(6,*)'error redef'
+              write(6,*)trim(nf90_strerror(ierr))
+          endif
+!          ierr=nf90_def_var(ncid,varname,nf90_float,idims,varid)
+          ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid,chunksizes=[dims(1),28,1], &
+              shuffle=.true.,deflate_level=1)
+          if (ierr /= nf90_noerr)then
+              write(6,*)'erroro define ',varname
+              write(6,*)trim(nf90_strerror(ierr))
+          endif
+          if(present(units))then
+            ierr=nf90_put_att(ncid,varid,'units',trim(units))
+            if (ierr /= nf90_noerr)then
+              write(6,*)'error put_att 1,trim(varname),trim(units)'
+              write(6,*)trim(nf90_strerror(ierr))
+            endif
+          endif
+          if(present(attribute))then
+!            write(6,*)'put -att ',trim(attribute)
+            ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+            if (ierr /= nf90_noerr)then
+              write(6,*)'error put_att 1,trim(varname),trim(attribute)'
+              write(6,*)trim(nf90_strerror(ierr))
+            endif
+          endif
+          ierr=nf90_enddef(ncid)
+          if (ierr /= nf90_noerr)then
+                write(6,*)'error enddef ',varname
+                write(6,*)trim(nf90_strerror(ierr))
+          endif
+        endif
+      elseif(time<=1)then
+        inquire(file=trim(datafile),exist=exist)
+!        write(6,*)'datafile',trim(datafile),'exist',exist
+!        call flush(6)
+        if(exist)then
+          dodefine=.false.
+          ierr=nf90_open(trim(datafile),nf90_write,ncid)
+          ierr=nf90_inq_varid(ncid,varname,varid)
+          if (ierr /= nf90_noerr)then
+!            write(6,*)'varname not defined',varname
+!            ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+            ierr=nf90_inq_dimid(ncid,'grid_xt',idimxt)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error grid_xt inq'
+                call flush(6)
+            endif
+            ierr=nf90_inq_dimid(ncid,'grid_yt',idimyt)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error grid_yt inq'
+                call flush(6)
+            endif
+!            ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+!            !if (ierr /= nf90_noerr)then
+!                write(6,*)'ferror grid_zt inq'
+!                call flush(6)
+!            endif
+            ierr=nf90_inq_dimid(ncid,'time',itime)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error time inq'
+                call flush(6)
+            endif
+            idims(1)=idimxt
+            idims(2)=idimyt
+            idims(3)=itime
+            ierr=nf90_redef(ncid)
+            if (ierr /= nf90_noerr)then
+               write(6,*)'error redef'
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+            if(iam.eq.0)then
+              write(6,*)'def var 2d ',trim(varname)
+            endif
+            ierr=nf90_def_var(ncid,varname,nf90_float,idims,varid)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'erroro define ',varname
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+            if(present(units))then
+               ierr=nf90_put_att(ncid,varid,'units',trim(units))
+              if (ierr /= nf90_noerr)then
+                write(6,*)'error put_att 2',trim(varname),trim(units)
+                write(6,*)trim(nf90_strerror(ierr))
+              endif
+            endif
+            if(present(attribute))then
+               ierr=nf90_put_att(ncid,varid,'attribute',trim(attribute))
+              if (ierr /= nf90_noerr)then
+                write(6,*)'error put_att attribuet 2',trim(varname),trim(units)
+                write(6,*)trim(nf90_strerror(ierr))
+              endif
+            endif
+            ierr=nf90_enddef(ncid)
+            if (ierr /= nf90_noerr)then
+                write(6,*)'error enddef ',varname
+                write(6,*)trim(nf90_strerror(ierr))
+            endif
+          endif
+        else
+!          write(6,*)'datafile does not exist',trim(datafile),' so create '
+!          call flush(6)
+!          ierr=nf90_create(trim(datafile),NF90_64BIT_OFFSET,ncid)
+          ierr=nf90_create(trim(datafile),NF90_clobber+nf90_netcdf4,ncid)
+          dodefine=.true.
+        endif
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error create time',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+      else
+!        write(6,*)'open datafile',trim(datafile)
+!        call flush(6)
+        ierr=nf90_open(trim(datafile),NF90_WRITE,ncid)
+        if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error open time',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+        endif
+        dodefine=.false.
+      endif
+    endif
+    if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz ajl error open ',trim(datafile)
+      call flush(6)
+    endif
+    dims=shape(buffer)
+    allocate (out(dims(1),dims(2),1))
+    out(:,:,1)=buffer(:,:)
+!    write(6,*)'dims',dims
+!    call flush(6)
+!    write(6,*)'dodefine',dodefine
+!    call flush(6)
+    if(dodefine)then
+      ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_xt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_dim(ncid,'grid_yt',dims(2),idimyt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_yt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+!      ierr=nf90_def_dim(ncid,'grid_zt',dims(3),idimzt)
+!      if (ierr /= nf90_noerr)then
+!           write(6,*)'zzzz ajl error def_dim grid_zt'
+!           write(6,*)trim(nf90_strerror(ierr))
+!      endif
+      ierr=nf90_def_dim(ncid,'time',NF90_UNLIMITED,itime)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim time'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_var(ncid,'time',nf90_double,itime,idtime)
+      ierr=nf90_def_var(ncid,'grid_xt',nf90_double,idimxt,idgridxt)
+      ierr=nf90_def_var(ncid,'grid_yt',nf90_double,idimyt,idgridyt)
+      ierr=nf90_put_att(ncid,idtime,'long_name','time')
+      ierr=nf90_put_att(ncid,idtime,'units','days since '//trim(cdatestr))
+      ierr=nf90_put_att(ncid,idtime,'cartesian_axis','T')
+      ierr=nf90_put_att(ncid,idtime,'calendar_type','JULIAN')
+      ierr=nf90_put_att(ncid,idtime,'calendar','JULIAN')
+      ierr=nf90_put_att(ncid,idgridxt,'long_name','T-cell longitude')
+      ierr=nf90_put_att(ncid,idgridxt,'units','degrees_E')
+      ierr=nf90_put_att(ncid,idgridxt,'cartesian_axis','X')
+      ierr=nf90_put_att(ncid,idgridyt,'long_name','T-cell latitude')
+      ierr=nf90_put_att(ncid,idgridyt,'units','degrees_N')
+      ierr=nf90_put_att(ncid,idgridyt,'cartesian_axis','Y')
+      idims(1)=idimxt
+      idims(2)=idimyt
+      idims(3)=itime
+      idims2(1)=idimxt
+      idims2(2)=idimyt
+
+      ierr=nf90_def_var(ncid,'lat',nf90_float,idims2,ilat) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var write3dnc lat'
+           write(6,*)trim(nf90_strerror(ierr))
+           call flush(6)
+      endif
+      ierr=nf90_def_var(ncid,'lon',nf90_float,idims2,ilon) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var lon write3dnc'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      if(present(varname))then
+        ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid,chunksizes=[dims(1),28,1],shuffle=.true.,deflate_level=1)
+      else
+        ierr=nf90_def_var(ncid,trim(filename),NF90_FLOAT,idims,varid)
+        write(6,*)'no varname'
+      endif
+      if (ierr /= nf90_noerr)then
+           if(present(varname))then
+           write(6,*)'zzzz ajl error def_var varname',varname
+           endif
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      if(present(units))then
+        ierr=nf90_put_att(ncid,varid,'units',trim(units))
+        if (ierr /= nf90_noerr)then
+          write(6,*)'error put_att 3',trim(units)
+          write(6,*)trim(nf90_strerror(ierr))
+        endif
+      endif
+      ierr=nf90_enddef(ncid)
+      if (ierr /= nf90_noerr)then
+       write(6,*)'zzzz ajl enddef'
+       write(6,*)trim(nf90_strerror(ierr))
+      endif
+      rtime=fracday
+      ierr=nf90_put_var(ncid,idtime,rtime)
+      allocate (gridxy(dims(1)))
+      do i=1,dims(1)
+        gridxy(i)=i
+      end do
+      ierr=nf90_put_var(ncid,idgridxt,gridxy)
+      ierr=nf90_put_var(ncid,idgridyt,gridxy)
+      deallocate(gridxy)
+    endif
+    if(present(time))then
+      start=1
+      start(3)=time
+      count(1)=dims(1)
+      count(2)=dims(2)
+      count(3)=1
+      if(present(varname))then
+        ierr=nf90_inq_varid(ncid,trim(varname),varid)
+      else
+        ierr=nf90_inq_varid(ncid,trim(filename),varid)
+      endif
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error inq_varid bb'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_var(ncid,varid,out,start=start,count=count)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put var outtime ',time
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+    else
+      ierr=nf90_put_var(ncid,varid,out)
+      if (ierr /= nf90_noerr)then
+         write(6,*)'zzzz ajl put var out'
+         write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+    if(dodefine)then
+      ierr=nf90_put_var(ncid,ilon,lon)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lon'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_var(ncid,ilat,lat)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lat'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+    deallocate (out)
+    ierr=nf90_close(ncid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz ajl error close'
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+    endif
+
+  end subroutine chem_io_file_writenc2d
+
+
+  subroutine chem_io_read_2DR4(filename, farray, path, recrange, recsize, recstride, de, bigendian,varname,rc,oldname)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(out) :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: recrange(2)
+    integer,          optional, intent(in)  :: recsize
+    integer,          optional, intent(in)  :: recstride
+    integer,          optional, intent(in)  :: de
+    logical,          optional, intent(in)  :: bigendian
+    character(len=*), optional, intent(in)  :: varname
+    integer,          optional, intent(out) :: rc
+    logical,optional,intent(in) :: oldname
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    integer :: bsize(2),lbuf(1),lenfile
+    logical :: localIOflag,exist,doread
+    character(len=CHEM_MAXSTR) :: datafile,datafiledat
+    real(CHEM_KIND_R4), dimension(:), allocatable :: buffer
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: buffer2d
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1))) )then
+       write(6,*)'filename',filename
+       write(6,*)'farray',size(farray),shape(farray),'di',ide-ids+1,jde-jds+1
+       call flush(6)
+    endif
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    bsize = (/ ite-its+1, jte-jts+1 /)
+    lbuf=(/(bsize(1)*bsize(2))/)
+!    write(6,*)'bsize',bsize
+!    call flush(6)
+    allocate(buffer(bsize(1)*bsize(2)), stat=localrc)
+!    write(6,*)'localrc',localrc
+!    call flush(6)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer = 0._CHEM_KIND_R4
+    allocate(buffer2d(bsize(1),bsize(2)), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer2d", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer2d=0._cHEM_KIND_R4
+!    write(6,*)'localIOflag',localIOflag
+!    call flush(6)
+
+    if (localIOflag) then
+!      write(6,*)'call raqmschem_io_file_name',trim(filename),'path',trim(path)
+!      call flush(6)
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread,oldname=oldname)
+!     write(6,*)'datafile',trim(datafile)
+!     call flush(6)
+!     write(6,*)'present recrange',present(recrange)
+!     call flush(6)
+!     write(6,*)'present recsize',present(recsize)
+!     call flush(6)
+!     write(6,*)'present recstride',present(recstride)
+!     call flush(6)
+!!     write(6,*)'recrange',recrange,'recsize',recsize,'recstride',recstride
+!!     call flush(6)
+!     write(6,*)'call chem_io_file_read',trim(datafile),'present bigendian',present(bigendian)
+!     call flush(6)
+     if(present(recrange))then
+!       write(6,*)'recrange',recrange
+!       !call flush(6)
+     endif
+!     if(present(recsize))then
+!       write(6,*)'recsize',recsize
+!       call flush(6)
+!     endif
+      if(present(varname))then
+!        write(6,*)'varname',varname,'shape',shape(buffer2d)
+!        call flush(6)
+!        add in netcdf read for our 3d variables
+!        check if netcdf file is there
+         inquire(file=datafile,exist=exist)
+         if(exist)then
+           call chem_io_file_read_2d_nc(datafile,buffer2d,varname=varname,rc=localrc)
+!           write(6,*)'file_read_2d from nc',maxval(buffer2d),' ',trim(varname)
+!           call flush(6)
+         else
+!          check if .dat file is there instead
+           lenfile=len_trim(datafile)
+           datafiledat=datafile(1:lenfile-2)//'dat'
+           inquire(file=datafiledat,exist=exist)
+           if(exist)then
+             call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+             deallocate(buffer2d)
+           else
+             write(6,*)'neither .dat nor .nc exist'
+             stop
+           endif
+         endif
+      elseif(present(bigendian))then
+        call bigchem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      else
+        call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      endif
+!       write(6,*)'chem_io_file_read ',localrc
+!      call flush(6)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!         write(6,'("chem_data_read 2D: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!         trim(datafile), minval(buffer), maxval(buffer)
+!         write(6,*)'filename',filename
+!      endif
+    end if
+!    write(6,*)'call chem_comm_bcast',shape(buffer),'localIOflag',localIOflag,'bsize',bsize
+!    call flush(6)
+!    call mpi_barrier(tilecomm,localrc)
+    if(present(varname).and.allocated(buffer2d))then
+      buffer=reshape(buffer2d,lbuf)
+    endif
+
+    call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
+!     write(6,*)'after bcast',localrc
+!     call flush(6)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if(present(varname))then
+      buf2d = reshape(buffer, bsize)
+!      write(6,*)'buf2d ',trim(varname),maxval(buf2d)
+    else
+      buf2d = reshape(buffer, bsize)
+    endif
+
+    farray = buf2d(ids:ide, jds:jde) 
+     
+    deallocate(buffer, buf2d, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(varname))then
+      deallocate(buffer2d)
+    endif
+
+  end subroutine chem_io_read_2DR4
+
+  subroutine chem_io_read_2DR4angle(filename, farray, iend,jend,path, recrange, recsize, recstride, de, bigendian,varname,rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(out) :: farray(:,:)
+    integer,                    intent(in) :: iend,jend
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: recrange(2)
+    integer,          optional, intent(in)  :: recsize
+    integer,          optional, intent(in)  :: recstride
+    integer,          optional, intent(in)  :: de
+    logical,          optional, intent(in)  :: bigendian
+    character(len=*), optional, intent(in)  :: varname
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte,i,j
+    integer :: bsize(2),lbuf(1)
+    logical :: localIOflag,doread
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:), allocatable :: buffer
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: buffer2d
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (iend-its+1)*(jend-jts+1))) )then
+       write(6,*)'filename',filename
+       write(6,*)'its',its,jts,'iend',iend,jend
+       write(6,*)'farray',size(farray),shape(farray),'di',iend-its+1,jend-jts+1
+       call flush(6)
+    endif
+    if (chem_rc_test((size(farray) /= (iend-its+1)*(jend-jts+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    bsize = (/ iend-its+1, jend-jts+1 /)
+    lbuf=(/(bsize(1)*bsize(2))/)
+!    write(6,*)'bsize',bsize
+!    call flush(6)
+    allocate(buffer(bsize(1)*bsize(2)), stat=localrc)
+!    write(6,*)'localrc',localrc
+!    call flush(6)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer = 0._CHEM_KIND_R4
+    allocate(buffer2d(bsize(1),bsize(2)), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer2d", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer2d=0._cHEM_KIND_R4
+!    write(6,*)'localIOflag',localIOflag
+!    call flush(6)
+
+    if (localIOflag) then
+!      write(6,*)'call raqmschem_io_file_name',trim(filename),'path',trim(path)
+!      call flush(6)
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+!     write(6,*)'datafile',trim(datafile)
+!     call flush(6)
+!     write(6,*)'present recrange',present(recrange)
+!     call flush(6)
+!     write(6,*)'present recsize',present(recsize)
+!     call flush(6)
+!     write(6,*)'present recstride',present(recstride)
+!     call flush(6)
+!!     write(6,*)'recrange',recrange,'recsize',recsize,'recstride',recstride
+!!     call flush(6)
+!     write(6,*)'call chem_io_file_read',trim(datafile),'present bigendian',present(bigendian)
+!     call flush(6)
+     if(present(recrange))then
+!       write(6,*)'recrange',recrange
+!       !call flush(6)
+     endif
+!     if(present(recsize))then
+!       write(6,*)'recsize',recsize
+!       call flush(6)
+!     endif
+      if(present(varname))then
+!        write(6,*)'varname',varname,'shape',shape(buffer2d)
+!        call flush(6)
+!        add in netcdf read for our 3d variables
+         call chem_io_file_read_2d_nc(datafile,buffer2d,varname=varname,rc=localrc)
+!         write(6,*)'file_read_2d from nc',maxval(buffer2d),' ',trim(varname)
+!         call flush(6)
+      elseif(present(bigendian))then
+        call bigchem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      else
+        call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      endif
+!       write(6,*)'chem_io_file_read ',localrc
+!      call flush(6)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!         write(6,'("chem_data_read 2D: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!         trim(datafile), minval(buffer), maxval(buffer)
+!         write(6,*)'filename',filename
+!      endif
+    end if
+!    write(6,*)'call chem_comm_bcast',shape(buffer),'localIOflag',localIOflag,'bsize',bsize
+!    call flush(6)
+!    call mpi_barrier(tilecomm,localrc)
+    if(present(varname))then
+      buffer=reshape(buffer2d,lbuf)
+    endif
+
+    call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
+!     write(6,*)'after bcast',localrc
+!     call flush(6)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if(present(varname))then
+      buf2d = reshape(buffer, bsize)
+!      write(6,*)'buf2d ',trim(varname),maxval(buf2d)
+    else
+      buf2d = reshape(buffer, bsize)
+    endif
+
+!    farray = buf2d(ids:ide, jds:jde) 
+    farray=buf2d(:,:)
+!    if(present(varname))then
+!       write(6,*)trim(varname),maxval(buf2d),minval(buf2d)
+!    endif
+!    do j=jds,jde
+!      do i=ids,ide
+!        if(buf2d(i,j)<0.0)then
+!          if(present(varname))then
+!          write(6,*)trim(varname),i,j,tile,buf2d(i,j)
+          !endif
+!        endif
+!      end do
+!    end do
+#if 0
+    do j=jds,jde
+      do i=ids,ide
+        if(isnan(buf2d(i,j)))then
+          write(6,*)'2d isnan',i,j
+          call flush(6)
+        endif
+      end do
+    end do
+#endif
+!    write(6,*)'fill farray from buf2d ',ids,ide,'jds',jds,jde,maxval(farray),trim(varname)
+!    call flush(6)
+!    write(6,*)'farray',shape(farray)
+!    call flush(6)
+     
+    deallocate(buffer, buf2d, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(varname))then
+      deallocate(buffer2d)
+    endif
+
+  end subroutine chem_io_read_2DR4angle
+
+  subroutine chem_io_read_3DR4(filename, farray, path, recrange, recsize, recstride, de, bigendian,varname,rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(out) :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: recrange(2)
+    integer,          optional, intent(in)  :: recsize
+    integer,          optional, intent(in)  :: recstride
+    integer,          optional, intent(in)  :: de
+    logical,          optional, intent(in)  :: bigendian
+    character(len=*), optional, intent(in)  :: varname
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte,i,j,k
+    integer :: bsize(3),lbuf(1)
+    logical :: localIOflag,doread
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: buffer
+    real(CHEM_KIND_R4), dimension(:,:,:),     allocatable :: buffer3d
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable, target :: buf3d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    bsize = (/ ite-its+1, jte-jts+1, size(farray, dim=3) /)
+    lbuf=(/(bsize(1)*bsize(2)*bsize(3))/)
+
+    ! -- check size consistency
+    if ( size(farray) /= (ide-ids+1)*(jde-jds+1)*bsize(3) )then
+      write(6,*)'size farray',size(farray),shape(farray)
+      write(6,*)'ix',ide-ids+1,jde-jds+1,bsize(3)
+      call flush(6)
+    endif
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*bsize(3)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buffer(bsize(1)*bsize(2)*bsize(3)), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer = 0._CHEM_KIND_R4
+    allocate(buffer3d(bsize(1),bsize(2),bsize(3)), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer3d", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buffer3d=0._cHEM_KIND_R4
+
+    if (localIOflag) then
+!      write(6,*)'filename',trim(filename),'varname',varname,'buber',shape(buffer3d)
+!      call flush(6)
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+!      write(6,*)'present varname',present(varname)
+ 
+      if(present(varname))then
+!        add in netcdf read for our 3d variables
+!         write(6,*)'varname',trim(varname)
+!         call flush(6)
+         call chem_io_file_read_3d_nc(datafile,buffer3d,varname=varname,rc=localrc)
+!         write(6,*)'localec',localrc,trim(varname)
+!         call flush(6)
+         if(localrc/=0.0)then
+           write(6,*)'erro read 3d ',trim(varname),'from file',trim(datafile)
+           call flush(6)
+           call killit('error io')
+         endif
+      elseif(present(bigendian))then
+        call bigchem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      else
+        call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!        write(6,'("chem_data_read 3d: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(buffer3d), maxval(buffer3d)
+!        write(6,*)'filename',trim(filename)
+      !endif
+    end if
+    buffer=reshape(buffer3d,lbuf)
+
+    call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,bsize(3)), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = reshape(buffer, bsize)
+
+    farray = buf3d(ids:ide, jds:jde, :)
+#if 0
+    do j=jds,jde
+      do i=ids,ide
+        do k=1,bsize(3)
+        if(isnan(buf3d(i,j,k)))then
+          write(6,*)'3d isnan',i,j,k
+          call flush(6)
+        endif
+        end do
+      end do
+    end do
+#endif
+     
+    deallocate(buffer, buf3d, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+  end subroutine chem_io_read_3DR4
+
+
+  subroutine chem_io_write_2DR4(filename, farray, path, pos, de, time,varname,units,attribute,rc)
+    use netcdf
+    use chem_comm_mod, only : chem_comm_get
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(in)  :: time
+    character(len=*),optional,  intent(in)  :: varname
+    character(len=*),optional,  intent(in)  :: units
+    character(len=*),optional,  intent(in)  :: attribute
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d, recvbuf
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer ncid,ierr,lenf,mype
+    lenf=len_trim(filename)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    call chem_comm_get(localpe=mype)
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'get lat2d,lon2d de',de
+!    call flush(6)
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!    write(6,*)'subde',de,'pos',pos,'ids',ids,ide,'jds',jds,jde,'its',its,ite,'jts',jts,jte
+!    call flush(6)
+!     write(6,*)'got latlon',localrc
+!     call flush(6)
+!    write(6,*)'lbound ',lbound(lat2dr8)
+!    write(6,*)'ubound ',ubound(lat2dr8)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buf2d = 0._CHEM_KIND_R4
+
+    buf2d(ids:ide, jds:jde) = farray
+!    write(6,*)'buf2d',ids,ide,'jds',jds,jde,'shapefarray',shape(farray)
+!    write(6,*)'its',its,ite,'jts',jts,jte
+!    call flush(6)
+
+    allocate(recvbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+!    write(6,*)'lat2d',maxval(lat2d),minval(lat2d),'shape',shape(lat2d)
+!    write(6,*)'lon2d',maxval(lon2d),minval(lon2d),'shape',shape(lon2d)
+!    call flush(6)
+!    write(6,*)'shape recvbuf',shape(recvbuf)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+    latbuf=0._CHEM_KIND_R4
+    lonbuf=0._CHEM_KIND_R4
+!     write(6,*)'shape latbuf',shape(latbuf),'recvbuf',shape(recvbuf)
+!    write(70+mype,*)'de',de,ids,ide,jds,jde,'local',localIoflag
+!    call flush(70+mype)
+
+    call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+!      write(6,*)'write_io filename',trim(filename),' path ',trim(path)
+!      call flush(6)
+!      write(6,*)'lonbuf',maxval(lonbuf),minval(lonbuf),'lat',maxval(latbuf),minval(latbuf)
+!      write(6,*)'shape',shape(lonbuf)
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+!      write(6,*)'datafile write ',trim(datafile)
+!      call flush(6)
+!      write(6,*)'shape recvbuf',shape(recvbuf),'size bud2d',size(buf2d)
+      if(filename(lenf-2:lenf).eq.'.nc')then
+!        write(6,*)'do netcdf',trim(datafile)
+!        call flush(6)
+!        call chem_io_file_writenc(datafile, reshape(recvbuf, (/size(buf2d)/)), &
+        if(present(varname))then
+!          write(6,*)'call chem_io_file_writenc2d',trim(datafile),trim(filename),trim(varname)
+!          call flush(6)
+          if(present(units))then
+            if(present(attribute))then
+            call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+            time=time, varname=varname,units=units,attribute=attribute,rc=localrc)
+            else
+            call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+            time=time, varname=varname,units=units,rc=localrc)
+            endif
+          else
+            call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+            time=time, varname=varname,rc=localrc)
+          endif
+        else
+          if(present(units))then
+            call chem_io_file_writenc(datafile, filename,recvbuf,latbuf,lonbuf, &
+            varname=varname,units=units,rc=localrc)
+          else
+            call chem_io_file_writenc(datafile, filename,recvbuf,latbuf,lonbuf, &
+            varname=varname,rc=localrc)
+          endif
+        endif
+      else
+!        write(6,*)'do binary'
+!        call flush(6)
+        call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf2d)/)), &
+        pos=pos, rc=localrc)
+      endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+!      write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+    end if
+
+    deallocate(buf2d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate (lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_write_2DR4
+
+
+  subroutine chem_io_write_3DR4(filename, farray, order, path, pos, de,time, varname,units,rc)
+    use raqmschem_pmgrid_mod, only : iam
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: order
+    character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(in)  :: time
+    integer,          optional, intent(out) :: rc
+    character(len=*),optional,  intent(in)  :: varname
+    character(len=*),optional,  intent(in)  :: units
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: i, j, k, id, jd, lbuf
+    integer :: ids, ide, jds, jde, its, ite, jts, jte, nk,lenf
+    logical :: localIOflag
+    character(len=3) :: localOrder
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: recvbuf
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: buf3d
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer bsize(3)
+!    write(6,*)'chem_io_write_3dR4 input on each node ',maxval(farray),minval(farray),trim(varname)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    localOrder = "ijk"
+    if (present(order)) localOrder = order
+
+    select case (trim(localOrder))
+      case("ikj")
+        ! -- (i,k,j)
+        nk = size(farray,dim=2)
+      case default
+        ! -- default to (i,j,k)
+        nk = size(farray,dim=3)
+    end select
+
+    ! -- check consistency in decomposition
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = 0._CHEM_KIND_R4
+
+    select case (trim(localOrder))
+      case("ikj")
+        do k = 1, nk
+          j = 0
+          do jd = jds, jde
+            j = j + 1
+            i = 0
+            do id = ids, ide
+              i = i + 1
+              buf3d(id, jd, k) = farray(i, k, j)
+            end do
+          end do
+        end do
+      case default
+        buf3d(ids:ide, jds:jde, 1:nk) = farray
+    end select
+
+    lbuf = (ite-its+1)*(jte-jts+1)*nk
+    bsize = (/ ite-its+1, jte-jts+1,nk /)
+    allocate(recvbuf(lbuf), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+
+    call chem_comm_reduce(reshape(buf3d, (/lbuf/)), recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+    latbuf=0.
+    lonbuf=0.
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+      lenf=len_trim(filename)
+      if(filename(lenf-2:lenf).eq.'.nc')then
+        buf3d=reshape(recvbuf,bsize)
+!        write(6,*)'chem_io_write_3dR4 buf3d write',maxval(buf3d),minval(buf3d),'shape',shape(buf3d),' ',trim(varname)
+!        call flush(6)
+        if(present(units))then
+          call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname, units=units,rc=localrc)
+        else
+          call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname, rc=localrc)
+        endif
+      else
+        call chem_io_file_write(datafile, recvbuf, rc=localrc)
+      endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+!      endif
+    end if
+
+    deallocate(buf3d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate (lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_write_3DR4
+
+  subroutine chem_io_write_3DR8(filename, farray, order, path, pos, de, rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R8),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: order
+    character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: i, j, k, id, jd, lbuf
+    integer :: ids, ide, jds, jde, its, ite, jts, jte, nk
+    logical :: localIOflag
+    character(len=3) :: localOrder
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: recvbuf
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: buf3d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    localOrder = "ijk"
+    if (present(order)) localOrder = order
+
+    select case (trim(localOrder))
+      case("ikj")
+        ! -- (i,k,j)
+        nk = size(farray,dim=2)
+      case default
+        ! -- default to (i,j,k)
+        nk = size(farray,dim=3)
+    end select
+
+    ! -- check consistency in decomposition
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = 0._CHEM_KIND_R4
+
+    select case (trim(localOrder))
+      case("ikj")
+        do k = 1, nk
+          j = 0
+          do jd = jds, jde
+            j = j + 1
+            i = 0
+            do id = ids, ide
+              i = i + 1
+              buf3d(id, jd, k) = real(farray(i, k, j), kind=CHEM_KIND_R4)
+            end do
+          end do
+        end do
+      case default
+        buf3d(ids:ide, jds:jde, 1:nk) = real(farray, kind=CHEM_KIND_R4)
+    end select
+
+    lbuf = (ite-its+1)*(jte-jts+1)*nk
+    allocate(recvbuf(lbuf), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+
+    call chem_comm_reduce(reshape(buf3d, (/lbuf/)), recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+
+      call chem_io_file_write(datafile, recvbuf, pos=pos, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      if(tile.eq.1)then
+      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+        trim(datafile), minval(recvbuf), maxval(recvbuf)
+      endif
+    end if
+
+    deallocate(buf3d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+  end subroutine chem_io_write_3DR8
+  subroutine chem_io_writenc_2DR4(filename, farray, path, pos, de, time,varname,units,attribute,rc)
+    use netcdf
+    use chem_comm_mod, only : chem_comm_get
+    use raqmschem_pmgrid_mod, only : iam
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(in)  :: time
+    character(len=*),optional,  intent(in)  :: varname
+    character(len=*),optional,  intent(in)  :: units
+    character(len=*),optional,  intent(in)  :: attribute
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d, recvbuf
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer ncid,ierr,lenf,mype
+!    real(chem_kind_r4) :: timer4(1)
+!    integer idtime,idgridxt,idgridyt
+!    integer,allocatable :: gridxy(:)
+    lenf=len_trim(filename)
+!    if(iam.eq.0.and.present(varname))then
+!      write(6,*)'writenc 2d',trim(varname)
+!    endif
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    call chem_comm_get(localpe=mype)
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+!       if(tile.eq.5.and.varname.eq.'colrooh')then
+!       write(6,*)'2d ',varname,'minval',minval(farray)
+!       call flush(6)
+!    endif
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'get lat2d,lon2d de',de
+!    call flush(6)
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!       if(tile.eq.5.and.varname.eq.'colrooh')then
+!          write(6,*)'ids',ids,ide,'jds',jds,jde
+!          call flush(6)
+!          if(ids<=19.and.19<=ide.and.jds<=69.and.69<=jde)then
+!            write(6,*)'colrroh 19,69 ',19-ids+1,69-jds+1,farray(19-ids+1,69-jds+1)
+!          endif
+!       endif
+!    write(6,*)'subde',de,'pos',pos,'ids',ids,ide,'jds',jds,jde,'its',its,ite,'jts',jts,jte
+!    call flush(6)
+!     write(6,*)'got latlon',localrc
+!     call flush(6)
+!    write(6,*)'lbound ',lbound(lat2dr8)
+!    write(6,*)'ubound ',ubound(lat2dr8)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buf2d = 0._CHEM_KIND_R4
+
+    buf2d(ids:ide, jds:jde) = farray
+!    write(6,*)'buf2d',ids,ide,'jds',jds,jde,'shapefarray',shape(farray)
+!    write(6,*)'its',its,ite,'jts',jts,jte
+!    call flush(6)
+
+    allocate(recvbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+!    write(6,*)'lat2d',maxval(lat2d),minval(lat2d),'shape',shape(lat2d)
+!    write(6,*)'lon2d',maxval(lon2d),minval(lon2d),'shape',shape(lon2d)
+!    call flush(6)
+!    write(6,*)'shape recvbuf',shape(recvbuf)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+    latbuf=0._CHEM_KIND_R4
+    lonbuf=0._CHEM_KIND_R4
+!     write(6,*)'shape latbuf',shape(latbuf),'recvbuf',shape(recvbuf)
+!    write(70+mype,*)'de',de,ids,ide,jds,jde,'local',localIoflag
+!    call flush(70+mype)
+
+    call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+!      write(6,*)'write_io filename',trim(filename),' path ',trim(path)
+!      call flush(6)
+!      write(6,*)'lonbuf',maxval(lonbuf),minval(lonbuf),'lat',maxval(latbuf),minval(latbuf)
+!      write(6,*)'shape',shape(lonbuf)
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+!      write(6,*)'datafile write ',trim(datafile)
+!      call flush(6)
+!      write(6,*)'shape recvbuf',shape(recvbuf),'size bud2d',size(buf2d)
+!      if(filename(lenf-2:lenf).eq.'.nc')then
+!        write(6,*)'do netcdf',trim(datafile)
+!        call flush(6)
+!        call chem_io_file_writenc(datafile, reshape(recvbuf, (/size(buf2d)/)), &
+        if(present(varname))then
+!          write(6,*)'call chem_io_file_writenc2d',trim(datafile),trim(filename),trim(varname)
+!          call flush(6)
+!          if(tile.eq.5.and.varname.eq.'colrooh')then
+!          write(6,*)'tile',tile,' write to ',trim(filename),' var ',varname,' max ',maxval(recvbuf),minval(recvbuf)
+          !call flush(6)
+!          write(6,*)'tile',tile,varname,' 19,69 ',recvbuf(19,69)
+!          endif
+          if(present(units))then
+!            if(mype==0)then
+!               write(6,*)'call chem_io_file_writenc2d',trim(varname)
+!            endif
+            if(present(attribute))then
+!              if(iam==0)then
+!                write(6,*)'chem_io_file_writenc2d attribute',trim(attribute)
+!              endif
+              call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+              time=time, varname=varname,units=units,attribute=attribute,rc=localrc)
+            else
+              call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+              time=time, varname=varname,units=units,rc=localrc)
+            endif
+          else
+            call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+            time=time, varname=varname,rc=localrc)
+          endif
+        else
+          if(present(units))then
+            call chem_io_file_writenc(datafile, filename,recvbuf,latbuf,lonbuf, &
+            varname=varname,units=units,rc=localrc)
+          else
+            call chem_io_file_writenc(datafile, filename,recvbuf,latbuf,lonbuf, &
+            varname=varname,rc=localrc)
+          endif
+        endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+!      write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+    end if
+
+    deallocate(buf2d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate (lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_writenc_2DR4
+
+
+  subroutine chem_io_writenc_3DR4(filename, farray, order, path, pos, de,time, varname,units,attribute,rc)
+    use raqmschem_pmgrid_mod, only : iam
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: order
+    character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(in)  :: time
+    integer,          optional, intent(out) :: rc
+    character(len=*),optional,  intent(in)  :: varname
+    character(len=*),optional,  intent(in)  :: units
+    character(len=*),optional,  intent(in)  :: attribute
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: i, j, k, id, jd, lbuf
+    integer :: ids, ide, jds, jde, its, ite, jts, jte, nk,lenf
+    logical :: localIOflag
+    character(len=3) :: localOrder
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: recvbuf
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: buf3d
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer bsize(3)
+!    write(6,*)'chem_io_write_3dR4 input on each node ',maxval(farray),minval(farray),trim(varname)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    localOrder = "ijk"
+    if (present(order)) localOrder = order
+
+    select case (trim(localOrder))
+      case("ikj")
+        ! -- (i,k,j)
+        nk = size(farray,dim=2)
+      case default
+        ! -- default to (i,j,k)
+        nk = size(farray,dim=3)
+    end select
+
+    ! -- check consistency in decomposition
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = 0._CHEM_KIND_R4
+
+    select case (trim(localOrder))
+      case("ikj")
+        do k = 1, nk
+          j = 0
+          do jd = jds, jde
+            j = j + 1
+            i = 0
+            do id = ids, ide
+              i = i + 1
+              buf3d(id, jd, k) = farray(i, k, j)
+            end do
+          end do
+        end do
+      case default
+        buf3d(ids:ide, jds:jde, 1:nk) = farray
+    end select
+
+    lbuf = (ite-its+1)*(jte-jts+1)*nk
+    bsize = (/ ite-its+1, jte-jts+1,nk /)
+    allocate(recvbuf(lbuf), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+!    write(6,*)iam,'chem_comm_reduce'
+!    call flush(6)
+    call chem_comm_reduce(reshape(buf3d, (/lbuf/)), recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+!    write(6,*)iam,'did chem_comm_reduce'
+!    call flush(6)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+    latbuf=0.
+    lonbuf=0.
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)iam,'localIoflag',localIOflag
+!    call flush(6)
+    if (localIOflag) then
+!      write(6,*)'present path ',present(path)
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+      lenf=len_trim(filename)
+!      write(6,*)'3d datafile',trim(datafile),'filenname',trim(filename),'path',trim(path)
+!      call flush(6)
+!      if(filename(lenf-2:lenf).eq.'.nc')then
+        buf3d=reshape(recvbuf,bsize)
+!        write(6,*)'chem_io_write_3dR4 buf3d write',maxval(buf3d),minval(buf3d),'shape',shape(buf3d),' ',trim(varname)
+!        call flush(6)
+!        if(tile.eq.2)then
+!          if(varname.eq.'brcl')then
+!            write(6,*)'brcl write',buf3d(74,32,1)
+!            call flush(6)
+!          endif
+!        endif
+!        write(6,*)'chem_io_file_writenc3d ',trim(datafile)
+!        call flush(6)
+        if(present(units))then
+          if(present(attribute))then
+            call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname,  &
+            units=units,attribute=attribute,rc=localrc)
+          else
+            call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname, units=units,rc=localrc)
+          endif
+        else
+          call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname, rc=localrc)
+        endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+!      endif
+    end if
+!    write(6,*)iam,'did write'
+!    call flush(6)
+
+    deallocate(buf3d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate(lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_writenc_3DR4
+  subroutine chem_io_writenc_3DR4_debug(filename, farray, varname,order, path,  de,rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: order
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+    character(len=*),  intent(in)  :: varname
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: i, j, k, id, jd, lbuf
+    integer :: ids, ide, jds, jde, its, ite, jts, jte, nk,lenf
+    logical :: localIOflag
+    character(len=3) :: localOrder
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: recvbuf
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: buf3d
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer bsize(3)
+!    write(6,*)'chem_io_write_3dR4 input on each node ',maxval(farray),minval(farray),trim(varname)
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    localOrder = "ijk"
+    if (present(order)) localOrder = order
+
+    select case (trim(localOrder))
+      case("ikj")
+        ! -- (i,k,j)
+        nk = size(farray,dim=2)
+      case default
+        ! -- default to (i,j,k)
+        nk = size(farray,dim=3)
+    end select
+
+    ! -- check consistency in decomposition
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = 0._CHEM_KIND_R4
+
+    select case (trim(localOrder))
+      case("ikj")
+        do k = 1, nk
+          j = 0
+          do jd = jds, jde
+            j = j + 1
+            i = 0
+            do id = ids, ide
+              i = i + 1
+              buf3d(id, jd, k) = farray(i, k, j)
+            end do
+          end do
+        end do
+      case default
+        buf3d(ids:ide, jds:jde, 1:nk) = farray
+    end select
+
+    lbuf = (ite-its+1)*(jte-jts+1)*nk
+    bsize = (/ ite-its+1, jte-jts+1,nk /)
+    allocate(recvbuf(lbuf), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+
+    call chem_comm_reduce(reshape(buf3d, (/lbuf/)), recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+    latbuf=0.
+    lonbuf=0.
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+      lenf=len_trim(filename)
+!      if(filename(lenf-2:lenf).eq.'.nc')then
+        buf3d=reshape(recvbuf,bsize)
+!        write(6,*)'chem_io_write_3dR4 buf3d write',maxval(buf3d),minval(buf3d),'shape',shape(buf3d),' ',trim(varname)
+!        call flush(6)
+!        if(tile.eq.2)then
+!          if(varname.eq.'brcl')then
+!            write(6,*)'brcl write',buf3d(74,32,1)
+!            call flush(6)
+!          endif
+!        endif
+        write(6,*)'chem_io_file_writenc3d ',trim(datafile)
+        call flush(6)
+        call chem_io_file_writenc3d_debug(datafile, filename,buf3d,varname,latbuf,lonbuf,   rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      if(tile.eq.1)then
+!      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+!      endif
+    end if
+
+    deallocate(buf3d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate (lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_writenc_3DR4_debug
+
+  subroutine chem_io_file_writenc3d_debug(datafile, filename,buffer, varname,lat,lon, rc)
+    use netcdf
+    character(len=*),           intent(in)  :: datafile
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:,:,:)
+    real(CHEM_KIND_R4),         intent(in)  :: lat(:,:),lon(:,:)
+    integer,          optional, intent(out) :: rc
+    character (len=*), intent(in) :: varname
+    integer ncid,ierr,varid,dims(3),ilat,ilon,idimzt,lenf
+    real(chem_kind_r4),allocatable :: out(:,:,:,:)
+
+    ! -- local variables
+    integer :: localrc
+    real(CHEM_KIND_R4) :: atest
+    integer idimxt,idimyt,idims(3),idims2(2),count(3),start(3)
+    logical dodefine,exist
+
+    ! -- begin
+!    write(6,*)'writenc3d',maxval(buffer),minval(buffer)
+!    write(6,*)'shape buffer',shape(buffer),'filename',filename,' var ',varname
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    write(6,*)'writenc3d datafile ',trim(datafile),' varname ',trim(varname)
+    dodefine=.false.
+
+    inquire(file=trim(datafile),exist=exist)
+!    write(6,*)trim(datafile),' exist ',exist,' varname ',trim(varname)
+!    call flush(6)
+    if(.not.exist)then
+!      ierr=nf90_create(trim(datafile),0,ncid)
+      ierr=nf90_create(trim(datafile),nf90_clobber+nf90_netcdf4,ncid)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error create no time',trim(datafile)
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+!      write(6,*)'create netcdf 3d debug',trim(datafile),'ncid',ncid
+!      call flush(6)
+      dodefine=.true.
+    else ! exist
+      dodefine=.false.
+      ierr=nf90_open(trim(datafile),nf90_write,ncid)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'error open',trim(datafile)
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_inq_varid(ncid,varname,varid)
+      if (ierr /= nf90_noerr)then
+!        write(6,*)'varname not defined',varname
+!       ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+        ierr=nf90_inq_dimid(ncid,'grid_xt',idimxt)
+        if (ierr /= nf90_noerr)then
+            write(6,*)'error grid_xt inq'
+            call flush(6)
+        endif
+        ierr=nf90_inq_dimid(ncid,'grid_yt',idimyt)
+        if (ierr /= nf90_noerr)then
+            write(6,*)'error grid_yt inq'
+            call flush(6)
+        endif
+        ierr=nf90_inq_dimid(ncid,'grid_zt',idimzt)
+        if (ierr /= nf90_noerr)then
+            write(6,*)'gerror grid_zt inq'
+            call flush(6)
+        endif
+        idims(1)=idimxt
+        idims(2)=idimyt
+        idims(3)=idimzt
+        ierr=nf90_redef(ncid)
+        if (ierr /= nf90_noerr)then
+           write(6,*)'error redef'
+            write(6,*)trim(nf90_strerror(ierr))
+        endif
+        ierr=nf90_def_var(ncid,varname,nf90_float,idims,varid)
+        if (ierr /= nf90_noerr)then
+            write(6,*)'erroro define ',varname
+            write(6,*)trim(nf90_strerror(ierr))
+        endif
+        ierr=nf90_enddef(ncid)
+        if (ierr /= nf90_noerr)then
+            write(6,*)'error enddef ',varname
+            write(6,*)trim(nf90_strerror(ierr))
+        endif
+      endif
+
+    endif
+    if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz ajl error open ',trim(datafile)
+      call flush(6)
+    endif
+    dims=shape(buffer)
+    allocate (out(dims(1),dims(2),dims(3),1))
+    out(:,:,:,1)=buffer(:,:,:)
+!    write(6,*)'dims',dims
+!    call flush(6)
+!    write(6,*)'dodefine',dodefine
+!    call flush(6)
+    if(dodefine)then
+!      write(6,*)'top define ncid ',ncid
+!      call flush(6)
+      ierr=nf90_def_dim(ncid,'grid_xt',dims(1),idimxt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_xt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_dim(ncid,'grid_yt',dims(2),idimyt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_yt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_def_dim(ncid,'grid_zt',dims(3),idimzt)
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_dim grid_zt'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      idims(1)=idimxt
+      idims(2)=idimyt
+      idims(3)=idimzt
+      idims2(1)=idimxt
+      idims2(2)=idimyt
+
+      ierr=nf90_def_var(ncid,'lat',nf90_float,idims2,ilat) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var write3dnc lat'
+           write(6,*)trim(nf90_strerror(ierr))
+           call flush(6)
+      endif
+      ierr=nf90_def_var(ncid,'lon',nf90_float,idims2,ilon) 
+      if (ierr /= nf90_noerr)then
+           write(6,*)'zzzz ajl error def_var lon write3dnc'
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+        ierr=nf90_def_var(ncid,trim(varname),NF90_FLOAT,idims,varid)
+      if (ierr /= nf90_noerr)then
+           write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_enddef(ncid)
+      if (ierr /= nf90_noerr)then
+       write(6,*)'zzzz ajl enddef'
+       write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+   ierr=nf90_put_var(ncid,varid,out)
+   if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz ajl put var out'
+      write(6,*)trim(nf90_strerror(ierr))
+    endif
+    if(dodefine)then
+      ierr=nf90_put_var(ncid,ilon,lon)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lon'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+      ierr=nf90_put_var(ncid,ilat,lat)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'put_var lat'
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+    endif
+    deallocate (out)
+    ierr=nf90_close(ncid)
+    if (ierr /= nf90_noerr)then
+      write(6,*)'zzzz3d ajl error close'
+      write(6,*)trim(nf90_strerror(ierr))
+      call flush(6)
+    endif
+
+  end subroutine chem_io_file_writenc3d_debug
+  subroutine chem_io_writenc_2DR4_debug(filename, farray, varname,path,  de, rc)
+    use netcdf
+    use chem_comm_mod, only : chem_comm_get
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: de
+    character(len=*),  intent(in)  :: varname
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d, recvbuf
+    real(chem_kind_R8), pointer, dimension(:,: ) :: lat2dr8,lon2dr8
+    real(chem_kind_R4), pointer, dimension(:,: ) :: lat2d,lon2d,latbuf,lonbuf
+    integer ncid,ierr,lenf,mype
+    lenf=len_trim(filename)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    call chem_comm_get(localpe=mype)
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'get lat2d,lon2d de',de
+!    call flush(6)
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, lon=lon2dr8,lat=lat2dr8,rc=localrc)
+!    write(6,*)'subde',de,'pos',pos,'ids',ids,ide,'jds',jds,jde,'its',its,ite,'jts',jts,jte
+!    call flush(6)
+!     write(6,*)'got latlon',localrc
+!     call flush(6)
+!    write(6,*)'lbound ',lbound(lat2dr8)
+!    write(6,*)'ubound ',ubound(lat2dr8)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buf2d = 0._CHEM_KIND_R4
+
+    buf2d(ids:ide, jds:jde) = farray
+!    write(6,*)'buf2d',ids,ide,'jds',jds,jde,'shapefarray',shape(farray)
+!    write(6,*)'its',its,ite,'jts',jts,jte
+!    call flush(6)
+
+    allocate(recvbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lonbuf(its:ite,jts:jte), stat=localrc)
+    allocate(latbuf(its:ite,jts:jte), stat=localrc)
+    allocate(lat2d(its:ite,jts:jte))
+    allocate(lon2d(its:ite,jts:jte))
+    lat2d=0.
+    lon2d=0.
+    lat2d(ids:ide,jds:jde)=lat2dr8
+    lon2d(ids:ide,jds:jde)=lon2dr8
+!    write(6,*)'lat2d',maxval(lat2d),minval(lat2d),'shape',shape(lat2d)
+!    write(6,*)'lon2d',maxval(lon2d),minval(lon2d),'shape',shape(lon2d)
+!    call flush(6)
+!    write(6,*)'shape recvbuf',shape(recvbuf)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+    latbuf=0._CHEM_KIND_R4
+    lonbuf=0._CHEM_KIND_R4
+!     write(6,*)'shape latbuf',shape(latbuf),'recvbuf',shape(recvbuf)
+!    write(70+mype,*)'de',de,ids,ide,jds,jde,'local',localIoflag
+!    call flush(70+mype)
+
+    call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lat2d, latbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    call chem_comm_reduce(lon2d, lonbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+!      write(6,*)'write_io filename',trim(filename),' path ',trim(path)
+!      call flush(6)
+!      write(6,*)'lonbuf',maxval(lonbuf),minval(lonbuf),'lat',maxval(latbuf),minval(latbuf)
+!      write(6,*)'shape',shape(lonbuf)
+
+      call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+!      write(6,*)'datafile write ',trim(datafile)
+!      call flush(6)
+!      write(6,*)'shape recvbuf',shape(recvbuf),'size bud2d',size(buf2d)
+!      if(filename(lenf-2:lenf).eq.'.nc')then
+!        write(6,*)'do netcdf',trim(datafile)
+!        call flush(6)
+!        call chem_io_file_writenc(datafile, reshape(recvbuf, (/size(buf2d)/)), &
+!          write(6,*)'call chem_io_file_writenc2d',trim(datafile),trim(filename),trim(varname)
+!          call flush(6)
+      call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+           varname=varname,rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+!      write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+!        trim(datafile), minval(recvbuf), maxval(recvbuf)
+    end if
+
+    deallocate(buf2d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    deallocate (lonbuf,latbuf,lat2d,lon2d)
+
+  end subroutine chem_io_writenc_2DR4_debug
+  subroutine createnetcdf(ncid,filename,path,de,rc)
+    use chem_comm_mod, only : chem_comm_get
+    use netcdf
+    integer,intent(out) :: ncid
+    character(len=*),           intent(in)  :: filename
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+    integer localrc,ierr
+    logical localIOflag
+    character *256 datafile
+!    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+!      localIOflag=localIOflag, rc=localrc)
+    call chem_model_get(de=de, localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    if(localIOflag)then
+      if(present(path))then
+        datafile=trim(path)//trim(filename)
+      else
+        datafile=trim(filename)
+      endif
+      write(6,*)'nf90_create ',trim(datafile)
+      call flush(6)
+      ierr=nf90_create(trim(datafile),nf90_clobber+nf90_netcdf4,ncid)
+      if (ierr /= nf90_noerr)then
+        write(6,*)'yyyy ajl error create no time',trim(datafile)
+        write(6,*)trim(nf90_strerror(ierr))
+      endif
+!      write(6,*)'create netcdf 3d debug',trim(datafile),'ncid',ncid
+!      call flush(6)
+  else 
+    ncid=0
+  endif
+
+  return
+  end subroutine createnetcdf
+
+
+end module raqmschem_io_mod

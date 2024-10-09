@@ -1,0 +1,57 @@
+
+  subroutine chem_comm_bcast_r2(buffer, count, rootpe, comm, rc)
+    real(CHEM_KIND_R4), intent(inout) :: buffer(:,:)
+    integer, optional,  intent(in)    :: count
+    integer, optional,  intent(in)    :: rootpe
+    integer, optional,  intent(in)    :: comm
+    integer, optional,  intent(out)   :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: localcomm, localcount, root
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    if (present(count)) then
+      if (count > size(buffer)) return
+      localcount = count
+    else
+      localcount = size(buffer)
+    end if
+    root = chem_comm_rootpe
+    if (present(rootpe)) root = rootpe
+    localcomm = mpi_comm_chem
+    if (present(comm)) localcomm = comm
+    call mpi_bcast(buffer, localcount, MPI_REAL, root, localcomm, localrc)
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    
+  end subroutine chem_comm_bcast_r2
+  subroutine chem_comm_bcast_d2(buffer, count, rootpe, comm, rc)
+    real(CHEM_KIND_R8), intent(inout) :: buffer(:,:)
+    integer, optional,  intent(in)    :: count
+    integer, optional,  intent(in)    :: rootpe
+    integer, optional,  intent(in)    :: comm
+    integer, optional,  intent(out)   :: rc
+
+    ! -- local variables
+    integer :: localrc,ierr
+    integer :: localcomm, localcount, root
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+    if (present(count)) then
+      if (count > size(buffer)) return
+      localcount = count
+    else
+      localcount = size(buffer)
+    end if
+    root = chem_comm_rootpe
+    if (present(rootpe)) root = rootpe
+    localcomm = mpi_comm_chem
+    if (present(comm)) localcomm = comm
+    call mpi_bcast(buffer, localcount, MPI_DOUBLE, root, localcomm, localrc)
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    
+  end subroutine chem_comm_bcast_d2

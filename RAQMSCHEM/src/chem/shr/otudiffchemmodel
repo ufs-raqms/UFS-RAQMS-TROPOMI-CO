@@ -1,0 +1,152 @@
+5,6c5
+<   use raqmschem_config_mod
+<   use chem_config_mod, only : chem_config_species_init,chem_config_contol_init
+---
+>   use chem_config_mod
+18c17
+<     type(raqmschem_config_type),  pointer :: config  => null()
+---
+>     type(chem_config_type),  pointer :: config  => null()
+28a28,30
+>   public :: CHEM_OPT_GOCART
+>   public :: CHEM_OPT_GOCART_RACM
+>   public :: CHEM_OPT_RACM_SOA_VBS
+33c35
+<   public :: raqmschem_config_type
+---
+>   public :: chem_config_type
+39c41
+<   public :: raqmschem_model_create
+---
+>   public :: chem_model_create
+42,43c44,45
+<   public :: raqmschem_model_get
+<   public :: raqmschem_model_set
+---
+>   public :: chem_model_get
+>   public :: chem_model_set
+49c51
+<   public :: raqmschem_model_domain_set
+---
+>   public :: chem_model_domain_set
+54c56
+<   subroutine raqmschem_model_create(deCount, rc)
+---
+>   subroutine chem_model_create(deCount, rc)
+67,68d68
+< !    write(6,*)'ajl raqmschem_model_create localdecount',localdecount
+< !    call flush(6)
+76c76
+<   end subroutine raqmschem_model_create
+---
+>   end subroutine chem_model_create
+138,139d137
+< !    write(6,*)'ajl top chem_model_init'
+< !    call flush(6)
+143,144c141
+< !    write(6,*)'ajl chem_model_init'
+< !    call flush(6)
+---
+> 
+151,152d147
+< !    write(6,*)'localrc',localrc
+< !    call flush(6)
+169c164
+<       call raqmschem_model_set(de=de, modelComm=modelComm, rc=localrc)
+---
+>       call chem_model_set(de=de, modelComm=modelComm, rc=localrc)
+172,173d166
+< !    write(6,*)'ajl bot chem_model_init'
+< !    call flush(6)
+194,195d186
+< !    write(6,*)'ajl chem_model_clock_create'
+< !    call flush(6)
+209c200
+<         call raqmschem_model_set(de=de, clock=model % clock, rc=localrc)
+---
+>         call chem_model_set(de=de, clock=model % clock, rc=localrc)
+233c224
+<     call raqmschem_model_get(de=0, deCount=deCount, clock=clock, rc=localrc)
+---
+>     call chem_model_get(de=0, deCount=deCount, clock=clock, rc=localrc)
+275c266
+<     call raqmschem_model_get(de=0, deCount=deCount, clock=clock, rc=localrc)
+---
+>     call chem_model_get(de=0, deCount=deCount, clock=clock, rc=localrc)
+303,304d293
+< !    write(6,*)'ajl chem_model_config_init'
+< !    call flush(6)
+312c301
+<       call raqmschem_config_read(model % config, rc=localrc)
+---
+>       call chem_config_read(model % config, rc=localrc)
+321,322d309
+< !      write(6,*)'ajl decount',decount,'call set'
+< !      call flush(6)
+324c311
+<         call raqmschem_model_set(de=de, config=model % config, rc=localrc)
+---
+>         call chem_model_set(de=de, config=model % config, rc=localrc)
+328,329d314
+< !    write(6,*)'ajl bot chem_model_config_init'
+< !    call flush(6)
+334c319
+<   subroutine raqmschem_model_domain_set(minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile, &
+---
+>   subroutine chem_model_domain_set(minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile, &
+350,351c335
+< !    write(6,*)'ajl raqmschem_model_domain_set'
+< !    call flush(6)
+---
+> 
+389c373
+<   end subroutine raqmschem_model_domain_set
+---
+>   end subroutine chem_model_domain_set
+476c460
+<   subroutine raqmschem_model_set(de, numIntLayers, numModLayers, numSoilLayers, numTracers, modelComm, tileComm, &
+---
+>   subroutine chem_model_set(de, numIntLayers, numModLayers, numSoilLayers, numTracers, modelComm, tileComm, &
+488c472
+<     type(raqmschem_config_type), optional, pointer :: config
+---
+>     type(chem_config_type), optional, pointer :: config
+497,498c481
+< !    write(6,*)'ajl raqmchem_model_set'
+< !    call flush(6)
+---
+> 
+515c498
+<   end subroutine raqmschem_model_set
+---
+>   end subroutine chem_model_set
+518c501
+<   subroutine raqmschem_model_get(de, deCount, stateIn, stateOut, clock, config, &
+---
+>   subroutine chem_model_get(de, deCount, stateIn, stateOut, clock, config, &
+525c508
+<     type(raqmschem_config_type),optional,  pointer     :: config
+---
+>     type(chem_config_type),optional,  pointer     :: config
+542d524
+<     
+544,545d525
+< !     write(6,*)'ajl raqmchem_model_get chem_model_local_get',localrc
+< !     call flush(6)
+565c545
+<   end subroutine raqmschem_model_get
+---
+>   end subroutine chem_model_get
+585,590d564
+< !    write(6,*)'ajl local get de',localDe
+< !    call flush(6)
+< !    if(present(decount))then
+< !      write(6,*)'ajl local get decount',decount
+<       !call flush(6)
+< !    endif
+597,598d570
+< !      write(6,*)'ajl chem_model_local_get sizechemmodel',size(chem_model)
+< !      call flush(6)
+612,613d583
+< !    write(6,*)'ajl bot chemmodelelocalget'
+< !    call flush(6)

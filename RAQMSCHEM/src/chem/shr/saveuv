@@ -1,0 +1,25 @@
+
+subroutine uvtouvgrid(u,v,ugrd,vgrd,nc,nr,sina,cosa,sinb,cosb)
+real u(nc,nr),v(nc,nr),ugrd(nc,nr),vgrd(nc,nr),angdx(nc,nr),angdy(nc,nr)
+real cosa(nc,nr),sina(nc,nr),cosb(nc,nr),sinb(nc,nr)
+select case(tile)
+  case(1,2,6)
+    do j=1,nr
+      do i=1,nc
+        ugrd(i,j)=u(i,j)*cosa(i,j)-v(i,j)*sina(i,j)
+        vgrd(i,j)=u(i,j)*cosb(i,j)+v(i,j)*sinb(i,j)
+      end do
+    end do
+  caSe(3,4,5)
+    do j=1,nr
+      do i=1,nc
+        ugrd(i,j)=u(i,j)*cosa(i,j)+v(i,j)*sina(i,j)
+        vgrd(i,j)=u(i,j)*cosb(i,j)+v(i,j)*sinb(i,j)
+      end do
+    end do
+  case default
+    write(6,*)'illegal case'
+    call flush(6)
+end select
+
+end subroutine uvtouvgrid

@@ -1,0 +1,46 @@
+310,315c310,315
+< !       call chem_io_read('e_pm_10.dat', data % emiss_ab(:,:,config % species % p_e_pm_10), &
+< !         path=trim(config % emi_inname), de=de, rc=localrc)
+< !       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+< !       if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') &
+< !         localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_10)), &
+< !         maxval(data % emiss_ab(:,:,config % species % p_e_pm_10))
+---
+>         call chem_io_read('e_pm_10.dat', data % emiss_ab(:,:,config % species % p_e_pm_10), &
+>           path=trim(config % emi_inname), de=de, rc=localrc)
+>         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+>         if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') &
+>           localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_10)), &
+>           maxval(data % emiss_ab(:,:,config % species % p_e_pm_10))
+513c513
+<           path=trim(config % fireemi_inname), de=de, rc=localrc)
+---
+>           path=trim(config % fireemi_inname), de=de, varname='ebu_bc',rc=localrc)
+520c520
+<           path=trim(config % fireemi_inname), de=de, rc=localrc)
+---
+>           path=trim(config % fireemi_inname), de=de, varname='ebu_oc',rc=localrc)
+527c527
+<           path=trim(config % fireemi_inname), de=de, rc=localrc)
+---
+>           path=trim(config % fireemi_inname), de=de, varname='ebu_pm25',rc=localrc)
+534c534
+<           path=trim(config % fireemi_inname), de=de, rc=localrc)
+---
+>           path=trim(config % fireemi_inname), de=de, varname='ebu_so2',rc=localrc)
+539,540c539
+<         write(6,*)'plumerise_flag',config % plumerise_flag,'MODIS',FIRE_OPT_MODIS,'GBBEPX',FIRE_OPT_GBBEPx
+<         call flush(6)
+---
+> 
+555c554
+<             if (config % plumerisefire_frq > 0) then
+---
+> !            write(6,*)'path',trim(config % fireemi_inname)
+557c556,557
+<               path=trim(config % fireemi_inname), de=de, rc=localrc)
+---
+>               path=trim(config % fireemi_inname), de=de, varname='plumefrp',rc=localrc)
+> !            write(6,*)'plimefrp',shape(data%plume),'max',maxval(data%plume),minval(data%plume)
+561d560
+<             endif

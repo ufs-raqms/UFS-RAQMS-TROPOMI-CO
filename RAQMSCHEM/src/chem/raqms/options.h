@@ -1,0 +1,12 @@
+#define NOTYET
+#define DOMPI
+#define DAILYFIRES
+#define DOINT
+#define DOINT2
+#define CALCLIGHTNINGNOX
+#define DO_AEROSOL_BR2
+#define AEROSOL_SEASALT_AOD
+#define DO_AEROSOL_DEFINE
+#define DOCHEMJ
+#define NOWETDEPDIAG
+#define BRINTGLIN

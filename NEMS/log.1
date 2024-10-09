@@ -1,0 +1,191 @@
+Convert /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder
+...into /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder.mk
+Include /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder.mk
+Adding FV3 makeopts to FMS makeopts
+. /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.sh.inc ; stack=`ulimit -S -s`                  ; ulimit -S -s 200000                     ; module use /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf                 ; module load modules.nems              ; module list                           ; ulimit -S -s $stack ; cd /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs                      ; \
+exec gmake  all
+No modules loaded
+gmake[1]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs'
+mkdir -p "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL"
+mv fms.mk "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL/."
+cp -fp *.a *.mod ../include/*.h "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL"/.
+gmake[1]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs'
+test -d /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+Compiling  into /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL on hera
+cp -fp /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/configure.nems \
+       "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3"/conf/configure.fv3
+cp -fp /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems   \
+       "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3"/conf/modules.fv3
+. /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.sh.inc ; stack=`ulimit -S -s`                  ; ulimit -S -s 200000                     ; module use /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf                 ; module load modules.nems              ; module list                           ; ulimit -S -s $stack ; cd /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3 ; \
+  exec gmake COMP=FV3 COMP_SRCDIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3 COMP_BINDIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL MACHINE_ID=hera FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL  nemsinstall
+No modules loaded
+gmake[1]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake -C cpl                  FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 io ...
+
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/cpl'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/cpl'
+gmake -C gfsphysics      FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 gfsphysics ...
+
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics'
+gmake -C ipd                  FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 gfsphysics ...
+
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/ipd'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/ipd'
+gmake -C io                   FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 io ...
+
+$ESMF_INC is []
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/io'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/io'
+gmake -C atmos_cubed_sphere   FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 fv3core ...
+
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/atmos_cubed_sphere'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/atmos_cubed_sphere'
+gmake -C stochastic_physics   FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 stochastic_physics ...
+
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/stochastic_physics'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/stochastic_physics'
+gmake libfv3cap.a  FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake[2]: `libfv3cap.a' is up to date.
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake esmf_make_fragment FMS_DIR=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+gmake[2]: Entering directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+# additional include files needed for PGI
+#@echo "ESMF_DEP_INCPATH   = /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/nems_dir" >> fv3.mk
+
+Finished generating ESMF self-describing build dependency makefile fragment: fv3.mk
+
+gmake[2]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+Installation into "/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL" complete!
+
+gmake[1]: Leaving directory `/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+test -d /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL
+. /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.sh.inc ; stack=`ulimit -S -s`                  ; ulimit -S -s 200000                     ; module use /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf                 ; module load modules.nems              ; module list                           ; ulimit -S -s $stack ; export                   ; \
+set -e                                                        ; \
+cd /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM                                          ; \
+./configure --prefix=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL                          \
+  --datarootdir=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL --libdir=/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL    \
+          
+No modules loaded
+export BASH_ENV="/apps/lmod/lmod/init/bash"
+export DISPLAY="localhost:17.0"
+export EDITOR="vim"
+export FLEX_LIB_DIR="/usr/lib64"
+export FPATH="/apps/lmod/8.5.2/init/ksh_funcs"
+export GASCRP="/home/Kate.Zhang/grads/lib"
+export GLOBUS_TCP_PORT_RANGE="40000,46999"
+export GLOBUS_TCP_SOURCE_RANGE="40000,46999"
+export GROUP="wrf-chem"
+export HOME="/home/Kate.Zhang"
+export HOST="hfe05"
+export HOSTNAME="hfe05"
+export HOSTTYPE="x86_64-linux"
+export JASPERINC="/usr/include/jasper/"
+export JASPERLIB="/usr/lib64/"
+export KDEDIRS="/usr"
+export KDE_IS_PRELINKED="1"
+export LANG="en_US.UTF-8"
+export LD_LIBRARY_PATH="/apps/slurm/default/lib"
+export LESSOPEN="||/usr/bin/lesspipe.sh %s"
+export LMOD_ANCIENT_TIME="1"
+export LMOD_CMD="/apps/lmod/lmod/libexec/lmod"
+export LMOD_COLORIZE="yes"
+export LMOD_DIR="/apps/lmod/lmod/libexec/"
+export LMOD_FULL_SETTARG_SUPPORT="no"
+export LMOD_PACKAGE_PATH="/apps/lmod/etc"
+export LMOD_PKG="/apps/lmod/lmod"
+export LMOD_PREPEND_BLOCK="normal"
+export LMOD_REDIRECT="yes"
+export LMOD_ROOT="/apps/lmod"
+export LMOD_SETTARG_CMD=":"
+export LMOD_SETTARG_FULL_SUPPORT="no"
+export LMOD_SHORT_TIME="86400"
+export LMOD_VERSION="8.5.2"
+export LMOD_arch="x86_64"
+export LMOD_sys="Linux"
+export LOGNAME="Kate.Zhang"
+export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=05;48;5;232;38;5;15:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;34:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.axv=38;5;13:*.anx=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.axa=38;5;45:*.oga=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:"
+export MACHTYPE="x86_64"
+export MAIL="/var/spool/mail/Kate.Zhang"
+export MAKEFLAGS=" --jobserver-fds=4,5 -j -- app=coupledFV3_GSDCHEM"
+export MAKELEVEL="1"
+export MAKEOVERRIDES="\${-*-command-variables-*-}"
+export MANPATH="/apps/lmod/lmod/share/man:/apps/local/man:/apps/slurm/default/share/man:/apps/slurm/tools/sbank/share/man::"
+export MFLAGS="- --jobserver-fds=4,5 -j"
+export MODULEPATH="/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf:/apps/lmod/lmod/modulefiles/Core:/apps/modules/modulefiles/Linux:/apps/modules/modulefiles:/opt/cray/modulefiles:/opt/cray/craype/default/modulefiles:/scratch1/BMC/gmtb/software/modulefiles/generic:/scratch2/NCEPDEV/nwprod/NCEPLIBS/modulefiles"
+export MODULEPATH_ROOT="/apps/modules/modulefiles"
+export MODULESHOME="/apps/lmod/lmod"
+export MP_STACK_SIZE="64000000000"
+export OLDPWD
+export OMP_NUM_THREADS="1"
+export OSTYPE="linux"
+export PATH="/whome/jacquesm/sms-2.9.1.20BM/bin:/whome/jacquesm/sms-2.9.1.20BM/lib:/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/ibutils/bin:/apps/local/bin:/apps/local/sbin:/apps/slurm/default/slurm/tools:/apps/slurm/default/bin:/apps/slurm/default/sbin:/apps/slurm/tools/sbank/bin:."
+export PWD="/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS"
+export QTDIR="/usr/lib64/qt-3.3"
+export QTINC="/usr/lib64/qt-3.3/include"
+export QTLIB="/usr/lib64/qt-3.3/lib"
+export QT_GRAPHICSSYSTEM_CHECKED="1"
+export QT_PLUGIN_PATH="/usr/lib64/kde4/plugins:/usr/lib/kde4/plugins"
+export REMOTEHOST="hera-rsa.boulder.rdhpcs.noaa.gov"
+export SHELL="/bin/tcsh"
+export SHLVL="2"
+export SMS="/whome/jacquesm/sms-2.9.1.20BM"
+export SSH_CLIENT="140.208.168.10 45582 22"
+export SSH_CONNECTION="140.208.168.10 45582 140.208.193.5 22"
+export SSH_TTY="/dev/pts/11"
+export TARG_TITLE_BAR_PAREN=" "
+export TERM="xterm-256color"
+export USER="Kate.Zhang"
+export VENDOR="unknown"
+export WRFIO_NCD_LARGE_FILE_SUPPORT="1"
+export WRF_CHEM="1"
+export WRF_EM_CORE="1"
+export WRF_KPP="1"
+export WRF_NMM_CORE="0"
+export X509_USER_CERT="/home/Kate.Zhang/.globus/usercert.pem"
+export X509_USER_PROXY="/home/Kate.Zhang/.globus/usercert.pem"
+export XDG_RUNTIME_DIR="/run/user/10556"
+export XDG_SESSION_ID="15480"
+export YACC="/usr/bin/yacc -d"
+export _ModuleTable001_="X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IDAuMDgzMzMzMzMzMzMzMzMzLApjX3Nob3J0VGltZSA9IDIuMzc4NjY5OTc3MTg4MSwKZGVwdGhUID0ge30sCmZhbWlseSA9IHt9LAptVCA9IHt9LAptcGF0aEEgPSB7CiIvc2NyYXRjaDIvQk1DL2dzZC1mdjMtZGV2L2x6aGFuZy9FTUNfRlYzL3Y5MS9FTUNfRlYzR0ZTLUdTRENIRU0vTkVNUy9zcmMvY29uZiIsICIvYXBwcy9sbW9kL2xtb2QvbW9kdWxlZmlsZXMvQ29yZSIsICIvYXBwcy9tb2R1bGVzL21vZHVsZWZpbGVzL0xpbnV4IgosICIvYXBwcy9tb2R1bGVzL21vZHVsZWZpbGVzIiwgIi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsICIvb3B0L2NyYXkvY3JheXBlL2RlZmF1bHQvbW9kdWxl"
+export _ModuleTable002_="ZmlsZXMiLCAiL3NjcmF0Y2gxL0JNQy9nbXRiL3NvZnR3YXJlL21vZHVsZWZpbGVzL2dlbmVyaWMiLCAiL3NjcmF0Y2gyL05DRVBERVYvbndwcm9kL05DRVBMSUJTL21vZHVsZWZpbGVzIiwKfSwKc3lzdGVtQmFzZU1QQVRIID0gIi9hcHBzL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlOi9hcHBzL21vZHVsZXMvbW9kdWxlZmlsZXMvTGludXg6L2FwcHMvbW9kdWxlcy9tb2R1bGVmaWxlczovb3B0L2NyYXkvbW9kdWxlZmlsZXM6L29wdC9jcmF5L2NyYXlwZS9kZWZhdWx0L21vZHVsZWZpbGVzIiwKfQo="
+export _ModuleTable003_="XT0iZ3JpYl9hcGkiLFsid1YiXT0iMDAwMDAwMDAxLjAwMDAwMDAyNi4wMDAwMDAwMDEuKnpmaW5hbCIsfSxoZGY1PXtbImZuIl09Ii9hcHBzL21vZHVsZXMvbW9kdWxlZmFtaWxpZXMvaW50ZWwvaGRmNS8xLjEwLjQiLFsiZnVsbE5hbWUiXT0iaGRmNS8xLjEwLjQiLFsibG9hZE9yZGVyIl09Nixwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJoZGY1IixbIndWIl09Il4wMDAwMDAwMS4wMDAwMDAwMTAuMDAwMDAwMDA0Lip6ZmluYWwiLH0saHBzcz17WyJmbiJdPSIvYXBwcy9tb2R1bGVzL21vZHVsZWZpbGVzL2hwc3MvaHBzcyIsWyJmdWxsTmFtZSJdPSJocHNzL2hwc3MiLFsibG9hZE9yZGVyIl09OCxwcm9wVD17fSxb"
+export _ModuleTable_Sz_="2"
+export _NEMS_MAKE_RECURSION_DETECT="X"
+export __LMOD_REF_COUNT_GASCRP="/home/Kate.Zhang/grads/lib:1"
+export __LMOD_REF_COUNT_LD_LIBRARY_PATH="/apps/slurm/default/lib:1"
+export __LMOD_REF_COUNT_MANPATH="/apps/lmod/lmod/share/man:1;/apps/local/man:1;/apps/slurm/default/share/man:1;/apps/slurm/tools/sbank/share/man:1"
+export __LMOD_REF_COUNT_MODULEPATH="/scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf:1;/apps/lmod/lmod/modulefiles/Core:1;/apps/modules/modulefiles/Linux:1;/apps/modules/modulefiles:1;/opt/cray/modulefiles:1;/opt/cray/craype/default/modulefiles:1;/scratch1/BMC/gmtb/software/modulefiles/generic:1;/scratch2/NCEPDEV/nwprod/NCEPLIBS/modulefiles:1"
+export __LMOD_REF_COUNT_PATH="/whome/jacquesm/sms-2.9.1.20BM/bin:1;/whome/jacquesm/sms-2.9.1.20BM/lib:1;/usr/lib64/qt-3.3/bin:1;/usr/local/bin:1;/usr/bin:1;/usr/local/sbin:1;/usr/sbin:1;/opt/ibutils/bin:1;/apps/local/bin:1;/apps/local/sbin:1;/apps/slurm/default/slurm/tools:1;/apps/slurm/default/bin:1;/apps/slurm/default/sbin:1;/apps/slurm/tools/sbank/bin:1;.:1"
+export __LMOD_SET_FPATH="1"
+export app="coupledFV3_GSDCHEM"
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for cut... /usr/bin/cut
+checking for ESMF library... 

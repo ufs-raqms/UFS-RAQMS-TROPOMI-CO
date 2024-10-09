@@ -1,0 +1,359 @@
+
+    subroutine raqmschem_chem_write_aodfcst(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+    use raqmschem_pmgrid_mod,only : gsiarray,gsivarr,cemaod
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co,grvity
+    use raqmschem_state_mod
+    implicit none
+    integer dims(3),i,j
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    character*100 :: aodatt='using aod coeff defived from geos-5 crtm coefficients'
+    integer, optional, intent(out) :: rc
+    type(chem_data_type) :: data
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout,cotend
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc,ext_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot,aod_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bc,aod_oc
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: cotot
+    type(chem_state_type),  pointer :: stateIn, stateOut
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k,kk,nl,mm
+    type(chem_config_type), pointer :: config => null()
+    REAL,    PARAMETER :: airmw    = 28.97
+    character *10 :: units
+    real(chem_kind_r4) :: fac,facdob
+    logical aerosol_ugpKg
+    character *10 caerosol_ugpKg
+    integer,pointer,dimension(:) :: loccem
+    character *8,pointer,dimension(:) :: gsicem
+    real*4,pointer,dimension(:,:,:,:) :: gsiinc
+    caerosol_ugpKg=' '
+    call getenv('AEROSOL_ugpKg',caerosol_ugpKg)
+    if(iam==0)then
+       write(6,*)'top aodfcst '
+    endif
+    if(caerosol_ugpKg/=' ')then
+      if(caerosol_ugpKg=='YES')then
+        aerosol_ugpKg=.true.
+        if(iam==0)then
+          write(6,*)'aersol_ugpKg'
+        endif
+      elseif(caerosol_ugpKg=='NO')then
+        aerosol_ugpKg=.false.
+        if(iam==0)then
+          write(6,*)'aersol_ppmv'
+        endif
+      endif
+    else ! make default
+      aerosol_ugpKg=.true.
+      if(iam==0)then
+        write(6,*)'aersol_ugpKg'
+      endif
+    endif
+      
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    fac=avgro/airmw*10./grvity
+    facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+    cdatestr(1:4)=cdate(1:4)
+    cdatestr(5:5)='-'
+    cdatestr(6:7)=cdate(5:6)
+    cdatestr(8:8)='-'
+    cdatestr(9:10)=cdate(7:8)
+    cdatestr(11:11)=' '
+    cdatestr(12:13)=cdate(9:10)
+    cdatestr(14:)=':00:00'
+!    write(6,*)'ajl top chem_write'
+!    write(200+iam,*)'ajl top chem_write',trim(cdatestr)
+!    call flush(6)
+!    call flush(200+iam)
+
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'present filename',present(filename),'presend cdate',present(cdate)
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='tracer.'//cdate//'.nc'
+      else
+        fileout='tracer.nc'
+      endif
+    endif
+    nl=dims(3)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      sfcp(:,:)=statein%pr3d(:,:,1)*.01
+      do k=1,dims(3)
+        dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))*.01
+        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+        cotot(:,:)=cotot(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_co)
+      end do
+      cotot=cotot*avgro/airmw*10./grvity*1.e-18
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='q',units='kg/kg',rc=localrc)
+        do k=1,dims(3)
+          traceout(:,:,k)=zsurf(:,:)+statein%phl3d(:,:,k)/9.80616
+        end do
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zdash',units='m',rc=localrc)
+        traceout=dpm*100. ! make pascals
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dpm',units='Pa',rc=localrc)
+        traceout=dz
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dz',units='m',rc=localrc)
+        traceout=statein%prl3d
+!        write(6,*)'iodata pdash',maxval(traceout),minval(traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='pdash',units='Pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='V',units='m/s',rc=localrc)
+        if(allocated(data%ext_3dg))then
+          traceout=data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_sulfg',units='1',attribute=aodatt,rc=localrc)
+          ext_bcoc=0.0
+          ext_bc=0.0
+          ext_oc=0.0
+          aod_bcoc=0.0
+          aod_bc=0.0
+          aod_oc=0.0
+          aod_dust=0.0
+          aod_seasalt=0.0
+          aod_sulf=0.0
+          do m=2,5
+            ext_bcoc=ext_bcoc+data%ext_3dg(:,:,:,m)
+            if(m<=3)then
+              ext_bc=ext_bc+data%ext_3dg(:,:,:,m)
+            else
+              ext_oc=ext_oc+data%ext_3dg(:,:,:,m)
+            endif
+          end do
+          ext_dust=0.0
+          ext_seasalt=0.0
+!         shoule be 6,10 ajl
+!         for gsi should be 6,10 since now have 5 dust bins and 6 is now dust1
+!         and not no3 which we don't have in model
+!         for gsi aod 6 is dust1 since have 1-5
+          do m=6,10
+            ext_dust=ext_dust+data%ext_3dg(:,:,:,m)
+!            write(6,*)'ext_dust',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+         ext_dust1=data%ext_3dg(:,:,:,6)
+         do m=11,14
+            ext_seasalt=ext_seasalt+data%ext_3dg(:,:,:,m)
+!            write(300+iam,*)'ext_3dg',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+          aod_dust1=0.0
+          do k=1,dims(3)
+            aod_bcoc(:,:)=aod_bcoc(:,:)+ext_bcoc(:,:,k)*dz(:,:,k)
+            aod_bc(:,:)=aod_bc(:,:)+ext_bc(:,:,k)*dz(:,:,k)
+            aod_oc(:,:)=aod_oc(:,:)+ext_oc(:,:,k)*dz(:,:,k)
+            aod_seasalt(:,:)=aod_seasalt(:,:)+ext_seasalt(:,:,k)*dz(:,:,k)
+            aod_dust(:,:)=aod_dust(:,:)+ext_dust(:,:,k)*dz(:,:,k)
+            aod_sulf(:,:)=aod_sulf(:,:)+data%ext_3d(:,:,k,1)*dz(:,:,k)
+            aod_tot(:,:)=aod_bcoc(:,:)+aod_seasalt(:,:)+aod_dust(:,:)+aod_sulf(:,:)
+            aod_dust1(:,:)=aod_dust1(:,:)+ext_dust1(:,:,k)*dz(:,:,k)
+          end do
+!          write(6,*)'aod_dust1',maxval(aod_dust1)
+!          write(6,*)'aod_dust',maxval(aod_dust)
+!          write(6,*)'maxvalaod',maxval(aod_tot),maxval(data%aodgsi)
+          ext_tot=ext_bcoc+ext_dust+ext_seasalt+data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),ext_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_bcoc',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_dust',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_seas',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_tot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_tot',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcoc',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bc',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_oc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_oc',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodssalt',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aoddust',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_sulf,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodsulf',units='1',attribute=aodatt,rc=localrc)
+        endif
+        if(allocated(ptropgsi))then
+          call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ptrop',units='Pa',attribute='using gsi code to calc ptrop',rc=localrc)
+        endif
+        if(allocated(ztropgsi))then
+          call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ztrop',units='m',attribute='using gsi code to calc ztrop',rc=localrc)
+        endif
+        if(allocated(data%aodg5))then
+          trace2dout=data%aodg5
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod',units='1',attribute=aodatt,rc=localrc)
+
+        endif  
+#ifdef DIAGCO2
+        call flipz(coften_save,traceout)
+        cotend=traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosrc',units='ppv sec -1',rc=localrc)
+        call flipz(codten_save,traceout)
+        cotend=cotend-traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosink',units='ppv sec -1',rc=localrc)
+        cotend(:,:,1)=cotend(:,:,1)-codep_save(:,:)
+        call chem_io_writenc(trim(fileout),cotend,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotend',units='ppv sec -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),codep_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='codep',units='ppv sec -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),cotot,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotot',units='molec/ccm2*10-18',rc=localrc)
+#endif
+   
+      if(iam==0)then
+         write(6,*)'nsolmax',nsolmax
+      endif
+      do m=1,nsolmax
+!        m=idaodgsi(mm)
+        units='ppv'
+!        traceout=tr3d(:,:,:,icheminputpt(m))
+        traceout=tr3d(:,:,:,idaodgsi(m))
+!       convert to raqms units
+        if(iam==0)then
+          write(6,*)m,'aodfcst cheminput',cheminput(m)
+        endif
+        if(cemaod(m)(1:2).eq.'bc'.or.cemaod(m)(1:3).eq.'oc1'.or. &
+          cemaod(m)(1:3).eq.'oc2'.or.                               &
+          cemaod(m)(1:3).eq.'dus'.or.cemaod(m)(1:3).eq.'sea'.or. &
+!          cemaod(m)(1:3).eq.'so2'.or.cemaod(m)(1:4).eq.'sulf')then
+          cemaod(m)(1:4).eq.'sulf')then
+          if( aerosol_ugpKg)then
+            units='ug/kg-dryair'
+            if(cemaod(m)(1:3).eq.'bc1')then
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'bc2')then
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc1')then
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc2')then
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cemaod(m)(1:4).eq.'sulf')then
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            endif
+          else
+!           convert  from ppv to ugpkg ?
+            traceout=traceout*1.e-9
+            if(cemaod(m)(1:3).eq.'bc1')then
+               traceout=traceout*airmw/tcmw(idbc1)
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'bc2')then
+              traceout=traceout*airmw/tcmw(idbc2)
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc1')then
+              traceout=traceout*airmw/tcmw(idoc1)
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc2')then
+              traceout=traceout*airmw/tcmw(idoc2)
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cemaod(m)(1:4).eq.'sulf')then
+              traceout=traceout*airmw/mw_so4_aer
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            else
+              units='kg kg-1'
+            endif
+          endif
+!          if(tile.eq.5)then
+            !write(300+iam,*)cemaod(m)(1:4),maxval(traceout),minval(traceout)
+!            flush(300+iam)
+!          endif
+        endif
+!        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa')then
+!       they changed so2 to ppm
+        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa'.or.cemaod(m)(1:3).eq.'so2')then
+          traceout=traceout*1.e-6
+        endif
+!        !if(iam.eq.0.and.tile.eq.2)then
+!          write(6,*)'m',m,'icemaodpt',cemaodlist(m),'cemaod',cemaod(m)
+!          call flush(6)
+!        endif
+!        write(200+iam,*)'m',m,cemaod(m),units
+!        call flush(200+iam)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname=cemaod(m),units=units,rc=localrc)
+!        write(6,*)'varname',trim(cemaod(m)),'rc',localrc
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+        trace2dout=sfcp*100. ! make Pa
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcp',units='Pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),zsurf,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcz',units='m',rc=localrc)
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zlwigrd',units=' ',rc=localrc)
+        call chem_io_writenc(trim(fileout),tau6hr,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cot6hr',units=' ',rc=localrc)
+        navg=0
+        tau6hr=0.0
+      
+    end do
+     
+    return
+    end subroutine raqmschem_chem_write_aodfcst

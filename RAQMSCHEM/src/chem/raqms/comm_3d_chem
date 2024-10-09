@@ -1,0 +1,76 @@
+!      .. larc chemistry grid parameters
+      include 'comm_defs_24t.chem'
+
+c  .. met field parameters:              
+!      parameter (nc=360,nr=181,nl=35)
+!      parameter (nc=360,nl=35)
+
+c miscellaneous model/run parameters
+c
+      common /modelsettings/ fixtend,hydrostatic,usefastj,cloudphot
+      logical fixtend,hydrostatic,usefastj,cloudphot
+      character*12 emdeplabel
+      data emdeplabel/'uwhyb_1x1.BE'/
+
+
+c  .. larc pressure-gridded parameters for upper-strat climatologies
+!      parameter (nl_clim=19,nl_clim_dyn=24)
+      common /larc_clim/ clim_plev(nl_clim),
+     +       clim_oxpress(img,ijg2,nl_clim),
+     +       clim_tpress(img,ijg2,nl_clim_dyn),
+     +       clim_zpress(img,ijg2,nl_clim_dyn)
+      real *4 clim_plev,clim_oxpress,clim_tpress,clim_zpress
+c  .. emissions grid
+!      parameter (nlnair=19,nlnlgt=16)
+      common /emgrid/ sairnox_p(nlnair),slnox_profile(nlnlgt,3)
+      real *4 sairnox_p,slnox_profile
+cc tropospheric heterogeneous rate at 100,200,....1000. mb
+c
+      common /svrhet/ trhet(10,ijg2)
+      real *4 trhet
+
+c  .. albedo data
+      integer ialb,jalb,npr,nlam,nxsec,nts
+      parameter (ialb=144,jalb=91)
+      common/albdata/xalb(ialb),yalb(jalb),
+     &              zlwi(ialb,jalb),zalb(ialb,jalb)
+      real *4 xalb,yalb,zlwi,zalb
+c
+c  .. real grid data
+c
+!      common/griddata/xgrid(nc,nr),ygrid(nc,nr)
+!      real *4 xgrid,ygrid
+      common/larcdata/xlarc(img),ylarc(ijg2),
+     &                sigma(inl),sigmah(inl)
+      real *4 xlarc,ylarc,sigma,sigmah
+c
+
+c-tzap 03 Nov 01 ***********************        real *4 dtflow,dtout,dt,theta,gmt 
+c-tzap 03 Nov 01 ***********************        common/ireal/dtflow,dtout,dt,theta
+!        real *4 dtflow,dtout,dt,gmt 
+        real *4 dtflow,dtout,dt
+        common/ireal/dtflow,dtout,dt
+c
+!        integer*4 istime,ictime,irtime,julday 
+!        common/mtimes/istime,ictime,irtime,julday,gmt 
+
+c Kawa photolysis table parameters
+      parameter (npr=24)
+      integer nsza,no3
+      parameter (nlam=79,nsza=20,no3=12)
+      parameter (nxsec=47,nts=200)
+      real(CHEM_KIND_R4) :: xtab,sdat,o2jdat,rlam,o3_tab,pr_tab
+      real(CHEM_KIND_R8) :: sza_tab
+      common /kawa/ xtab(nlam,nts,nxsec),sdat(nsza,no3,npr,nlam),
+     1              o2jdat(nsza,no3,npr),rlam(nlam),
+     2              o3_tab(no3,npr),pr_tab(npr)
+      common /kawa8/ sza_tab(nsza)
+
+c
+c quantities passed from troposphere module           
+c
+      common /trop_to_chem/gbphis(img,ijg2),gbts(img,ijg2),
+     +        draw(img,ijg2),rain(img,ijg2,7),h2ov(img,ijg2,7),
+     +        cd(img,ijg2),wmag(img,ijg2)
+      real *4 gbphis,gbts,draw,rain,h2ov,cd,wmag
+

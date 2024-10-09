@@ -1,0 +1,531 @@
+module wetdep_mod
+contains
+  subroutine wetdep_advance(advancecount,dts,rc2d,rn2d,ph3d,phl3d,pr3d,prl3d,tk3d,& 
+    us3d,vs3d,ws3d,exch,dqdt,tr3d_inout4, &
+    num_chem,num_moist,ntra,its, ite, jts, jte, kts, kte, &
+    ims, ime, jms, jme, kms, kme, &
+    rc)
+    use mpi
+    use chem_types_mod
+    use chem_rc_mod
+    use raqmschemcomm_mod, only : rcav_save,rnav_save,pblht
+    use raqmschemcomm_mod, only : chem_conv_tr,wetdep_ls_opt
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use wetdep_prep_mod, only : wetdep_prep
+!    use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, p1000, rd, epsilc
+    use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, p1000, rd
+    use raq_dep_ctrans_grell_mod, only : raq_grelldrvct
+    use raqmschem_species_mod, only : nsol,nchemfull,chemname,ichemfullpt,p_qc,chemfull,p_qi
+    use raqmschem_species_mod, only : p_brcl,p_brno3,cheminput,p_bry,cheminputlist,p_dust3,p_rooh
+    use raq_dep_wet_ls_mod
+    use wetdep_alpha_mod, only : initwetdep
+    use wetdep_fam_mod, only : initsubpointers
+    use raqmschem_pmgrid_mod,only : iam,ibeg,tile,iamprn,iprn,jprn,iprnin,jprnin,kprnin
+    use raqmschem_pmgrid_mod,only : jbeg,nstepat,nhtuw
+    use vertmx_driver_mod, only : vertmx_driver
+    use chem_config_mod, only : CTRA_OPT_NONE,CTRA_OPT_GRELL,WDLS_OPT_NONE,WDLS_OPT_GSD,WDLS_OPT_NGAC
+    use raqmschem_config_mod, only : WDLS_OPT_NGAC_BOTH
+    implicit none
+    integer, intent(in) :: advancecount,its,ite,jts,jte,kts,kte
+    integer, intent(in) :: ims,ime,jms,jme,kms,kme,num_moist,num_chem,ntra
+    integer, intent(out), optional :: rc
+    real(CHEM_KIND_R8), intent(in) :: dts
+    real(CHEM_KIND_R8), dimension(:,:), intent(in) :: rn2d,rc2d
+    real(CHEM_KIND_R8), dimension(:,:,:), intent(in) :: ph3d,phl3d,pr3d,prl3d,tk3d 
+    real(CHEM_KIND_R8), dimension(:,:,:), intent(in) :: us3d,vs3d,ws3d,exch,dqdt
+    real(CHEM_KIND_R4), dimension(:,:,:,:), intent(inout) :: tr3d_inout4
+!   tr3d_in4 will be inout so wetdep can update tracers at end to pass to chemistry
+!   these need to be in a module so are saved
+!   these will be for this time increment
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rcav,precc,precl
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rnav
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: dz8w
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: p8w ! only use level 1
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: p_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: rho_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: rri
+!    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme+1, jms:jme) :: t8w ! not !    used at present
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: t_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: u_phy,raincv_v
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: v_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: vvel,kt_turb,dqdti
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: z_at_w !  use up to kte+1 in gocart_prep
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: zmid
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_moist) :: moist
+    real(CHEM_KIND_R4) :: dt
+    integer :: ids, ide, jds, jde, kds, kde
+    integer :: jp,j,ip,i,k,m,locarc
+!   temporary variables
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: pbl 
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: raincv_b
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: relhum
+!    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nsol) :: chem
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem) :: tr_fall !  convective wetdep
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem) :: var_rmv !  large scale wetdep
+    real(CHEM_KIND_R4), dimension(ime-ims+1, jme-jms+1, kms:kme,1:num_chem) :: diffgrell,diffls !  large scale wetdep
+    real(CHEM_KIND_R4), dimension(kms:kme) :: brclold,brno3old
+    real(CHEM_KIND_R4) :: amaxdiffgrell
+    real(CHEM_KIND_R8) :: wallwet,wallwetcum,rtime1
+    logical first,doprecc
+    save first,wallwetcum
+    data first/.true./
+    integer dims(3),dims2(2),localrc
+    character *4 cstep,filename*256
+!   note kte is actual nl kme is ni one more
+!    write(6,*)'wetdep adv kte',kte,'kme',kme
+!    call flush(6)
+    rtime1=mpi_wtime()
+    dims(1)=ite-its+1
+    dims(2)=jte-jts+1
+    dims(3)=kte-kts+1
+    dims2=dims(1:2) 
+!    write(6,*)'top wetdep',advancecount
+!    call flush(6)
+!    write(200+iam,*)'top wetdep',advancecount
+!    call flush(200+iam)
+!    write(6,*)'dims',dims
+!    call flush(6)
+    write(cstep,'(i4.4)')nstepat
+!    if(iam.eq.0)then
+!       write(6,*)'kme',kme,'kte',kte
+!       call flush(6)
+!    endif
+
+    if(first)then
+      wallwetcum=0.0
+      call initsubpointers
+      if(iam.eq.0)then
+      write(6,*)'wetdep_ls_opt',wetdep_ls_opt,'chem_conv_tr',chem_conv_tr
+      endif
+    endif
+    if (present(rc)) rc = 0
+
+    ! -- set domain
+    ids = ims
+    ide = ime
+    jds = jms
+    jde = jme
+    kds = kms
+    kde = kme
+    ! -- initialize local arrays
+    raincv_b   = 0._CHEM_KIND_R4
+!    precc=0.0_CHEM_KIND_R4
+    doprecc=.false.
+!    precl=0.0
+    dt = real(dts, kind=CHEM_KIND_R4)
+!    write(6,*)'advnacecount',advancecount
+!    if(advancecount <= 0 )then
+        jp=0
+        do j=jts, jte
+        jp = jp + 1
+          ip = 0
+         do i= its, ite
+            ip = ip + 1
+      rcav(i,j) = max(rc2d(ip,jp)*1000.,0._CHEM_KIND_R4)
+      rnav(i,j) = max((rn2d(ip,jp)-rc2d(ip,jp))*1000.,0._CHEM_KIND_R4)
+!      if(tile.eq.3.and.i.eq.69.and.j.eq.35)then
+!        write(6,*)'rcav',i,j,rcav(i,j),'rnav',rnav(i,j),'lprate',lprate(i,j)
+!        call flush(6)
+!      endif
+!      if(tile.eq.3.and.i.eq.78.and.j.eq.92)then
+!        write(6,*)'rcav',i,j,rcav(i,j),'rnav',rnav(i,j),'lprate',lprate(i,j)
+        !call flush(6)
+!       endif
+         enddo
+        enddo
+!    else
+!        jp=0
+!        do j=jts, jte
+!        jp = jp + 1
+!          ip = 0
+!         do i= its, ite
+!            ip = ip + 1
+!      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav_save(i,j))
+      !rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav_save(i,j))
+!         enddo
+!        enddo
+!    end if
+!    if(iam.eq.iamprn)then
+!      write(6,*)'rcav ',rcav(iprnin,jprnin)
+!      call flush(6)
+!    endif
+!        jp=0
+!        do j=jts, jte
+!        jp = jp + 1
+!          ip = 0
+!         do i= its, ite
+!            ip = ip + 1
+!      rcav_save(i,j) = rc2d(ip,jp)*1000.
+!      rnav_save(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+!         enddo
+!        enddo
+     ncplprate=ncplprate+1 
+     do j=jts,jte
+       do i=its,ite
+         cprate(i,j)=cprate(i,j)+rcav(i,j)
+         lprate(i,j)=lprate(i,j)+rnav(i,j)
+       end do
+     end do
+!     if(tile.eq.3)then
+!        write(6,*)'rnav',lbound(rnav),'ub',ubound(rnav)
+!        write(6,*)'lprate',lbound(lprate),'ub',ubound(lprate)
+        !write(6,*)'its',its,ite,'jts',jts,jte
+!        do j=jts, jte
+!         do i= its, ite
+!           if(i.eq.69.and.j.eq.35)then
+!              write(6,*)'lpraet add',i,j,lprate(i,j)
+!          endif
+!           if(i.eq.78.and.j.eq.92)then
+!              write(6,*)'lpraet add',i,j,lprate(i,j)
+!          endif
+!        end do
+!      end do
+!     endif
+!     write(200+iam,*)'rnav',maxval(rnav),minval(rnav)
+!     write(200+iam,*)'rcav',maxval(rcav),minval(rcav)
+!     write(200+iam,*)'lprate',maxval(lprate),minval(lprate)
+!    write(6,*)'rc2d',maxval(rc2d),maxval(rn2d)
+!    write(6,*)'rcav',maxval(rcav),' rnav ',maxval(rnav)
+!   now call wetdep_prep
+!    write(6,*)'ntra',ntra
+!    call flush(6)
+!   if(iam.eq.iamprn)then
+!     do k=1,63
+!       write(250+iam,*)'pr3d',k,pr3d(iprn,jprn,k),prl3d(iprn,jprn,k),'tk3d',tk3d(iprn,jprn,k)
+!       call flush(250+iam)
+!     end do
+!     write(250+iam,*)'lbound',lbound(pr3d),'ubound',ubound(pr3d)
+!     call flush(250+iam)
+!     write(250+iam,*)'ims',ims,ime,jms,jme,'ibeg',ibeg,'jbeg',jbeg
+!       
+!   endif
+!    write(6,*)'wetdep prep'
+    !call flush(6)
+    call wetdep_prep(tr3d_inout4,tk3d,pr3d,prl3d,ph3d,phl3d, &
+      us3d,vs3d,ws3d, exch,dqdt,&
+      pblht, &
+      rcav,raincv_v, &
+!      t_phy,moist,u_phy,v_phy,p_phy,chem, &
+      t_phy,moist,u_phy,v_phy,p_phy, &
+      grvity,rd,p1000,cp, &
+!      t8w,p8w,pbl,z_at_w,zmid,dz8w,vvel, &
+      p8w,pbl,z_at_w,zmid,dz8w,vvel,kt_turb, dqdti,&
+      rho_phy, nsol, num_moist,ntra, &
+      ids,ide, jds,jde, kds,kde, &
+      ims,ime, jms,jme, kms,kme, &
+      its,ite, jts,jte, kts,kte,rc=rc) 
+!      write(6,*)'call grell nsol',nsol,'num_chem',num_chem
+!    write(6,*)'shape tr3d_inout4',shape(tr3d_inout4)
+!      call flush(6)
+!    write(6,*)'nchemfull',nchemfull,'num_moist',num_moist
+!    call flush(6)
+!    write(6,*)'call initwetdep ',kts,kte,'kms',kms,kme,'ub',ubound(t_phy)
+!    call flush(6)
+    call initwetdep(its,ite,jts,jte,kts,kte,kms,kme,t_phy,p_phy)
+#ifdef DIAGTILE
+   if(iam.eq.iamprn)then
+     do k=1,63
+       write(250+iam,*)'brcl in',k,tr3d_inout4(iprn,jprn,k,p_brcl),tr3d_inout4(iprn,jprn,k,p_brno3)
+       call flush(250+iam)
+     end do
+     brclold=tr3d_inout4(iprn,jprn,:,p_brcl)
+     brno3old=tr3d_inout4(iprn,jprn,:,p_brno3)
+!     do k=1,63
+!       write(250+iam,*)k,'rho',rho_phy(iprnin,k,jprnin),'u',u_phy(iprnin,k,jprnin),v_phy(iprnin,k,jprnin)
+!       call flush(250+iam)
+!     end do
+!     do k=1,63
+!       write(250+iam,*)k,'t',t_phy(iprnin,k,jprnin),moist(iprnin,k,jprnin,:)
+!       call flush(250+iam)
+!     end do
+!     do k=1,63
+!       write(250+iam,*)k,'dz',dz8w(iprnin,k,jprnin),'p',p_phy(iprnin,k,jprnin)
+!       call flush(250+iam)
+!     end do
+!     do k=1,64
+!       write(250+iam,*)k,'zatw',z_at_w(iprnin,k,jprnin)
+!     end do
+!     write(6,*)'pbl',pbl(iprnin,jprnin)
+!     call flush(6)
+!     write(250+iam,*)'call grellshape p8w',shape(p8w),'lb',lbound(p8w),'ub',ubound(p8w)
+!     call flush(250+iam)
+!     write(250+iam,*)'kms',kms,kme+1
+!     do k=1,64
+!       write(250+iam,*)'p8w before grell',k,p8w(iprnin,k,jprnin)
+!     end do
+!     call flush(250+iam)
+
+   endif
+#endif
+!    diffgrell=-tr3d_inout4
+!    write(6,*)'shape tr3d',shape(tr3d_inout4),'num_chem',num_chem,'nchemfull',nchemfull
+!    call flush(6)
+!    write(6,*)'shape diffgrell',shape(diffgrell)
+!   if(iam.eq.4.and.tile.eq.1)then
+!     write(6,*)'before grell dust3 ',p_dust3,iprn,jprn,tr3d_inout4(iprn,jprn,1,p_dust3)
+!     write(6,*)'diffgrell init',diffgrell(iprn,jprn,1,p_dust3)
+!     call flush(6)
+!   endif
+!   do m=1,num_chem
+!     amaxdiffgrell=maxval(abs(diffgrell(:,:,:,m)))
+!     if(amaxdiffgrell>1.e-30)then
+!       write(6,*)'amaxdiffgrell ',amaxdiffgrell 
+!       write(6,*)'diffgrell',maxval(diffgrell(:,:,:,m)),minval(diffgrell(:,:,:,m)),m,cheminput(m)
+!       do k=1,kte
+!         do j=1,jte-jts+1
+!           !do i=1,ite-its+1
+!             if(isnan(tr3d_inout4(i,j,k,m)))then
+!               write(6,*)'before nan i ',i,j,k,'m',m
+!               call flush(6)
+!             endif
+!           end do
+!         end do
+!       end do
+!     endif
+!   end do
+#ifdef DIAGTILE
+     if(iam.eq.iamprn)then
+       do m=4,num_chem
+         write(899,*)'before grell ',m,kprnin,tr3d_inout4(iprn,jprn,kprnin,m)
+         write(300+iam,*)'before grell ',m,kprnin,tr3d_inout4(iprn,jprn,kprnin,m)
+         call flush(300+iam)
+       end do
+       call flush(899)
+     endif
+#endif
+#ifdef DIAGTILE
+     if(iam.eq.iamprn)then
+       m=65
+       write(300+iam,*)'iprn',iprn,jprn,'iprnin',iprnin,jprnin
+       do k=1,20
+         write(300+iam,*)'before grell m',m,k,iprn,jprn,tr3d_inout4(iprn,jprn,k,m),p_rooh,tr3d_inout4(iprn,jprn,k,p_rooh)
+       end do
+       write(300+iam,*)'lb tr3d',lbound(tr3d_inout4),' ubound ',ubound(tr3d_inout4),' kind ',kind(tr3d_inout4)
+       call flush(300+iam)
+    endif
+#endif
+!   write(200+iam,*)'call grell ',dt,advancecount
+!   call flush(200+iam)
+!   write(200+iam,*)'rho',shape(rho_phy),'rcav',shape(rcav)
+!   call flush(200+iam)
+!   write(200+iam,*)'tr3d',shape(tr3d_inout4),' fall',shape(tr_fall)
+!   call flush(200+iam)
+!   write(200+iam,*)'u',shape(u_phy),'v',shape(v_phy)
+!   call flush(200+iam)
+!   write(200+iam,*)'t',shape(t_phy),'moist',shape(moist)
+!   call flush(200+iam)
+!   write(200+iam,*)'dz8w',shape(dz8w),'p',shape(p_phy)
+!   call flush(200+iam)
+!   write(200+iam,*)'p8w',shape(p8w),'pbl',shape(pbl)
+!   call flush(200+iam)
+!   write(200+iam,*)'xlv',xlv,cp,grvity,rv
+!   call flush(200+iam)
+!   write(200+iam,*)'z',shape(z_at_w)
+!   call flush(200+iam)
+!   write(200+iam,*)'numchem',num_chem,'num_moist',num_moist,'nchemfull',nchemfull
+!   call flush(200+iam)
+!   write(200+iam,*)'ids',ids,ide,'jds',jds,jde,'kds',kds,kde
+!   call flush(200+iam)
+!   write(200+iam,*)'ims',ims,ime,'jms',jms,jme,'kms',kms,kme
+!   call flush(200+iam)
+!   write(200+iam,*)'its',its,ite,'jts',jts,jte,'kts',kts,kte
+!   call flush(200+iam)
+    call raq_grelldrvct(dt,advancecount, &
+     rho_phy,rcav,tr3d_inout4,tr_fall, & ! should be the same
+!     rho_phy,raincv_v,tr3d_inout4,tr_fall, &
+!     u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w, &
+     u_phy,v_phy,t_phy,moist,p_phy,p8w, &
+     pbl,xlv,cp,grvity,rv,z_at_w, &
+     num_chem, num_moist,nchemfull, &
+     ids,ide, jds,jde, kds,kde, &
+     ims,ime, jms,jme, kms,kme, &
+     its,ite, jts,jte, kts,kte)
+#ifdef DIAGTILE
+     if(iam.eq.iamprn)then
+       do m=4,num_chem
+         write(899,*)'after grell ',m,kprnin,tr3d_inout4(iprn,jprn,kprnin,m)
+         call flush(899)
+       end do
+     endif
+#endif
+#ifdef DIAGTILE
+     if(iam.eq.iamprn)then
+       do m=4,num_chem
+         write(300+iam,*)'after grell ',m,kprnin,tr3d_inout4(iprn,jprn,kprnin,m)
+         call flush(300+iam)
+       end do
+     endif
+!      do k=1,63
+!        write(6,*)'brcl grell',k,tr3d_inout4(iprn,jprn,k,p_brcl),tr3d_inout4(iprn,jprn,k,p_brno3)
+!      end do
+!      do k=1,63
+!       if(brclold(k).ne.tr3d_inout4(iprn,jprn,k,p_brcl))then
+!        write(250+iam,*)'diff grell',k,tr3d_inout4(iprn,jprn,k,p_brcl)-brclold(k), &
+!        tr3d_inout4(iprn,jprn,k,p_brno3)-brno3old(k)
+!      endif
+!    end do
+!    brclold=tr3d_inout4(iprn,jprn,:,p_brcl)
+!    brno3old=tr3d_inout4(iprn,jprn,:,p_brno3)
+!   endif
+!  if(iam.eq.4.and.tile.eq.1)then
+!    write(6,*)'after grell call grell dust3 ',p_dust3,iprn,jprn,tr3d_inout4(iprn,jprn,1,p_dust3)
+!    write(6,*)'after grell call diffgrell init',diffgrell(iprn,jprn,1,p_dust3)
+!    call flush(6)
+!  endif
+!  
+!    diffgrell=tr3d_inout4+diffgrell
+!  if(iam.eq.4.and.tile.eq.1)then
+!    write(6,*)'after grell dust3 ',p_dust3,iprn,jprn,tr3d_inout4(iprn,jprn,1,p_dust3)
+!    call flush(6)
+!  endif
+!  do m=4,num_chem
+!    amaxdiffgrell=maxval(abs(diffgrell(:,:,:,m)))
+!    if(amaxdiffgrell>1.e-30)then
+!      write(6,*)'amaxdiffgrell ',amaxdiffgrell 
+!      write(6,*)'diffgrell',maxval(diffgrell(:,:,:,m)),minval(diffgrell(:,:,:,m)),m,cheminputlist(m)
+!      if(m.eq.14)then
+!      do k=1,kte
+!        do j=1,jte-jts+1
+!          do i=1,ite-its+1
+!            if(diffgrell(i,j,k,m).ne.0.0)then
+!              write(6,*)'its',its,ite,'jts',jts,jte
+!              write(6,*)'diffgrell',i,j,k,diffgrell(i,j,k,m),'out',m,tr3d_inout4(i,j,k,m)
+!              call flush(6)
+!            endif
+!!            if(isnan(tr3d_inout4(i,j,k,m)))then
+!!              write(6,*)'after nan i ',i,j,k,'m',m
+!!              call flush(6)
+!!            endif
+!          end do
+!        end do
+!      end do
+!      endif
+!    endif
+!  end do
+!  filename='diffgrell'//cstep//'.nc'
+#endif
+!     write(6,*)'call wetdpe qc',p_qc,p_qi,'nummoist',num_moist
+!     call flush(6)
+    select case (wetdep_ls_opt)
+      case (WDLS_OPT_GSD,0)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do GSDCHEM wetdep_ls'
+          call flush(6)
+        endif
+        call wetdep_ls(dt,tr3d_inout4,rnav,moist,t_phy,rho_phy,var_rmv,num_moist, &
+           num_chem,p_qc,p_qi,dz8w,vvel,        &   
+           ids,ide, jds,jde, kds,kde,                               &   
+           ims,ime, jms,jme, kms,kme,                               &   
+           its,ite, jts,jte, kts,kte)
+      case(WDLS_OPT_NGAC_BOTH)
+!        if(doprecc)then
+!          write(200+iam,*)'tr3d_inout4',lbound(tr3d_inout4),'ub',ubound(tr3d_inout4)
+!          write(200+iam,*)'t_phy',lbound(t_phy),'ub',ubound(t_phy)
+!          !write(200+iam,*)'its',its,ite,'jts',jts,jte,'kts',kts,kte
+!          write(200+iam,*)'ims',ims,ime,'jms',jms,jme,'kms',kms,kme
+!          call flush(200+iam)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do NGAC wetdep_ls_and_precc'
+          call flush(6)
+        endif
+          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
+            num_chem,var_rmv,tr3d_inout4,p8w,t_phy,  &
+            rho_phy,dqdti,rnav,          &     ! ajl
+           ims,ime, jms,jme, kms,kme, localrc,precc=rcav)
+!        else
+      case(WDLS_OPT_NGAC)
+!          write(200+iam,*)'tr3d_inout4',lbound(tr3d_inout4),'ub',ubound(tr3d_inout4)
+!          write(200+iam,*)'t_phy',lbound(t_phy),'ub',ubound(t_phy)
+!          write(200+iam,*)'its',its,ite,'jts',jts,jte,'kts',kts,kte
+!          write(200+iam,*)'ims',ims,ime,'jms',jms,jme,'kms',kms,kme
+          !call flush(200+iam)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do NGAC wetdep_ls_only'
+          call flush(6)
+        endif
+          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
+            num_chem,var_rmv,tr3d_inout4,p8w,t_phy,  &
+            rho_phy,dqdti,rnav,          &     ! ajl
+           ims,ime, jms,jme, kms,kme, localrc)
+!        endif
+      case default
+    end select
+#ifdef DIAGTILE
+!   if(tile.eq.2)then
+!    if(iamprn>0)then
+!      write(6,*)'printdiffls ',tr3d_inout4(iprnin,jprnin,1,p_bry),diffls(iprnin,jprnin,1,p_bry)
+!      call flush(6)
+!    endif 
+!   endif
+!  diffls=tr3d_inout4+diffls
+!!  do m=1,num_chem
+!!    if(maxval(abs(diffls(:,:,:,m)))>1.e-30)then
+!!      write(6,*)'diffls',maxval(diffls(:,:,:,m)),minval(diffls(:,:,:,m)),m,cheminput(m)
+!!    endif
+!!  end do
+!  filename='diffls'//cstep//'.nc'
+!    if(iam.eq.iamprn)then
+!      do k=1,63
+!        write(6,*)'brcl after ls',k,tr3d_inout4(iprn,jprn,k,p_brcl),tr3d_inout4(iprn,jprn,k,p_brno3)
+!      end do
+!     do k=1,63
+!       if(brclold(k).ne.tr3d_inout4(iprn,jprn,k,p_brcl))then
+!         write(250+iam,*)'diff ls',k,tr3d_inout4(iprn,jprn,k,p_brcl)-brclold(k), &
+!         tr3d_inout4(iprn,jprn,k,p_brno3)-brno3old(k)
+!       endif
+!     end do
+!   endif
+!     do i=1,nchemfull
+!       if(maxval(tr_fall(:,:,ichemfullpt(i)))>0)then
+!         write(6,*)'trfall',i,maxval(tr_fall(:,:,ichemfullpt(i))),chemfull(i)
+!       endif
+!     end do
+!     do i=1,nchemfull
+!        if(maxval(var_rmv(:,:,ichemfullpt(i)))>0.0)then
+!          write(6,*)'var_rmv',i,maxval(var_rmv(:,:,ichemfullpt(i))),chemfull(i)
+!        endif
+!     end do
+!     do i=1,nsol
+!       write(6,*)'wetdep ',i,maxval(tr_fall(:,:,i))
+!     end do
+!    write(6,*)'size tr3d',size(tr3d_inout4),' chem ',size(chem)
+!    call updateqsol(tr3d_inout4,chem,nsol)
+#endif
+    wallwet=mpi_wtime()-rtime1
+    wallwetcum=wallwetcum+wallwet
+    if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+      write(6,*)'wallwet ',wallwet,' cum ',wallwetcum
+      call flush(6)
+    endif
+!   add vert
+    call vertmx_driver(dt,tr3d_inout4,num_chem,kt_turb,rho_phy, &
+    z_at_w,zmid,ims,ime,jms,jme,kms,kme,kts,kte)
+    first=.false.
+    return
+
+
+  end subroutine wetdep_advance
+! subroutine updateqsol(tr3d_inout4,chem,nsol)
+! use chem_types_mod
+! use raqmschem_species_mod, only : idwetd
+! 
+! integer i,j,k,m
+! real(CHEM_KIND_R4), dimension(:,:,:,:), intent(inout) :: tr3d_inout4
+! real(CHEM_KIND_R4), dimension(:,:,:,:), intent(in) :: chem
+! integer isize(4),isize2(4)
+! isize=shape(tr3d_inout4)
+! isize2=shape(chem)
+!! write(6,*)'isize',isize,' isize2 ',isize2
+!! call flush(6)
+! do m=1,nsol
+!   do k=1,isize(3)
+!     do j=1,isize(2)
+!       do i=1,isize(1)
+!         tr3d_inout4(i,j,k,idwetd(m))=chem(i,k,j,m)
+!       end do
+!     end do
+!   end do
+! end do
+! end subroutine updateqsol
+end module wetdep_mod
+

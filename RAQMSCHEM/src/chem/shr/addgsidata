@@ -1,0 +1,6 @@
+  type gsidatatype
+    integer ngsivar
+    real,allocatable,dimension(:,:,:,:) :: gsiinc
+    integer,allocatable,dimension(:) :: loccem
+  end type
+  type(gsidatatype),allocatable :: gsiarray(:)

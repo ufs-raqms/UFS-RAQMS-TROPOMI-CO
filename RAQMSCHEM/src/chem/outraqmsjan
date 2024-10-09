@@ -1,0 +1,1088 @@
+diff -Bbw raqms/chem_driver_3d_nmhc.F /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.F
+53c53
+<       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,begj,endj,nr=>plat,nc,nl=>plev
+---
+>       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,jbeg,nr=>plat,nc,nl=>plev
+978d977
+<       use raqmschem_pmgrid_mod,only : begj,endj
+1024,1025c1023
+<       use raqmschemcomm_mod, only : lcedsair,intaltair,docedsair
+<       use raqmschemcomm_mod, only : srccoair,ktopcedsair,intcoair,intnoxair
+---
+>       use raqmschemcomm_mod, only : srccoair
+1035,1037d1032
+<       use raqmschemcomm_mod, only : srccocedsair,kbotcedsair,intcedsair
+<       use raqmschemcomm_mod, only : srcn2ocedsair
+<       use raqmschemcomm_mod, only : srcso2cedsair,ratioso2ceds,ratiococeds,ration2oceds
+1058d1052
+< !      use raqmschemcomm_mod, only : docedsair
+1232,1233d1225
+<       logical zupset,zloset
+< c save Ox photochemical tendency
+1234a1227
+> c save Ox photochemical tendency
+1257,1258c1250,1251
+<       real rr,coefpr94,af,coiplo,coiphi,noxiplo,noxiphi
+<       integer errcount,idum,k1
+---
+>       real rr,coefpr94
+>       integer errcount,idum
+1270,1278d1262
+< #ifdef DIAGCEDS
+<       if(tile==1.and.iam==11)then
+<         do i=1,nc
+<         if(i+ibeg-1==178.and.j==31)then
+<           write(6,*)'top doloop  i',i,j,'ibeg',ibeg
+<         endif
+<         end do
+<       endif
+< #endif
+1281,1284d1264
+< !      if(j==96)then
+< !        write(6,*)'nlnair',nlnair,'srcco',maxval(srccoair),'no',maxval(srcnair)
+< !        call flush(6)
+< !      endif
+2471,2477d2450
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop inside so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+3332,3357d3304
+<        if(lcedsair)then
+<          if(.not.allocated(srccocedsair))then
+<            allocate (srccocedsair(nc,begj:endj,nl))
+<          endif
+<          if(.not.allocated(srcn2ocedsair))then
+<            allocate (srcn2ocedsair(nc,begj:endj,nl))
+<            srcn2ocedsair=0.0
+<          endif
+<          if(.not.allocated(ratioso2ceds))then
+<            allocate (ratioso2ceds(nc,begj:endj,nl))
+<            ratioso2ceds=0.0
+<          endif
+<          if(.not.allocated(ration2oceds))then
+<            allocate (ration2oceds(nc,begj:endj,nl))
+<            ration2oceds=0.0
+<          endif
+<          if(.not.allocated(ratiococeds))then
+<            allocate (ratiococeds(nc,begj:endj,nl))
+<            ratiococeds=0.0
+<          endif
+<          srccocedsair(i,j,ip)=0.0
+<          if(.not.allocated(srcso2cedsair))then
+<            allocate (srcso2cedsair(nc,begj:endj,nl))
+<          endif
+<          srcso2cedsair(i,j,ip)=0.0
+<        endif
+3376,3399d3322
+< !       if(tile==5.and.j==192)then
+< !       write(6,*)iam,'ibeg',ibeg,'i',i,j,'tile',tile
+<        !write(6,*)'ibeg+i-1',ibeg+i-1
+<        !if(ibeg+i-1==168)write(6,*)'found 168'
+<        !call flush(6) 
+< !       endif
+< !       if(ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'iam',iam,'tile',tile,'lcedsir',lcedsair
+<          !call flush(6)
+< !       endif
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'found 168 lcedsair',lcedsair,i,j,'ip',ip,'lbot',lbot
+< !         call flush(6)
+< !       endif
+< !       if(iam==0.and.tile==1)then
+< !          write(6,*)'lcedsair2 ',lcedsair
+<        !endif
+<        if(lcedsair)then
+< !         write(6,*)'ktopcedsair',ktopcedsair,'shape',shape(intaltair)
+<          !flush(6)
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'before doceds so2grd',l,so2grd(i,l)
+< !             end do
+3401,3523d3323
+< !           endif  
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop before docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          call docedsair(i,j,ip,lbot,ltb,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop after docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          zloset=.false.
+<          zupset=.false.
+< !        need to find depth of layer 1 in altitude
+< !         if(lbot>ubound(zgeoh).or.lbot<1)then
+< !           write(6,*)'lbot'
+< !           flush(6)
+< !         endif
+< !         if(ip>ubound(zgeoh).or.ip<1)then
+< !           write(6,*)'ip',ip
+< !           flush(6)
+< !         endif
+<          zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !         write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !       endif
+<          if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<            zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !         end do
+< !           endif
+<            coiplo=0.0
+<            coiphi=0.0
+<            noxiplo=0.0
+<            noxiphi=0.0
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              coiphi=intcoair(i,j,ktopcedsair(i,j,1))
+<              noxiphi=intnoxair(i,j,ktopcedsair(i,j,1))
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(iam==75.and.i==1.and.j==49)then
+<                 write(6,*)'old zlo',zlo,'k',k,'intaltair',intaltair(k-1),intaltair(k)
+<              endif
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiplo=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                write(6,*)i,j,ip,'old zlo',zlo,'k',k,'af',af
+<                write(6,*)'old coiplo',coiplo
+<                flush(6)
+<                endif
+<                noxiplo=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+< !               write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiphi=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                  write(6,*)'old zup',zup,'k',k,'af',af,'coiphi',coiphi
+<                  flush(6)
+<                endif
+<                noxiphi=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+< !             write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<            saccoold=(coiphi-coiplo)/(zup-zlo)*1.e-5
+<            sacnoxold=(noxiphi-noxiplo)/(zup-zlo)*1.e-5
+< !           if(iam==75)then
+< !           if(iam==75.and.i==1.and.j==49)then
+<            saccoold=max(saccoold,0.0)
+<            if(saccoold/=sacco)then
+<               write(6,*)'saccoold',i,j,ip,saccoold,'newsacco ',sacco
+<               write(6,*)'old kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<               do k=kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<                 write(6,*)'old intcedsairold',k,intcedsair(i,j,k,1),'intaltair',intaltair(k)
+<               end do
+<            endif
+< !           endif
+< !           endif
+<            if(sacco<0.0)sacco=0.0
+<            srccocedsair(i,j,l)=sacco
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'after doceds so2grd',l,so2grd(i,l)
+< !             end do
+3525,3528d3324
+< !           endif  
+< 
+<          endif ! zlo< ip/=1
+<        else ! lceds
+3530a3327,3330
+> !       if(i.eq.iprn.and.j.eq.jprnin)then
+> !         write(300+iam,*)'ll',l,' sairnox_p ',sairnox_p(ll)
+> !         call flush(300+iam)
+> !        endif
+3553c3353
+<                else ! ll==1
+---
+>              else
+3589,3595c3389
+<                endif ! ll=1
+< !             endif ! press >=
+< !           end do ! do ll ajl test
+< !         endif ! lcedsair
+< !         if(sacnox/=0.0.or.sacco/=0.0 )then
+< !          write(6,*)'sacnox',i,j,ll,sacnox,'pfac',pfac
+< !         endif
+---
+>              endif
+3618,3622d3411
+<          if(ip<=1)then
+< !         if (press .ge. sairnox_p(nlnair)) then
+<            write(6,*)'error ip',ip,'press',press,'nlnair',nlnair,'p',sairnox_p(nlnair)
+<            flush(6)
+<          endif
+3656,3659c3445,3447
+<          endif ! pres
+<          enddo ! ll
+<          endif ! pres >
+<        endif ! lceds
+---
+>            endif
+>          enddo
+>        endif
+4867c4655
+<         write(6,*)'sairnox_p',sairnox_p
+---
+> !!        write(6,*)'sairnox_p',sairnox_p
+6159,6270d5946
+<       subroutine docedsair2(i,j,ip,lbot,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+<       use raqmschemlocaltype_mod
+<       use raqmschem_pmgrid_mod,only : iam
+<       use raqmschemcomm_mod, only : intcedsair,ccedsair,p_ceds_co,p_ceds_nox,p_ceds_so2
+<       use raqmschemcomm_mod, only : p_ceds_bc,p_ceds_oc,p_ceds_n2o
+<       use raqmschemcomm_mod, only : numcedsair,ktopcedsair
+<       use raqmschemcomm_mod, only : srccocedsair
+<       use raqmschemcomm_mod, only : lcedsair,intaltair
+<       implicit none
+<       type(chemlocaltype),target :: chemlocal
+< 
+< 
+<       integer lbot,klo,kup,k,i,j,ip,m,l
+<       real dens,sacco,sacnox,zgeoh(:),aflo,afup,dt
+<       real intvallo,intvalup,zlo,zup,sacso2
+<       logical :: zloset,zupset
+< #include <chemlocaldefinepointerF.h>
+< #include <chemlocaldefinepointer2F.h>
+< #include <chemlocalsetpointer.h>
+< #include <chemlocalsetpointer2.h>
+<       write(6,*)'cogrd shape',shape(cogrd)
+<       flush(6)
+<       zloset=.false.
+<       zupset=.false.
+< !     need to find depth of layer 1 in altitude
+<       zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !     if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !       write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !       write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !     endif
+< !      write(6,*)'ktopcedsair2',ktopcedsair
+< !      flush(6)
+< !      write(6,*)'allocated',allocated(intaltair)
+< !      flush(6)
+< !      write(6,*)'ktopcedsair2',ktopcedsair,'shape intaltair',shape(intaltair)
+< !      call flush(6)
+<       if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<         zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !        end do
+< !           endif
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              kup=ktopcedsair(i,j,1)
+<              afup=1.
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                klo=k
+<                aflo=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+<                !write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+<                !call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                kup=k
+<                afup=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+<              !write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<          do m=1,numcedsair
+<            select case (ccedsair(m))
+<            case ('CO')
+<              intvallo=intcedsair(i,j,klo,p_ceds_co)*aflo+intcedsair(i,j,klo,p_ceds_co)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_co)*afup+intcedsair(i,j,kup,p_ceds_co)*(1.-afup)
+<              sacco=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<              if(iam==75)then
+<                write(6,*)'fast sacco',i,j,ip,sacco,'klo',klo,kup
+<                write(6,*)'fast aflo',aflo,afup
+<                write(6,*)'fast intvallo',intvallo,intvalup
+<              endif
+<              srccocedsair(i,j,ip)=sacco
+<            case ('NOx')
+<              intvallo=intcedsair(i,j,klo,p_ceds_nox)*aflo+intcedsair(i,j,klo,p_ceds_nox)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_nox)*afup+intcedsair(i,j,kup,p_ceds_nox)*(1.-afup)
+<              sacnox=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<            case ('SO2')
+<              intvallo=intcedsair(i,j,klo,p_ceds_so2)*aflo+intcedsair(i,j,klo,p_ceds_so2)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_so2)*afup+intcedsair(i,j,kup,p_ceds_so2)*(1.-afup)
+<              sacso2=(intvalup-intvallo)/(zup-zlo)*1.e05
+<              so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+<            case default
+<            end select
+<          end do ! M  
+<            
+6272,6273d5947
+<          endif ! zlo< ip/=1
+<       end subroutine docedsair2
+diff -Bbw raqms/chem_driver_3d_nmhc.fastjtype.F /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.fastjtype.F
+53c53
+<       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,begj,endj,nr=>plat,nc,nl=>plev
+---
+>       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,jbeg,nr=>plat,nc,nl=>plev
+978d977
+<       use raqmschem_pmgrid_mod,only : begj,endj
+1024,1025c1023
+<       use raqmschemcomm_mod, only : lcedsair,intaltair,docedsair
+<       use raqmschemcomm_mod, only : srccoair,ktopcedsair,intcoair,intnoxair
+---
+>       use raqmschemcomm_mod, only : srccoair
+1035,1037d1032
+<       use raqmschemcomm_mod, only : srccocedsair,kbotcedsair,intcedsair
+<       use raqmschemcomm_mod, only : srcn2ocedsair
+<       use raqmschemcomm_mod, only : srcso2cedsair,ratioso2ceds,ratiococeds,ration2oceds
+1058d1052
+< !      use raqmschemcomm_mod, only : docedsair
+1232,1233d1225
+<       logical zupset,zloset
+< c save Ox photochemical tendency
+1234a1227
+> c save Ox photochemical tendency
+1257,1258c1250,1251
+<       real rr,coefpr94,af,coiplo,coiphi,noxiplo,noxiphi
+<       integer errcount,idum,k1
+---
+>       real rr,coefpr94
+>       integer errcount,idum
+1270,1278d1262
+< #ifdef DIAGCEDS
+<       if(tile==1.and.iam==11)then
+<         do i=1,nc
+<         if(i+ibeg-1==178.and.j==31)then
+<           write(6,*)'top doloop  i',i,j,'ibeg',ibeg
+<         endif
+<         end do
+<       endif
+< #endif
+1281,1284d1264
+< !      if(j==96)then
+< !        write(6,*)'nlnair',nlnair,'srcco',maxval(srccoair),'no',maxval(srcnair)
+< !        call flush(6)
+< !      endif
+2471,2477d2450
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop inside so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+3332,3357d3304
+<        if(lcedsair)then
+<          if(.not.allocated(srccocedsair))then
+<            allocate (srccocedsair(nc,begj:endj,nl))
+<          endif
+<          if(.not.allocated(srcn2ocedsair))then
+<            allocate (srcn2ocedsair(nc,begj:endj,nl))
+<            srcn2ocedsair=0.0
+<          endif
+<          if(.not.allocated(ratioso2ceds))then
+<            allocate (ratioso2ceds(nc,begj:endj,nl))
+<            ratioso2ceds=0.0
+<          endif
+<          if(.not.allocated(ration2oceds))then
+<            allocate (ration2oceds(nc,begj:endj,nl))
+<            ration2oceds=0.0
+<          endif
+<          if(.not.allocated(ratiococeds))then
+<            allocate (ratiococeds(nc,begj:endj,nl))
+<            ratiococeds=0.0
+<          endif
+<          srccocedsair(i,j,ip)=0.0
+<          if(.not.allocated(srcso2cedsair))then
+<            allocate (srcso2cedsair(nc,begj:endj,nl))
+<          endif
+<          srcso2cedsair(i,j,ip)=0.0
+<        endif
+3376,3399d3322
+< !       if(tile==5.and.j==192)then
+< !       write(6,*)iam,'ibeg',ibeg,'i',i,j,'tile',tile
+<        !write(6,*)'ibeg+i-1',ibeg+i-1
+<        !if(ibeg+i-1==168)write(6,*)'found 168'
+<        !call flush(6) 
+< !       endif
+< !       if(ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'iam',iam,'tile',tile,'lcedsir',lcedsair
+<          !call flush(6)
+< !       endif
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'found 168 lcedsair',lcedsair,i,j,'ip',ip,'lbot',lbot
+< !         call flush(6)
+< !       endif
+< !       if(iam==0.and.tile==1)then
+< !          write(6,*)'lcedsair2 ',lcedsair
+<        !endif
+<        if(lcedsair)then
+< !         write(6,*)'ktopcedsair',ktopcedsair,'shape',shape(intaltair)
+<          !flush(6)
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'before doceds so2grd',l,so2grd(i,l)
+< !             end do
+3401,3523d3323
+< !           endif  
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop before docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          call docedsair(i,j,ip,lbot,ltb,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop after docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          zloset=.false.
+<          zupset=.false.
+< !        need to find depth of layer 1 in altitude
+< !         if(lbot>ubound(zgeoh).or.lbot<1)then
+< !           write(6,*)'lbot'
+< !           flush(6)
+< !         endif
+< !         if(ip>ubound(zgeoh).or.ip<1)then
+< !           write(6,*)'ip',ip
+< !           flush(6)
+< !         endif
+<          zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !         write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !       endif
+<          if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<            zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !         end do
+< !           endif
+<            coiplo=0.0
+<            coiphi=0.0
+<            noxiplo=0.0
+<            noxiphi=0.0
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              coiphi=intcoair(i,j,ktopcedsair(i,j,1))
+<              noxiphi=intnoxair(i,j,ktopcedsair(i,j,1))
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(iam==75.and.i==1.and.j==49)then
+<                 write(6,*)'old zlo',zlo,'k',k,'intaltair',intaltair(k-1),intaltair(k)
+<              endif
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiplo=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                write(6,*)i,j,ip,'old zlo',zlo,'k',k,'af',af
+<                write(6,*)'old coiplo',coiplo
+<                flush(6)
+<                endif
+<                noxiplo=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+< !               write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiphi=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                  write(6,*)'old zup',zup,'k',k,'af',af,'coiphi',coiphi
+<                  flush(6)
+<                endif
+<                noxiphi=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+< !             write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<            saccoold=(coiphi-coiplo)/(zup-zlo)*1.e-5
+<            sacnoxold=(noxiphi-noxiplo)/(zup-zlo)*1.e-5
+< !           if(iam==75)then
+< !           if(iam==75.and.i==1.and.j==49)then
+<            saccoold=max(saccoold,0.0)
+<            if(saccoold/=sacco)then
+<               write(6,*)'saccoold',i,j,ip,saccoold,'newsacco ',sacco
+<               write(6,*)'old kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<               do k=kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<                 write(6,*)'old intcedsairold',k,intcedsair(i,j,k,1),'intaltair',intaltair(k)
+<               end do
+<            endif
+< !           endif
+< !           endif
+<            if(sacco<0.0)sacco=0.0
+<            srccocedsair(i,j,l)=sacco
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'after doceds so2grd',l,so2grd(i,l)
+< !             end do
+3525,3528d3324
+< !           endif  
+< 
+<          endif ! zlo< ip/=1
+<        else ! lceds
+3530a3327,3330
+> !       if(i.eq.iprn.and.j.eq.jprnin)then
+> !         write(300+iam,*)'ll',l,' sairnox_p ',sairnox_p(ll)
+> !         call flush(300+iam)
+> !        endif
+3553c3353
+<                else ! ll==1
+---
+>              else
+3589,3595c3389
+<                endif ! ll=1
+< !             endif ! press >=
+< !           end do ! do ll ajl test
+< !         endif ! lcedsair
+< !         if(sacnox/=0.0.or.sacco/=0.0 )then
+< !          write(6,*)'sacnox',i,j,ll,sacnox,'pfac',pfac
+< !         endif
+---
+>              endif
+3618,3622d3411
+<          if(ip<=1)then
+< !         if (press .ge. sairnox_p(nlnair)) then
+<            write(6,*)'error ip',ip,'press',press,'nlnair',nlnair,'p',sairnox_p(nlnair)
+<            flush(6)
+<          endif
+3656,3659c3445,3447
+<          endif ! pres
+<          enddo ! ll
+<          endif ! pres >
+<        endif ! lceds
+---
+>            endif
+>          enddo
+>        endif
+4867c4655
+<         write(6,*)'sairnox_p',sairnox_p
+---
+> !!        write(6,*)'sairnox_p',sairnox_p
+6159,6270d5946
+<       subroutine docedsair2(i,j,ip,lbot,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+<       use raqmschemlocaltype_mod
+<       use raqmschem_pmgrid_mod,only : iam
+<       use raqmschemcomm_mod, only : intcedsair,ccedsair,p_ceds_co,p_ceds_nox,p_ceds_so2
+<       use raqmschemcomm_mod, only : p_ceds_bc,p_ceds_oc,p_ceds_n2o
+<       use raqmschemcomm_mod, only : numcedsair,ktopcedsair
+<       use raqmschemcomm_mod, only : srccocedsair
+<       use raqmschemcomm_mod, only : lcedsair,intaltair
+<       implicit none
+<       type(chemlocaltype),target :: chemlocal
+< 
+< 
+<       integer lbot,klo,kup,k,i,j,ip,m,l
+<       real dens,sacco,sacnox,zgeoh(:),aflo,afup,dt
+<       real intvallo,intvalup,zlo,zup,sacso2
+<       logical :: zloset,zupset
+< #include <chemlocaldefinepointerF.h>
+< #include <chemlocaldefinepointer2F.h>
+< #include <chemlocalsetpointer.h>
+< #include <chemlocalsetpointer2.h>
+<       write(6,*)'cogrd shape',shape(cogrd)
+<       flush(6)
+<       zloset=.false.
+<       zupset=.false.
+< !     need to find depth of layer 1 in altitude
+<       zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !     if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !       write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !       write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !     endif
+< !      write(6,*)'ktopcedsair2',ktopcedsair
+< !      flush(6)
+< !      write(6,*)'allocated',allocated(intaltair)
+< !      flush(6)
+< !      write(6,*)'ktopcedsair2',ktopcedsair,'shape intaltair',shape(intaltair)
+< !      call flush(6)
+<       if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<         zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !        end do
+< !           endif
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              kup=ktopcedsair(i,j,1)
+<              afup=1.
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                klo=k
+<                aflo=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+<                !write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+<                !call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                kup=k
+<                afup=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+<              !write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<          do m=1,numcedsair
+<            select case (ccedsair(m))
+<            case ('CO')
+<              intvallo=intcedsair(i,j,klo,p_ceds_co)*aflo+intcedsair(i,j,klo,p_ceds_co)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_co)*afup+intcedsair(i,j,kup,p_ceds_co)*(1.-afup)
+<              sacco=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<              if(iam==75)then
+<                write(6,*)'fast sacco',i,j,ip,sacco,'klo',klo,kup
+<                write(6,*)'fast aflo',aflo,afup
+<                write(6,*)'fast intvallo',intvallo,intvalup
+<              endif
+<              srccocedsair(i,j,ip)=sacco
+<            case ('NOx')
+<              intvallo=intcedsair(i,j,klo,p_ceds_nox)*aflo+intcedsair(i,j,klo,p_ceds_nox)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_nox)*afup+intcedsair(i,j,kup,p_ceds_nox)*(1.-afup)
+<              sacnox=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<            case ('SO2')
+<              intvallo=intcedsair(i,j,klo,p_ceds_so2)*aflo+intcedsair(i,j,klo,p_ceds_so2)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_so2)*afup+intcedsair(i,j,kup,p_ceds_so2)*(1.-afup)
+<              sacso2=(intvalup-intvallo)/(zup-zlo)*1.e05
+<              so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+<            case default
+<            end select
+<          end do ! M  
+<            
+6272,6273d5947
+<          endif ! zlo< ip/=1
+<       end subroutine docedsair2
+Only in raqms: chem_driver_3d_nmhc.fastjtype.F.07.5.2023
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: chem_driver_3d_nmhc.o
+diff -Bbw raqms/chemgsimod.F90 /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/chemgsimod.F90
+176d175
+<     first=.false.
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: chemgsimod.mod
+diff -Bbw raqms/combined_chemsource_nmhc.F /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/combined_chemsource_nmhc.F
+6324d6323
+< !       make default ajl 1/4/2023 all of the run scripts had it on
+6326,6328c6325
+<         if(cenv.eq.'NO')then
+<           donew=.false.
+<         else
+---
+>         if(cenv.eq.'YES')then
+6329a6327,6328
+>         else
+>           donew=.false.
+6897,6899c6896,6898
+< !                write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+< !                write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+< !                call flush(6)
+---
+>                 write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+>                 write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+>                 call flush(6)
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: combined_chemsource_nmhc.o
+diff -Bbw raqms/combined_chemsource_nmhc_v200902.murali.7.HTAPMONTH.newdt.fv3.J /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/combined_chemsource_nmhc_v200902.murali.7.HTAPMONTH.newdt.fv3.J
+6324d6323
+< !       make default ajl 1/4/2023 all of the run scripts had it on
+6326,6328c6325
+<         if(cenv.eq.'NO')then
+<           donew=.false.
+<         else
+---
+>         if(cenv.eq.'YES')then
+6329a6327,6328
+>         else
+>           donew=.false.
+6897,6899c6896,6898
+< !                write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+< !                write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+< !                call flush(6)
+---
+>                 write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+>                 write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+>                 call flush(6)
+diff -Bbw raqms/comm_3d_chem /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/comm_3d_chem
+25,26c25
+<       integer,parameter :: nlnairdim=19
+<       common /emgrid/ sairnox_p(nlnairdim),slnox_profile(nlnlgt,3)
+---
+>       common /emgrid/ sairnox_p(nlnair),slnox_profile(nlnlgt,3)
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: computeaod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: exchange_o3vmr_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: exchange_o3vmr_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: het_kenc.o
+Common subdirectories: raqms/keep and /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/keep
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms.a
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-calcaodgsi.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-calcaod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-chemgsimod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-computeaod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-raq_dep_ctrans_grell_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-raq_dep_wet_ls_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-raqms_model_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-raqms_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-seasalt_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-vertmx_driver_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-vertmxv_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-wetdep_alpha_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-wetdep_fam_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-wetdep_mod.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: libraqms_a-wetdep_prep_mod.o
+diff -Bbw raqms/Makefile /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/Makefile
+283c283
+< datarootdir = ${prefix}/share
+---
+> datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+292c292
+< libdir = ${exec_prefix}/lib
+---
+> libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+300c300
+< prefix = /usr/local
+---
+> prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: newcol.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: photcode_larc_47_nmhc_v0.7.o
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: printbrintg
+Only in raqms: printcedsair
+Only in raqms: printtest
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: raq_dep_ctrans_grell_mod.mod
+diff -Bbw raqms/raq_dep_wet_ls_mod.F90 /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/raq_dep_wet_ls_mod.F90
+75,76c75
+< !     make default al 1/4/2023 since always had it set in run scripts
+<       if(cenv==' '.or.cenv.eq.'YES')then
+---
+>       if(cenv.eq.'YES')then
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: raq_dep_wet_ls_mod.mod
+diff -Bbw raqms/raqms_model_mod.F90 /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+203d202
+< #if 0
+250d248
+< #endif
+807d804
+<   Stateout%tr3d(:,:,:,p_so2)=chem_pass_state%tr3d(:,:,:,p_so2)*1.e-6 ! new ajl 6/30/2023
+856,859d852
+<         if(iam==0)then
+<           write(6,*)'write_aodfcst ok ',doaodfcst,icall
+<           call flush(6)
+<         endif
+862,866d854
+<         if(iam==0)then
+<         write(6,*)'write_full bad  ',doaodfcst,icall
+<         call flush(6)
+<         endif
+< 
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: raqms_model_mod.mod
+diff -Bbw raqms/raqms_mod.F90 /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms/raqms_mod.F90
+43d42
+<   use raqmschemcomm_mod, only : lcedsair,numcedsair
+318,320d316
+<         tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) ! ajl add 6/16/2023
+<         tr3d_inout4(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms)
+<         tr3d_inout4(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) ! ajl end add 6/16/2023
+366,368d361
+<     tr3d_inout4(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl add 6/16/2023
+<     tr3d_inout4(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+<     tr3d_inout4(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,p_msa) ! ajl end add 6/16/2023
+403,417c396
+< ! so2 now ppm makd ppv for raqms
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 inputfrom gsdchem ',gsdchem_tr3d_inout8(ii,jj,k,p_so2),'tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+---
+> ! so2 now ppm
+421,434d399
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 input converted tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+629,638d593
+< #ifdef DIAGCEDS
+<   if(iam==11)then
+<     write(6,*)'find ajl js',js,je
+<     flush(6)
+<   endif
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<     write(6,*)'on node ',js,je,'is',is,ie
+<     flush(6)
+<   endif
+< #endif
+673,678d627
+< #ifdef DIAGCEDS
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<       write(6,*)'ajl call maptochem',j
+<       flush(6)
+<    endif
+< #endif
+691,705c640
+< !     end#if
+< #ifdef DIAGCEDS
+<         if(tile==1.and.iam==11.and.j==31)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2grdbefore doloop ',chemlocal%so2grd(ii,k)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+---
+> !     endif
+707,720d641
+< #ifdef DIAGCEDS
+<         if(tile==1.aNd.iam==1.and.j==31)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2grdafter doloop ',chemlocal%so2grd(ii,k)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+727,734d647
+< #ifdef DIAGCEDS
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<       write(6,*)'ajl call mapfromchem',j,'js',js,je,'is',is,ie
+<       write(6,*)'lbound ',lbound(gsdchem_tr3d_inout8),'ub',ubound(gsdchem_tr3d_inout8)
+<       write(6,*)'lboundtr3d',lbound(tr3d_out),'ub',ubound(tr3d_out)
+<       flush(6)
+<    endif
+< #endif
+736,751d648
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<                 write(6,*)k,'so2 new after from',tr3d_out(ii,jj,k,p_so2) *1.e6
+<                 write(6,*)k,'diff so2',tr3d_out(ii,jj,k,p_so2) *1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+795,801d691
+<       if(lcedsair)then
+<         if(mchem==p_bc1.or.mchem==p_bc2.or.mchem==p_oc1.or.mchem==p_oc2) cycle
+<         if(mchem==p_so2) cycle
+<       endif
+< !      if(mchem==p_bc1.or.mchem==p_oc1.or.mchem==p_so2.and.iam==11)then
+<         !write(6,*)'mchem error ',mchem,p_bc1,p_oc1,p_so2
+< !      endif
+808,809d697
+<       if(.not.lcedsair)then
+<       endif
+984,1029d871
+<   if(lcedsair)then
+<     do j=1,numcedsair
+<       select case(ccedsair(j))
+<       case ('BC')
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'bc1 old ',gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+<                 write(6,*)k,'bc new ',tr3d_out(ii,jj,k,p_bc1) 
+<                 write(6,*)k,'diff bc',tr3d_out(ii,jj,k,p_bc1) -gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+<         gsdchem_tr3d_inout8(:,:,:,p_bc1)=tr3d_out(:,:,:,p_bc1)
+<         gsdchem_tr3d_inout8(:,:,:,p_bc2)=tr3d_out(:,:,:,p_bc2)
+<       caSe ('OC')
+<         gsdchem_tr3d_inout8(:,:,:,p_oc1)=tr3d_out(:,:,:,p_oc1)
+<         gsdchem_tr3d_inout8(:,:,:,p_oc2)=tr3d_out(:,:,:,p_oc2)
+<       caSe ('SO2')
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'bottom return so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<                 write(6,*)k,'bottom return so2 new ',tr3d_out(ii,jj,k,p_so2)*1.e6
+<                 write(6,*)k,'bottom return diff so2',tr3d_out(ii,jj,k,p_so2)*1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+<         gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_out(:,:,:,p_so2) *1.e6 ! ajl 6/16/2023 back toppm
+<       end select
+<     end do
+<   endif
+1055,1057d896
+<       gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) *1.e6 ajl 6/16/2023 back toppm
+<       gsdchem_tr3d_inout8(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms) *1.e6
+<       gsdchem_tr3d_inout8(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) *1.e6 end ajl 6/16/20203
+1074,1076d912
+<       tr3d_out(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl 6/16/2023
+<       tr3d_out(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+<       tr3d_out(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,msa) ! end ajl 6/16.2023
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: raqms_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: seasalt_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: vertmx_driver_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: vertmxv_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: wetdep_alpha_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: wetdep_fam_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: wetdep_mod.mod
+Only in /ships22/raqms/lenzen/FV3OLD.jan3/RAQMSCHEM/src/chem/raqms: wetdep_prep_mod.mod

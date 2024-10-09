@@ -1,0 +1,459 @@
+
+module raq_plume_scalar_mod
+
+  use chem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
+  use chem_const_mod,  only : g => grvity, cp, &
+                              r_d => rd, r_v => rv, p1000mb => p1000
+  use raq_plume_data_mod,  only : num_frp_plume, p_frp_flam_frac, p_frp_mean, p_frp_std, &
+                              p_frp_mean_size, p_frp_std_size, &
+                              tropical_forest, boreal_forest, savannah, grassland,   &
+                              nveg_agreg, wind_eff
+  use raq_plume_zero_mod
+
+  real,parameter :: rgas=r_d
+  real,parameter :: cpor=cp/r_d
+  real,parameter :: p00=p1000mb
+
+  public
+
+contains
+
+subroutine plumerise(m1,firesize,mean_fct   &
+                    ,nspecies,eburn_in,eburn_out              &
+                    ,up,vp,wp,theta,pp,dn0,rv,zt_rams,zm_rams &
+                    ,plume_frp,plumerise_flag)
+  use chem_types_mod 
+  implicit none
+
+  ! arguments
+  integer :: m1,nspecies,plumerise_flag
+
+  real(CHEM_KIND_R4), dimension(nveg_agreg),    intent(in)    :: firesize,mean_fct
+  real(CHEM_KIND_R4), dimension(nspecies),      intent(in)    :: eburn_in
+  real(CHEM_KIND_R4), dimension(m1,nspecies),   intent(out)   :: eburn_out
+  real(CHEM_KIND_R4), dimension(m1),      intent(in)    :: up,vp,wp,theta,pp,dn0,rv
+  real(CHEM_KIND_R4), dimension(m1),            intent(in)    :: zt_rams,zm_rams
+  real(CHEM_KIND_R4), dimension(num_frp_plume), intent(inout) :: plume_frp
+
+  ! local variables
+  integer :: i,j,k,iveg_ag,imm,ispc,ixx,k1,k2,kmt
+  integer :: iloop
+  integer :: ncall = 0 
+
+  real               :: burnt_area,dz_flam,rhodzi,dzi,frp
+  real               :: q_smold_kgm2
+  real               :: convert_smold_to_flam
+  real, dimension(2) :: ztopmax
+
+  !Fator de conversao de unidades
+  !!fcu=1.      !=> kg [gas/part] /kg [ar]
+  !!fcu =1.e+12   !=> ng [gas/part] /kg [ar]
+  !!real,parameter :: fcu =1.e+6 !=> mg [gas/part] /kg [ar] 
+  !----------------------------------------------------------------------
+  !               indexacao para o array "plume(k,i,j)" 
+  ! k 
+  ! 1   => area media (m^2) dos focos  em biomas floresta dentro do gribox i,j 
+  ! 2   => area media (m^2) dos focos  em biomas savana dentro do gribox i,j
+  ! 3   => area media (m^2) dos focos  em biomas pastagem dentro do gribox i,j
+  ! 4   => desvio padrao da area media (m^2) dos focos : floresta
+  ! 5   => desvio padrao da area media (m^2) dos focos : savana
+  ! 6   => desvio padrao da area media (m^2) dos focos : pastagem
+  ! 7 a 9 =>  sem uso
+  !10(=k_CO_smold) => parte da emissao total de CO correspondente a fase smoldering
+  !11, 12 e 13 => este array guarda a relacao entre
+  !               qCO( flaming, floresta) e a quantidade total emitida 
+  !               na fase smoldering, isto e;
+  !               qCO( flaming, floresta) =  plume(11,i,j)*plume(10,i,j)
+  !               qCO( flaming, savana  ) =  plume(12,i,j)*plume(10,i,j)
+  !               qCO( flaming, pastagem) =  plume(13,i,j)*plume(10,i,j)
+  !20(=k_PM25_smold),21,22 e 23 o mesmo para PM25               
+  !
+  !24-n1 =>  sem uso
+  !----------------------------------------------------------------------
+
+  ! initialize output
+!  write(6,*)'top nl',m1,size(eburn_out),'nspecies',nspecies
+!  call flush(6)
+  eburn_out = 0.
+!  write(6,*)'ncall',ncall
+!  call flush(6)
+
+  if (ncall == 0) then
+    ncall = 1
+    call zero_plumegen_coms
+  endif
+  
+    
+  j=1
+  i=1
+! do j = ja,jz           ! loop em j
+!   do i = ia,iz         ! loop em i
+     
+     !- if the max value of flaming is close to zero => there is not emission with
+     !- plume rise => cycle
+
+      do k = 1,m1
+!        write(6,*)'k',k
+!        call flush(6)
+        ucon  (k)=up(k)           ! u wind
+        vcon  (k)=vp(k)           ! v wind
+        thtcon(k)=theta(k)          ! pot temperature
+        picon (k)=pp(k)                ! exner function
+        rvcon (k)=rv(k)            ! water vapor mixing ratio
+        zcon  (k)=zt_rams(k)               ! termod-point height
+        zzcon (k)=zm_rams(k)               ! W-point height
+      enddo
+      do ispc=1,nspecies
+        eburn_out(1,ispc) = eburn_in(ispc)
+!        if(eburn_out(1,ispc)/=0.0)then
+!          write(6,*)'eburn_out',ispc,eburn_out(1,ispc)
+!        endif
+      enddo
+
+         !- get envinronmental state (temp, water vapor mix ratio, ...)
+      call get_env_condition(1,m1,kmt,wind_eff)
+      !- loop over the four types of aggregate biomes with fires for
+      !plumerise version 1
+      !- for plumerise version 2, there is exist only one loop
+      iloop=1
+      if (plumerise_flag == FIRE_OPT_MODIS) iloop = nveg_agreg
+
+      !- loop nos 4 biomas agregados com possivel queimada
+      do iveg_ag=1,iloop
+
+        select case (plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            !- verifica a existencia de emissao flaming para um bioma especifico
+            !orig: if( plume( k_CO_smold + iveg_ag ,i,j) < 1.e-6 ) cycle
+            if(mean_fct(iveg_ag) < 1.e-6 ) cycle
+ 
+            ! burnt area and standard deviation
+            burnt_area    = firesize(iveg_ag)
+
+            !-number to calculate the flaming emission from the
+            !amount emitted
+            !-during the smoldering phase
+            convert_smold_to_flam = mean_fct(iveg_ag) !FRP
+
+          case (FIRE_OPT_GBBEPx)
+            !-number to calculate the emission during the flaming pahse
+            !-from the amount emitted during the smoldering phase
+            convert_smold_to_flam=plume_frp(p_frp_flam_frac)
+
+            !- check if there is only one fire in a given grid box (=> std =0.)
+            if(plume_frp(p_frp_std) < 1.0e-6) then
+              !- if yes, we will set it as a 20% of the mean frp as a gross
+              !estimation
+              !- of the retrieval uncertainty by the sensors.
+              !- (we are not taking care about the fire size retrieval)
+              plume_frp(p_frp_std)=0.2*plume_frp(p_frp_mean)
+            endif
+          case default
+            !- no further option implemented
+        end select
+
+        !- loop nos valores  minimo e maximo da taxa de calor
+        do imm=1,2
+          if (plumerise_flag == FIRE_OPT_GBBEPx) then
+            if(imm==1 ) then
+              !for imm = 1 => lower injection height
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) -0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) - 0.5*plume_frp(p_frp_std))
+            elseif(imm==2 ) then
+              !for imm = 2 => higher injection height
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) +0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) + 0.5*plume_frp(p_frp_std))
+            endif
+          endif
+
+          !- get fire properties (burned area, plume radius, heating rates ...)
+          call get_fire_properties(imm,iveg_ag,burnt_area,frp,plumerise_flag)
+     
+          !------  generates the plume rise    ------
+
+          !-- only one value for eflux of GRASSLAND
+          if (plumerise_flag == FIRE_OPT_MODIS) then
+            if(iveg_ag == 4         .and. imm == 2) then
+              ztopmax(2)=ztopmax(1)
+              ztopmax(1)=zzcon(1)
+              cycle
+            endif
+          endif
+
+          call makeplume (kmt,ztopmax(imm),ixx,imm)
+
+        enddo ! enddo do loop em imm
+
+        !- define o dominio vertical onde a emissao flaming ira ser colocada
+        call set_flam_vert(ztopmax,k1,k2,nkp,zzcon,W_VMD,VMD)
+
+        !- espessura da camada vertical
+        !- distribui a emissao flaming entre os niveis k1 e k2
+        dzi= 1./(zzcon(k2+1)-zzcon(k1))
+!        if(k1<k2)then
+!          write(6,*)'k1',k1,k2,'dzi',dzi
+!        endif
+        do k=k1,k2
+          !use this in case the emission src is already in mixing ratio
+          !rhodzi= 1./(dn0(k,i,j) * dz_flam)
+          !use this in case the emission src is tracer density
+
+          do ispc = 1, nspecies
+
+            !- get back the smoldering emission in kg/m2  (actually in 1e-9 kg/m2)
+
+            !use this in case the emission src is already in mixing ratio
+            !q_smold_kgm2 = (1/dzt(2) *  dn0(2,i,j)    )*   &
+            !          chem1_src_g(bburn,ispc,ng)%sc_src(2,i,j)
+
+            !use this in case the emission src is tracer density
+            !q_smold_kgm2 = ((zt_rams(2)-zt_rams(1))                 )*   &
+            !          eburn_in(ispc)
+            q_smold_kgm2 = eburn_in(ispc)
+
+            ! units = already in ppbm,  don't need "fcu" factor
+            !eburn_out(k,ispc) = eburn_out(k,ispc) +&
+            !                       mean_fct(iveg_ag)  *&
+            !                       q_smold_kgm2 * &
+            !                   dzi    !use this in case the emission src is tracer density
+            eburn_out(k,ispc)= eburn_out(k,ispc) + convert_smold_to_flam * q_smold_kgm2 * dzi
+!        if(eburn_out(k,ispc)/=0.0)then
+!           write(6,*)'eburnout k',k,ispc,eburn_out(k,ispc)
+!        endif
+          enddo
+
+        enddo
+
+      enddo ! enddo do loop em iveg_ag
+
+!      enddo  ! loop em i
+! enddo   ! loop em j
+
+end subroutine plumerise
+module plume_scalar_mod
+
+  use chem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
+  use chem_const_mod,  only : g => grvity, cp, &
+                              r_d => rd, r_v => rv, p1000mb => p1000
+  use plume_data_mod,  only : num_frp_plume, p_frp_flam_frac, p_frp_mean, p_frp_std, &
+                              p_frp_mean_size, p_frp_std_size, &
+                              tropical_forest, boreal_forest, savannah, grassland,   &
+                              nveg_agreg, wind_eff
+  use plume_zero_mod
+
+  real,parameter :: rgas=r_d
+  real,parameter :: cpor=cp/r_d
+  real,parameter :: p00=p1000mb
+
+  public
+
+contains
+
+subroutine plumerise(m1,firesize,mean_fct   &
+                    ,nspecies,eburn_in,eburn_out              &
+                    ,up,vp,wp,theta,pp,dn0,rv,zt_rams,zm_rams &
+                    ,plume_frp,plumerise_flag)
+  
+  implicit none
+
+  ! arguments
+  integer :: m1,nspecies,plumerise_flag
+
+  real, dimension(nveg_agreg),    intent(in)    :: firesize,mean_fct
+  real, dimension(nspecies),      intent(in)    :: eburn_in
+  real, dimension(m1,nspecies),   intent(out)   :: eburn_out
+  real, dimension(m1),      intent(in)    :: up,vp,wp,theta,pp,dn0,rv
+  real, dimension(m1),            intent(in)    :: zt_rams,zm_rams
+  real, dimension(num_frp_plume), intent(inout) :: plume_frp
+
+  ! local variables
+  integer :: i,j,k,iveg_ag,imm,ispc,ixx,k1,k2,kmt
+  integer :: iloop
+  integer :: ncall = 0 
+
+  real               :: burnt_area,dz_flam,rhodzi,dzi,frp
+  real               :: q_smold_kgm2
+  real               :: convert_smold_to_flam
+  real, dimension(2) :: ztopmax
+
+  !Fator de conversao de unidades
+  !!fcu=1.      !=> kg [gas/part] /kg [ar]
+  !!fcu =1.e+12   !=> ng [gas/part] /kg [ar]
+  !!real,parameter :: fcu =1.e+6 !=> mg [gas/part] /kg [ar] 
+  !----------------------------------------------------------------------
+  !               indexacao para o array "plume(k,i,j)" 
+  ! k 
+  ! 1   => area media (m^2) dos focos  em biomas floresta dentro do gribox i,j 
+  ! 2   => area media (m^2) dos focos  em biomas savana dentro do gribox i,j
+  ! 3   => area media (m^2) dos focos  em biomas pastagem dentro do gribox i,j
+  ! 4   => desvio padrao da area media (m^2) dos focos : floresta
+  ! 5   => desvio padrao da area media (m^2) dos focos : savana
+  ! 6   => desvio padrao da area media (m^2) dos focos : pastagem
+  ! 7 a 9 =>  sem uso
+  !10(=k_CO_smold) => parte da emissao total de CO correspondente a fase smoldering
+  !11, 12 e 13 => este array guarda a relacao entre
+  !               qCO( flaming, floresta) e a quantidade total emitida 
+  !               na fase smoldering, isto e;
+  !               qCO( flaming, floresta) =  plume(11,i,j)*plume(10,i,j)
+  !               qCO( flaming, savana  ) =  plume(12,i,j)*plume(10,i,j)
+  !               qCO( flaming, pastagem) =  plume(13,i,j)*plume(10,i,j)
+  !20(=k_PM25_smold),21,22 e 23 o mesmo para PM25               
+  !
+  !24-n1 =>  sem uso
+  !----------------------------------------------------------------------
+
+  ! initialize output
+  write(6,*)'top nl',m1,size(eburn_out)
+  call flush(6)
+  eburn_out = 0.
+
+  if (ncall == 0) then
+    ncall = 1
+    call zero_plumegen_coms
+  endif
+  
+    
+  j=1
+  i=1
+! do j = ja,jz           ! loop em j
+!   do i = ia,iz         ! loop em i
+     
+     !- if the max value of flaming is close to zero => there is not emission with
+     !- plume rise => cycle
+
+      do k = 1,m1
+        ucon  (k)=up(k)           ! u wind
+        vcon  (k)=vp(k)           ! v wind
+        thtcon(k)=theta(k)          ! pot temperature
+        picon (k)=pp(k)                ! exner function
+        rvcon (k)=rv(k)            ! water vapor mixing ratio
+        zcon  (k)=zt_rams(k)               ! termod-point height
+        zzcon (k)=zm_rams(k)               ! W-point height
+      enddo
+      do ispc=1,nspecies
+        eburn_out(1,ispc) = eburn_in(ispc)
+!        if(eburn_out(1,ispc)/=0.0)then
+!          write(6,*)'eburn_out',ispc,eburn_out(1,ispc)
+!        endif
+      enddo
+
+         !- get envinronmental state (temp, water vapor mix ratio, ...)
+      call get_env_condition(1,m1,kmt,wind_eff)
+      !- loop over the four types of aggregate biomes with fires for
+      !plumerise version 1
+      !- for plumerise version 2, there is exist only one loop
+      iloop=1
+      if (plumerise_flag == FIRE_OPT_MODIS) iloop = nveg_agreg
+
+      !- loop nos 4 biomas agregados com possivel queimada
+      do iveg_ag=1,iloop
+
+        select case (plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            !- verifica a existencia de emissao flaming para um bioma especifico
+            !orig: if( plume( k_CO_smold + iveg_ag ,i,j) < 1.e-6 ) cycle
+            if(mean_fct(iveg_ag) < 1.e-6 ) cycle
+ 
+            ! burnt area and standard deviation
+            burnt_area    = firesize(iveg_ag)
+
+            !-number to calculate the flaming emission from the
+            !amount emitted
+            !-during the smoldering phase
+            convert_smold_to_flam = mean_fct(iveg_ag) !FRP
+
+          case (FIRE_OPT_GBBEPx)
+            !-number to calculate the emission during the flaming pahse
+            !-from the amount emitted during the smoldering phase
+            convert_smold_to_flam=plume_frp(p_frp_flam_frac)
+
+            !- check if there is only one fire in a given grid box (=> std =0.)
+            if(plume_frp(p_frp_std) < 1.0e-6) then
+              !- if yes, we will set it as a 20% of the mean frp as a gross
+              !estimation
+              !- of the retrieval uncertainty by the sensors.
+              !- (we are not taking care about the fire size retrieval)
+              plume_frp(p_frp_std)=0.2*plume_frp(p_frp_mean)
+            endif
+          case default
+            !- no further option implemented
+        end select
+
+        !- loop nos valores  minimo e maximo da taxa de calor
+        do imm=1,2
+          if (plumerise_flag == FIRE_OPT_GBBEPx) then
+            if(imm==1 ) then
+              !for imm = 1 => lower injection height
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) -0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) - 0.5*plume_frp(p_frp_std))
+            elseif(imm==2 ) then
+              !for imm = 2 => higher injection height
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) +0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) + 0.5*plume_frp(p_frp_std))
+            endif
+          endif
+
+          !- get fire properties (burned area, plume radius, heating rates ...)
+          call get_fire_properties(imm,iveg_ag,burnt_area,frp,plumerise_flag)
+     
+          !------  generates the plume rise    ------
+
+          !-- only one value for eflux of GRASSLAND
+          if (plumerise_flag == FIRE_OPT_MODIS) then
+            if(iveg_ag == 4         .and. imm == 2) then
+              ztopmax(2)=ztopmax(1)
+              ztopmax(1)=zzcon(1)
+              cycle
+            endif
+          endif
+
+          call makeplume (kmt,ztopmax(imm),ixx,imm)
+
+        enddo ! enddo do loop em imm
+
+        !- define o dominio vertical onde a emissao flaming ira ser colocada
+        call set_flam_vert(ztopmax,k1,k2,nkp,zzcon,W_VMD,VMD)
+
+        !- espessura da camada vertical
+        !- distribui a emissao flaming entre os niveis k1 e k2
+        dzi= 1./(zzcon(k2+1)-zzcon(k1))
+!        if(k1<k2)then
+!          write(6,*)'k1',k1,k2,'dzi',dzi
+!        endif
+        do k=k1,k2
+          !use this in case the emission src is already in mixing ratio
+          !rhodzi= 1./(dn0(k,i,j) * dz_flam)
+          !use this in case the emission src is tracer density
+
+          do ispc = 1, nspecies
+
+            !- get back the smoldering emission in kg/m2  (actually in 1e-9 kg/m2)
+
+            !use this in case the emission src is already in mixing ratio
+            !q_smold_kgm2 = (1/dzt(2) *  dn0(2,i,j)    )*   &
+            !          chem1_src_g(bburn,ispc,ng)%sc_src(2,i,j)
+
+            !use this in case the emission src is tracer density
+            !q_smold_kgm2 = ((zt_rams(2)-zt_rams(1))                 )*   &
+            !          eburn_in(ispc)
+            q_smold_kgm2 = eburn_in(ispc)
+
+            ! units = already in ppbm,  don't need "fcu" factor
+            !eburn_out(k,ispc) = eburn_out(k,ispc) +&
+            !                       mean_fct(iveg_ag)  *&
+            !                       q_smold_kgm2 * &
+            !                   dzi    !use this in case the emission src is tracer density
+            eburn_out(k,ispc)= eburn_out(k,ispc) + convert_smold_to_flam * q_smold_kgm2 * dzi
+!        if(eburn_out(k,ispc)/=0.0)then
+!           write(6,*)'eburnout k',k,ispc,eburn_out(k,ispc)
+!        endif
+          enddo
+
+        enddo
+
+      enddo ! enddo do loop em iveg_ag
+
+!      enddo  ! loop em i
+! enddo   ! loop em j
+
+end subroutine plumerise

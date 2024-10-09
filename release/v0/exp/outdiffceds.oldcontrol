@@ -1,0 +1,176 @@
+2a3
+> ##SBATCH --time=4:30:00
+3a5
+> ##SBATCH --time=0:08:00
+4a7,8
+> ##SBATCH --cpus-per-task=1
+> ##SBATCH --partition=raqms
+5a10,14
+> ##SBATCH --priority=20
+> ##SBATCH --partition=ivy
+> #####SBATCH --qos=debug
+> ####SBATCH --constraint=haswell
+> ##SBATCH --mem-per-cpu=2000
+8,11c17,18
+< ## need to set this path to where you want the job output to go
+< 
+< #SBATCH --output=/ships19/models2/lenzen/fv3/myjob.C192.V9.1.JTASKS.CONTROL.CEDS.DTSEC.CDATEIN
+< # set up environment variables to match the GEFS operational run
+---
+> #SBATCH --output=/ships19/models2/lenzen/fv3/myjob.C192.V9.1.JTASKS.CONTROL.SAMFCHEM.2000.DTSEC.CDATEIN
+> #export NTASKS=$SLURM_NTASKS
+14,16d20
+< export cdmbgwd="0.2,2.5"
+< export nstf_name="2,0,0,0,0"
+< # AJL set last day to run for this experiment
+18,19c22
+< # for sample make shorter
+< export CDATEENDRUN=2019071712
+---
+> #export CDATEENDRUN=2019100412
+22,26d24
+< # ajl new one need
+< export NTASKS_FV3=$NTASKS
+< export restart_interval=0
+< export CDUMP=gfs
+< #ajl end new one
+31c29
+< # dont have RAQMS o3vmr returned to replace the ozone in physics
+---
+> export INTGNEW=YES
+36c34,42
+< # ajl turn of GSI assimilation for now
+---
+> #export WETDEPLSWRF=YES
+> #export WRFCHEMALPHA=YES
+> #export SASTRACERPOS=YES
+> #export SASSHALTRACERPOS=YES
+> #export SAMFCHEM=YES
+> #export cdmbgwd="0.23,1.5,1.0,1.0" # our version only has two
+> #export cdmbgwd="0.23,1.5" # 16b with more levels
+> # found for old global workflow with 64 levels and found on gsdchem parm/config.fv3
+> export cdmbgwd="0.2,2.5"
+39c45
+<   export GSIVAR="AOD"
+---
+>   export GSIVAR="sulf bc1 bc2 oc1 oc2 dust1 dust2 dust3 dust4 dust5 seas1 seas2 seas3 seas4"
+47a54
+> #export DIAGCO=YES
+50,53c57
+< # AJL set first date to run
+< # the Initial data files need to be premade from RAQMS chemical species and GFS atm files
+< # se $BASE_DATA and $IC_DIRB below
+< # Alternative to use a file from a previous run from the IC_DIR file
+---
+> #export CDATEBEG=2019070112
+54a59
+> #export CDATEBEG=2019063012
+59a65
+> #export HRSAVE=1
+80a87,90
+> #export IAT=183
+> #export JAT=172
+> #export TILEAT=2
+> #export KAT=1
+83,84c93,95
+< #export machine=s4-cardinal              #WCOSS_C, theia, etc
+< export machine=s4-submit              #WCOSS_C, theia, etc
+---
+> export machine=s4-cardinal              #WCOSS_C, theia, etc
+> #export machine=s4-submit              #WCOSS_C, theia, etc
+> #export PSLOT=fv3gfs.$PTYPE.$MODE.$NTASKS.onelayer.nth1.$CASE.088.raqmso3vmr.$FHMAX               #user-defined experiment name.
+87c98
+< export EXPNAME=O3.CONTROL.CEDS.run
+---
+> export EXPNAME=O3.CONTROL.SAMFCHEM.esrl.nstf.20.diag.test
+88a100,104
+> # raqms original units not defined use ugpkg
+> #export AEROSOL_UNITS=raqms
+> # YES aerosols for statein for raqms otherwise use gsdchem aersols
+> #export AEROSOL_IN_OLD=YES
+> #export CDATE=2019083112           #initial condition dates  2016092900 2016011812 2016081200               
+98d113
+< # AJL set it to not use OMP
+103,104c117,118
+< # you will need to point to disk space you have permissions to use
+< 
+---
+> #export BASE_OUT=/iliad/proxy/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+> #export BASE_OUT=/ships19/aqda/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+107a121,122
+> export TMPDIR=/ships19/aqda/$LOGNAME/tmpdir.gsi.viirs.gocart-aodfraction.$CDATE
+> mkdir -p $TMPDIR
+135a151,156
+> #export BASE_OUT=$BASE_OUT/OUTDIR/
+> #mkdir -p $BASE_OUT
+> #lfs setstripe --stripe-count 4 $emi_outname
+> #export nstf_name="2,0,1,0,5"
+> #export nstf_name="2,1,0,0,0"
+> export nstf_name="2,0,0,0,0"
+157c178
+< export NFHMAX_HF=24                                   # max lenght of forecast
+---
+> export NFHMAX_HF=24
+174a196
+> #export domains_stack_size=80000000
+175a198
+> #export lgocart=.false.
+182c205,207
+<   export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.ceds.sh
+---
+>   export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.sh
+> #  export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.NAN.sh
+> #exglobal_fcst_nemsfv3gfs.GSI.NO2.$CASE.DTSECX.gen.sh         
+185a211
+> #exit 0
+206a233
+> #export FCSTEXEC=fv3_gfs_${TYPE}.${COMP}.${MODE}.x
+243a271,272
+> #export BASE_OUT=/iliad/proxy/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+> #mkdir -p $BASE_OUT
+251a281,282
+> #  export BASE_OUTPUT=/ships19/aqda/
+> #  export BASE_OUTPUT=/iliad/proxy/
+256a288,298
+> #  if (( YYYYMMDD <= 20190729 || YYYYMMDD >= 20190805 ))
+> #    then
+> #      if (( YYYY == 2019 ))
+>       #then
+> #        export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYYMMDD}/
+> #      else
+> #        export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYY}/${YYYYMMDD}/
+> #      fi
+> #    else
+>       #export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/Reprocessed/${YYYYMMDD}/
+>   #fi
+291,301c333
+<   if [ $ERRROR != 0 ]; then
+<     echo "forecast failed, exit"
+<     CDATENEW=$($new_date $CDATE 6h) 
+<     if [ ! -s RUNDONE.$CDATENEW ] ; then
+<       echo RUNDONE.$CDATENEW not found
+<       echo CDATE $CDATE CDATENEW $CDATENEW
+<       exit
+<     else
+<       echo had error code but RUNDONE.$CDATENEW is there so continue
+<     exit
+<   fi
+---
+>   if [ $ERRROR != 0 ]; then echo "forecast failed, exit"; exit; fi
+320,321c352
+< # AJL this will make .5 degree lat lon files from the 6 tile files in the TRACER DIR
+< # AJL optional if you wnat these or not
+---
+> 
+340,341d370
+< 
+< # AJL make new IC (initial condition) files for next run or cycle
+363,364c392
+< # ajl this allows to loop to do more days till hit end date
+< #export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.sample.run.script.scr
+---
+> export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.2019.CONTROL.SAMFCHEM.fv3.esrl.nstf.20.diag.scr
+368c396
+< #E$NEXTDAYRUN >& ${scratch_out}/outrundaynext.$CDATE
+---
+> #$NEXTDAYRUN >& ${scratch_out}/outrundaynext.$CDATE

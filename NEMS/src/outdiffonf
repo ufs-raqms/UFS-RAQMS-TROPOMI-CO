@@ -1,0 +1,362 @@
+diff -Bbw conf/configure.nems /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/configure.nems
+3,4c3,4
+< ## Platform: Hera
+< ## Compiler: Intel with IntelMPI
+---
+> ## Platform: s4-cardinal
+> ## Compiler: Intel with intelmpi
+39,40c39,40
+< CC = mpiicc
+< CXX = mpiicpc
+---
+> CC = mpicc
+> CXX = mpicxx
+47a48
+> #DEBUG = Y
+50c51
+< OPENMP = Y
+---
+> OPENMP = N
+51a53,54
+> # for amd nodes
+> #AVX2 = N
+53,55d55
+< CCPP = N
+< TRANSITION = N
+< STATIC = N
+59c59
+< 
+---
+> ifneq ($(NEMSIO_INC),)
+60a61,62
+> endif
+> 
+71,72c74,76
+< 
+< NETCDF_ROOT = $(NETCDF)
+---
+> NETCDF_LIB :=
+> NETCDF_ROOT = $(SSEC_NETCDF4_DIR)
+> NETCDF4 = $(SSEC_NETCDF4_DIR)
+76c80
+<   NETCDF_LIB += -L$(NETCDF)/lib -lnetcdff -lnetcdf
+---
+>   NETCDF_LIB += -L$(NETCDF4)/lib -lnetcdff -lnetcdf
+78c82
+<   NETCDF_LIB += -L$(NETCDF)/lib -lnetcdff -lnetcdf
+---
+>   NETCDF_LIB += -L$(NETCDF4)/lib -lnetcdff -lnetcdf
+84,87c88
+< FFLAGS := $(INCLUDE) -fno-alias -auto -safe-cray-ptr -save-temps -ftz -assume byterecl -nowarn -sox -align array64byte
+< 
+< CPPDEFS += -Duse_libMPI -Duse_netCDF -DSPMD -DUSE_LOG_DIAG_FIELD_INFO -Duse_LARGEFILE -DUSE_GFSL63 -DGFS_PHYS -Duse_WRTCOMP
+< CPPDEFS += -DNEW_TAUCTMAX -DINTERNAL_FILE_NML
+---
+> FFLAGS := $(INCLUDE) -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -nowarn -sox -align array64byte
+90c91
+< CPPDEFS +=
+---
+> CPPDEFS += -Duse_libMPI -Duse_netCDF -DSPMD -DUSE_LOG_DIAG_FIELD_INFO -Duse_LARGEFILE -DUSE_GFSL63 -DGFS_PHYS
+92c93
+< CPPDEFS += -DMOIST_CAPPA -DUSE_COND
+---
+> CPPDEFS += -Duse_libMPI -Duse_netCDF -DSPMD -DUSE_LOG_DIAG_FIELD_INFO -Duse_LARGEFILE -DUSE_GFSL63 -DGFS_PHYS -DMOIST_CAPPA -DUSE_COND
+95,97c96,97
+< ifeq ($(NAM_phys),Y)
+< CPPDEFS += -DNAM_phys
+< endif
+---
+> CPPDEFS += -DNEW_TAUCTMAX -DINTERNAL_FILE_NML
+> CPPDEFS += -Duse_WRTCOMP
+100c100
+< CPPDEFS += -DOVERLOAD_R4 -DOVERLOAD_R8
+---
+> CPPDEFS += -DOVERLOAD_R4
+103,105d102
+< ifeq ($(REPRO),Y)
+< FFLAGS += -i4 -real-size 64
+< else
+108,128c105,111
+< endif
+< 
+< ifeq ($(REPRO),Y)
+< FFLAGS += -qno-opt-dynamic-align
+< CFLAGS += -qno-opt-dynamic-align
+< else
+< ifeq ($(AVX2),Y)
+< # Don't use the AVX512 flags yet on hera
+< #FFLAGS += -axSSE4.2,AVX,CORE-AVX2,CORE-AVX512 -qno-opt-dynamic-align
+< #CFLAGS += -axSSE4.2,AVX,CORE-AVX2,CORE-AVX512 -qno-opt-dynamic-align
+< FFLAGS += -xCORE-AVX2 -qno-opt-dynamic-align
+< CFLAGS += -xCORE-AVX2 -qno-opt-dynamic-align
+< else
+< FFLAGS += -qno-opt-dynamic-align
+< CFLAGS += -qno-opt-dynamic-align
+< endif
+< endif
+< 
+< ifeq ($(MULTI_GASES),Y)
+< CPPDEFS += -DMULTI_GASES
+< endif
+---
+> # for cardinal turn off ajl
+> FFLAGS += -axavx 
+> CFLAGS += -axavx 
+> #  FFLAGS += -xCore-AVX512 -qopt-zmm-usage=high
+> # FFLAGS += -xCore-AVX2
+> #FFLAGS += -mcmodel=medium
+> #CFLAGS += -mcmodel=medium
+131,132c114,116
+< FFLAGS_REPRO = -O2 -debug minimal -fp-model consistent -qoverride-limits -g -traceback
+< FFLAGS_DEBUG = -g -O0 -check all -check noarg_temp_created -check nopointer -warn -warn noerrors -fp-stack-check -fstack-protector-all -fpe0 -debug -traceback -ftrapuv
+---
+> FFLAGS_REPRO = -O2 -debug minimal -fp-model source -qoverride-limits -g -traceback
+> FFLAGS_DEBUG = -g -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fp-stack-check -fstack-protector-all -fpe0 -debug -traceback -ftrapuv
+> FFLAGS_DEBUGS = -traceback
+135c119
+< FFLAGS_OPENMP = -qopenmp
+---
+> #FFLAGS_OPENMP = -qopenmp
+142c126
+< CFLAGS_OPENMP = -qopenmp
+---
+> #CFLAGS_OPENMP = -qopenmp
+147c131,132
+< FFLAGS_TEST = -O3 -debug minimal -fp-model source -qoverride-limits
+---
+> #FFLAGS_TEST = -O3 -debug minimal -fp-model source -qoverride-limits
+> FFLAGS_TEST = -O2 -debug minimal -fp-model source -qoverride-limits
+157,158c142
+< ifeq ($(REPRO),Y)
+< CPPDEFS += -DREPRO
+---
+> ifneq ($(REPRO),)
+162,163c146
+< else ifeq ($(DEBUG),Y)
+< CPPDEFS += -DDEBUG
+---
+> else ifneq ($(DEBUG),)
+167c150
+< else ifeq ($(TEST),Y)
+---
+> else ifneq ($(TEST),)
+177,178c160
+< ifeq ($(OPENMP),Y)
+< CPPDEFS += -DOPENMP
+---
+> ifneq ($(OPENMP),)
+184c166
+< ifeq ($(VERBOSE),Y)
+---
+> ifneq ($(VERBOSE),)
+188,203d169
+< endif
+< 
+< ifeq ($(CCPP),Y)
+< CPPDEFS += -DCCPP
+< CFLAGS += -I$(PATH_CCPP)/include
+< FFLAGS += -I$(PATH_CCPP)/include
+< ifeq ($(STATIC),Y)
+< CPPDEFS += -DSTATIC
+< LDFLAGS += -L$(PATH_CCPP)/lib -lccppphys -lccpp $(NCEPLIBS) -lxml2
+< else
+< LDFLAGS += -L$(PATH_CCPP)/lib -lccpp
+< endif
+< endif
+< 
+< ifeq ($(TRANSITION),Y)
+< CPPDEFS += -DTRANSITION
+diff -Bbw conf/module-setup.csh.inc /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.csh.inc
+6d5
+<     # We are on NOAA Jet
+11,12c10,11
+< else if ( { test -d /scratch1 -a ! -d /scratch } ) then
+<     # We are on NOAA Hera
+---
+> else if ( { test -d /scratch3 } ) then
+>     # We are on NOAA Theia
+39,44d37
+< else if ( { test -L /usrx && sh -c "readlink /usrx 2> /dev/null | grep dell" } ) then
+<     # We are on WCOSS Mars or Venus
+<     if ( ! { module help >& /dev/null } ) then
+<         source /usrx/local/prod/lmod/lmod/init/$__ms_shell
+<     endif
+<     module purge
+46c39
+<     # We are on NCAR Cheyenne
+---
+>     # We are on NCAR Yellowstone
+48c41
+<       source /glade/u/apps/ch/modulefiles/default/localinit/localinit.csh
+---
+>         source /usr/share/Modules/init/$__ms_shell
+60,107d52
+<         set __ms_source_etc_csh_login=yes
+<     else
+<         set __ms_source_etc_csh_login=no
+<     endif
+<     module purge
+<     unsetenv _LMFILES_
+<     unsetenv _LMFILES_000
+<     unsetenv _LMFILES_001
+<     unsetenv LOADEDMODULES
+<     module load modules
+<     if ( { test -d /opt/cray/ari/modulefiles } ) then
+<         module use -a /opt/cray/ari/modulefiles
+<     endif
+<     if ( { test -d /opt/cray/pe/ari/modulefiles } ) then
+<         module use -a /opt/cray/pe/ari/modulefiles
+<     endif
+<     if ( { test -d /opt/cray/pe/craype/default/modulefiles } ) then
+<         module use -a /opt/cray/pe/craype/default/modulefiles
+<     endif
+<     setenv NCEPLIBS /lustre/f1/pdata/ncep_shared/NCEPLIBS/lib
+<     if ( { test -d /lustre/f1/pdata/ncep_shared/NCEPLIBS/lib } ) then
+<       module use $NCEPLIBS/modulefiles
+<     endif
+<     if ( "$__ms_source_etc_csh_login" == yes ) then
+<       source /etc/csh.login
+<       unset __ms_source_etc_csh_login
+<     endif
+< else if ( { test -d /lrz/sys } ) then
+<     # We are on LRZ SuperMUC, nothing to do
+<     sh -c 'echo Platform: LRZ SuperMUC'
+< else if ( { test -d /Applications } ) then
+<     # We are on a MacOSX system, nothing to do
+<     sh -c 'echo Platform: MacOSX'
+< else if ( { test -e /etc/redhat-release } ) then
+<     if ( { grep -iq centos "/etc/redhat-release" } ) then
+<         # We are on CentOS Linux, nothing to do
+<         sh -c 'echo Platform: CentOS Linux'
+<     else
+<         # Workaround for csh limitation.  Use sh to print to stderr.
+<         sh -c 'echo WARNING: UNKNOWN PLATFORM 1>&2'
+<     endif
+< else if ( { test -e /etc/issue } ) then
+<     if ( { grep -iq ubuntu "/etc/issue" } ) then
+<         # We are on Ubuntu Linux, nothing to do
+<         sh -c 'echo Platform: Ubuntu Linux'
+<     else
+<         # Workaround for csh limitation.  Use sh to print to stderr.
+<         sh -c 'echo WARNING: UNKNOWN PLATFORM 1>&2'
+108a54,60
+>     module purge
+> else if ( { test -d /scratch -a -d /data } ) then
+>     echo other one we are on s4-cardinal
+>     if ( ! { module help >& /dev/null } ) then
+>         echo module not defined
+>     fi  
+>     module purge
+diff -Bbw conf/module-setup.sh.inc /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.sh.inc
+17a18
+> echo at ajl aa
+25,26c26,27
+< elif [[ -d /scratch1 && ! -d /scratch ]] ; then
+<     # We are on NOAA Hera
+---
+> elif [[ -d /scratch3 ]] ; then
+>     # We are on NOAA Theia
+54,59d54
+< elif [[ -L /usrx && "$( readlink /usrx 2> /dev/null )" =~ dell ]] ; then
+<     # We are on NOAA Mars or Venus
+<     if ( ! eval module help > /dev/null 2>&1 ) ; then
+< 	source /usrx/local/prod/lmod/lmod/init/$__ms_shell
+<     fi
+<     module purge
+61c56
+<     # We are on NCAR Cheyenne   
+---
+>     # We are on NCAR Yellowstone
+63c58
+<       . /glade/u/apps/ch/modulefiles/default/localinit/localinit.sh
+---
+>         . /usr/share/Modules/init/$__ms_shell
+75,77d69
+<         __ms_source_etc_profile=yes
+<     else
+<         __ms_source_etc_profile=no
+80,124c72,78
+< # clean up after purge 
+<     unset _LMFILES_
+<     unset _LMFILES_000
+<     unset _LMFILES_001
+<     unset LOADEDMODULES
+<     module load modules
+<     if [[ -d /opt/cray/ari/modulefiles ]] ; then
+<         module use -a /opt/cray/ari/modulefiles
+<     fi
+<     if [[ -d /opt/cray/pe/ari/modulefiles ]] ; then
+<         module use -a /opt/cray/pe/ari/modulefiles
+<     fi
+<     if [[ -d /opt/cray/pe/craype/default/modulefiles ]] ; then
+<         module use -a /opt/cray/pe/craype/default/modulefiles
+<     fi
+<     if [[ -s /etc/opt/cray/pe/admin-pe/site-config ]] ; then
+<         source /etc/opt/cray/pe/admin-pe/site-config
+<     fi
+<     export NCEPLIBS=/lustre/f1/pdata/ncep_shared/NCEPLIBS/lib
+<     if [[ -d "$NCEPLIBS" ]] ; then
+<         module use $NCEPLIBS/modulefiles
+<     fi
+<     if [[ "$__ms_source_etc_profile" == yes ]] ; then
+<       source /etc/profile
+<       unset __ms_source_etc_profile
+<     fi
+< elif [[ -d /lrz/sys ]] ; then
+<     # We are on LRZ SuperMUC, nothing to do
+<     echo "Platform: LRZ SuperMUC"
+< elif [[ -d /Applications ]] ; then
+<     # We are on a MacOSX system, nothing to do
+<     echo "Platform: MacOSX"
+< elif [[ -e /etc/redhat-release ]] ; then
+<     if grep -iq centos "/etc/redhat-release" ; then
+<         # We are on CentOS Linux, nothing to do
+<         echo "Platform: CentOS Linux"
+<     else
+<         echo WARNING: UNKNOWN PLATFORM 1>&2
+<     fi
+< elif [[ -e /etc/issue ]] ; then
+<     if grep -iq ubuntu "/etc/issue" ; then
+<         # We are on Ubuntu Linux, nothing to do
+<         echo "Platform: Ubuntu Linux"
+<     else
+<         echo WARNING: UNKNOWN PLATFORM 1>&2
+---
+> elif [[ -d /scratch && -d /data ]] ; then
+>     # we are on s4 assume module command is there
+>       echo " on inc module purge we are on s4-cardinal "
+>       if ( ! eval module help > /dev/null 2>&1 ) ; then
+>         echo ajl module not there
+>         echo $HOME
+>         source /home/lenzen/.bashrc >& /home/lenzen/trybashrc
+125a80,81
+>       module purge
+>       echo "did module purge at ajl ddd" >& $HOME/outmodulepurge
+diff -Bbw conf/modules.nems.csh /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems.csh
+1,3c1
+< source /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.csh.inc
+< module use /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf
+< module load modules.nems
+---
+> source /home/lenzen/FV3GFS-GSDCHEM.0.9.0/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems
+diff -Bbw conf/modules.nems.sh /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems.sh
+1,3c1
+< . /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/module-setup.sh.inc
+< module use /scratch2/BMC/gsd-fv3-dev/lzhang/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf
+< module load modules.nems
+---
+> . /home/lenzen/FV3GFS-GSDCHEM.0.9.0/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems
+diff -Bbw conf/test-results.mk /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/test-results.mk
+2a3,14
+> ESMF_VERSION_STRING=8.0.0 beta snapshot
+> ESMF_VERSION_STRING_GIT=ESMF_8_0_0_beta_snapshot_47
+> ESMF_VERSION_MAJOR=8
+> ESMF_VERSION_MINOR=0
+> ESMF_VERSION_REVISION=0
+> ESMF_VERSION_PATCHLEVEL=0
+> ESMF_VERSION_PUBLIC='F'
+> ESMF_VERSION_BETASNAPSHOT='T'
+> ESMF_APPSDIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//apps/appsO/Linux.intel.64.intelmpi.default
+> ESMF_LIBSDIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default
+> ESMF_F90COMPILECPPFLAGS=-DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+> ESMF_CXXCOMPILECPPFLAGS=-DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -D__SDIR__=''

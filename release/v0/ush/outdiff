@@ -1,0 +1,26 @@
+48,51d47
+< export HH=`echo $CDATEF | cut -c9-10`
+< export HH=3$HH
+< export HH3=$((HH % 3))
+< echo HH $HH HH3 $HH3
+57,60c53,56
+< #if [ $GG = 1deg    ];  then  export nlon=360  ; export nlat=180  ; fi
+< #if [ $GG = 0p5deg  ];  then  export nlon=720  ; export nlat=360  ; fi
+< #if [ $GG = 0p25deg ];  then  export nlon=1440 ; export nlat=720  ; fi
+< #if [ $GG = 0p125deg ]; then  export nlon=2880 ; export nlat=1440 ; fi
+---
+> if [ $GG = 1deg    ];  then  export nlon=360  ; export nlat=180  ; fi
+> if [ $GG = 0p5deg  ];  then  export nlon=720  ; export nlat=360  ; fi
+> if [ $GG = 0p25deg ];  then  export nlon=1440 ; export nlat=720  ; fi
+> if [ $GG = 0p125deg ]; then  export nlon=2880 ; export nlat=1440 ; fi
+78,79d73
+< echo HH3 $HH3 HH $HH
+< if [[ $HH3 = 0 ]] ; then
+89,91d82
+< fi
+< sleep 5
+< $GSI_DIR/run/rungsi.FV3GFS.GSI.geostationary.AOD.55km.sh >& $GSI_SCRATCH/outgsi.GEO.AOD.$CDATEF
+106c97
+< #exit -1
+---
+> exit -1

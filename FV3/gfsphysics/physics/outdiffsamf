@@ -1,0 +1,417 @@
+1,2c1,2
+<       subroutine samfdeepcnv_chem(im, ix, km, itc, ntc, ntr, delt,
+<      &  xlamde, xlamdd, cnvflg, jmin, kb, kmax, kbcon, ktcon, 
+---
+>       subroutine samfdeepcnv_aerosols(im, ix, km, itc, ntc, ntr, delt,
+>      &  xlamde, xlamdd, cnvflg, jmin, kb, kmax, kbcon, ktcon, fscav,
+4c4
+<      &  qtr, qchem)
+---
+>      &  qtr, qaero)
+20a21
+>       real(kind=kind_phys), dimension(ntc),         intent(in) :: fscav
+26c27
+<       real(kind=kind_phys), dimension(im,km,ntc),   intent(out) :: qchem
+---
+>       real(kind=kind_phys), dimension(im,km,ntc),   intent(out) :: qaero
+30d30
+<       real(kind=kind_phys),parameter :: qaminchem=1.e-22_kind_phys
+39,40c39,40
+< !      real(kind=kind_phys), dimension(im,km,ntc) :: chem_c, chem_pw,
+< !     &  wet_dep
+---
+>       real(kind=kind_phys), dimension(im,km,ntc) :: chem_c, chem_pw,
+>      &  wet_dep
+53,65d52
+<       real(kind=kind_phys) :: delesum(im)
+<       real(kind=kind_phys) :: changeup,diffflux,sumchem(im),sumchemb(im)
+<       integer me,nb
+<       integer nfixupchem(ntc)
+<       logical doprint
+<       common /myme2/me
+<       common /mynb/nb
+<       nfixupchem=0
+<       
+<       doprint=.false.
+< !      if(me==88.and.nb==57)then
+< !         doprint=.true.
+<       !endif
+76,77c63,64
+< !      chem_c    = zero
+< !      chem_pw   = zero
+---
+>       chem_c    = zero
+>       chem_pw   = zero
+82,84c69
+<       qchem     = zero
+< !      write(200+me,*)'qchem',shape(qchem)
+< !      call flush(200+me)
+---
+>       qaero     = zero
+92,99c77
+<             if (k <= kmax(i)) qchem(i,k,n) = max(qaminchem, qtr(i,k,it))
+<             if(doprint.and.n==49)then
+<                if (i==1.and.k<=kmax(i))then
+<                   write(400+me,*)'qchem',k,qchem(i,k,n)
+<                   write(200+me,*)'qchem',k,qchem(i,k,n)
+<                   call flush(400+me)
+<                endif
+<              endif
+---
+>             if (k <= kmax(i)) qaero(i,k,n) = max(qamin, qtr(i,k,it))
+116c94
+<      &        half * (qchem(i,k,n) + qchem(i,kp1,n))
+---
+>      &        half * (qaero(i,k,n) + qaero(i,kp1,n))
+121,125c99
+<           ctro2(i,kmax(i),n) = qchem(i,kmax(i),n)
+<         enddo
+<         if(doprint.and.n==49)then
+<           do k=1,kmax(i)
+<           write(400+me,*)'ctro2',k,ctro2(1,k,n)
+---
+>           ctro2(i,kmax(i),n) = qaero(i,kmax(i),n)
+127,128d100
+<           call flush(400+me)
+<         endif
+144,151d115
+<         if(doprint.and.n==49)then
+<           i=1
+<           write(400+me,*)'kb',kb(i),'jmin',jmin(i)
+<           do k=1,kmax(i)
+<           write(400+me,*)'ecdo2',k,ecdo2(1,k,n)
+<           end do
+<           call flush(400+me)
+<         endif
+194c158
+< c                chem_c(i,k,n)=fscav(n)*ecko2(i,k,n)
+---
+>                 chem_c(i,k,n)=fscav(n)*ecko2(i,k,n)
+197,199c161,163
+< c                tem=chem_c(i,k,n)/(one+c0t(i,k)*dz)
+< c                chem_pw(i,k,n)=c0t(i,k)*dz*tem*eta(i,kk) !etah
+< c                ecko2(i,k,n)=tem+ecko2(i,k,n)-chem_c(i,k,n)
+---
+>                 tem=chem_c(i,k,n)/(one+c0t(i,k)*dz)
+>                 chem_pw(i,k,n)=c0t(i,k)*dz*tem*eta(i,kk) !etah
+>                 ecko2(i,k,n)=tem+ecko2(i,k,n)-chem_c(i,k,n)
+307c271
+< !              wet_dep(i,k,n)=chem_pw(i,k,n)*g/delp(i,k)
+---
+>               wet_dep(i,k,n)=chem_pw(i,k,n)*g/delp(i,k)
+318,321d281
+<               if(doprint.and.n==49.and.i==1)then
+<                 write(400+me,*)'dellae2',k,dellae2(i,k,n),
+<      &'eta',eta(i,k),'ctro2',ctro2(i,k,n),'kb',kb(i)
+<               endif
+354c314
+<                 flx_lo(i,k) = -xmb(i) * tem * qchem(i,k,n)
+---
+>                 flx_lo(i,k) = -xmb(i) * tem * qaero(i,k,n)
+356c316
+<                 flx_lo(i,k) = -xmb(i) * tem * qchem(i,kk,n)
+---
+>                 flx_lo(i,k) = -xmb(i) * tem * qaero(i,kk,n)
+371c331
+<               clipout(i,k)=min(one ,qchem(i,k,n)/max(epsil,totlout(i,k))
+---
+>               clipout(i,k)=min(one ,qaero(i,k,n)/max(epsil,totlout(i,k))
+410,417c370,377
+< !      do n = 1, ntc
+< !        do k = 1, km
+< !          do i = 1, im
+< !            if (cnvflg(i) .and. (k < ktcon(i)))
+< !     &        wet_dep(i,k,n) = wet_dep(i,k,n)*xmb(i)*delt*delp(i,k)
+< !          enddo
+< !        enddo
+< !      enddo
+---
+>       do n = 1, ntc
+>         do k = 1, km
+>           do i = 1, im
+>             if (cnvflg(i) .and. (k < ktcon(i)))
+>      &        wet_dep(i,k,n) = wet_dep(i,k,n)*xmb(i)*delt*delp(i,k)
+>           enddo
+>         enddo
+>       enddo
+422,423d381
+<         sumchemb=0.0
+<         sumchem=0.0
+427,441c385,386
+<               sumchemb(i)=sumchemb(i)*qchem(i,k,n)*delp(i,k)
+<               changeup=(-.9*qchem(i,k,n)-dellae2(i,k,n)*delt)/delt
+<               if(changeup>0.)then
+< !               this will force minimum to be (1-.9)=.1*qchem(i,k,n)
+<                 dellae2(i,k,n)=dellae2(i,k,n)+changeup
+<                 diffflux=changeup*delp(i,k)
+<                 changeup=diffflux/delp(i,k+1)
+<                 dellae2(i,k+1,n)=dellae2(i,k+1,n)-changeup
+<                 nfixupchem(n)=nfixupchem(n)+1
+<               endif
+<               qchem(i,k,n) = qchem(i,k,n) + dellae2(i,k,n) * delt
+< !             do same method as old samfpositive instead
+<               sumchem(i)=sumchem(i)*qchem(i,k,n)*delp(i,k)
+<               if (qchem(i,k,n) < zero) then
+<                 write(6,*)'qchem deep neg',i,k,n,qchem(i,k,n)
+---
+>               qaero(i,k,n) = qaero(i,k,n) + dellae2(i,k,n) * delt
+>               if (qaero(i,k,n) < zero) then
+443,444c388,389
+< !                wet_dep(i,k,n) = wet_dep(i,k,n)-qchem(i,k,n)*delp(i,k)
+<                 qchem(i,k,n) = qaminchem
+---
+>                 wet_dep(i,k,n) = wet_dep(i,k,n)-qaero(i,k,n)*delp(i,k)
+>                 qaero(i,k,n) = qamin
+449,453d393
+<         do i=1,im
+<           if(sumchemb(i)/=sumchem(i))then
+<             write(6,*)n,'sumchemb',i,sumchemb(i),sumchem(i)
+< !            write(400+me,*)n,'sumchemb',i,sumchemb(i),sumchem(i)
+<           endif
+455,462d394
+<       enddo
+< !      if(maxval(nfixupchem)>0)then
+< !        do n=1,ntc
+< !          if(nfixupchem(n)>0)then
+< !            write(6,*)'nfixupchem',n,nfixupchem(n),' deepcnv'
+< !          endif
+< !        end do
+< !      endif
+468,469c400,401
+<       subroutine samfshalcnv_chem(im, ix, km, itc, ntc, ntr, delt,
+<      &  cnvflg, kb, kmax, kbcon, ktcon,
+---
+>       subroutine samfshalcnv_aerosols(im, ix, km, itc, ntc, ntr, delt,
+>      &  cnvflg, kb, kmax, kbcon, ktcon, fscav,
+471c403
+<      &  qtr, qchem)
+---
+>      &  qtr, qaero)
+489c421
+< !      real(kind=kind_phys), dimension(ntc),         intent(in) :: fscav
+---
+>       real(kind=kind_phys), dimension(ntc),         intent(in) :: fscav
+495c427
+<       real(kind=kind_phys), dimension(im,km,ntc),   intent(out) :: qchem
+---
+>       real(kind=kind_phys), dimension(im,km,ntc),   intent(out) :: qaero
+499d430
+<       real(kind=kind_phys),parameter :: qaminchem=1.e-22_kind_phys
+508,509c439,440
+< !      real(kind=kind_phys), dimension(im,km,ntc) :: chem_c, chem_pw,
+< !     &  wet_dep
+---
+>       real(kind=kind_phys), dimension(im,km,ntc) :: chem_c, chem_pw,
+>      &  wet_dep
+523,539d453
+<       real(kind=kind_phys) :: delesum(im)
+<       real(kind=kind_phys) :: changeup,diffflux,sumchem(im),sumchemb(im)
+<       integer me,nb
+<       logical doprint,foundneg(im)
+<       common /myme2/me
+<       common /mynb/nb
+<       integer nfixupchem(ntr)
+<       nfixupchem=0
+<       doprint=.false.
+<       delesum=0.0
+<       if(me==88.and.nb==57)then
+<          doprint=.true.
+<          write(200+me,*)'doprint shallow'
+<          write(400+me,*)'doprint shallow'
+<          call flush(200+me)
+<          call flush(400+me)
+<       endif
+550,551c464,465
+< !      chem_c    = zero
+< !      chem_pw   = zero
+---
+>       chem_c    = zero
+>       chem_pw   = zero
+556,559c470
+<       qchem     = zero
+< !      write(200+me,*)'qchem sahl',shape(qchem),'ntc',
+< !     *ntc,'ntr',ntr,'itc',itc
+<       !call flush(200+me)
+---
+>       qaero     = zero
+567,574c478
+<             if (k <= kmax(i)) qchem(i,k,n) = max(qaminchem, qtr(i,k,it))
+<             if(doprint.and.n==49)then
+<                if (i==1.and.k<=kmax(i))then
+<                   write(400+me,*)'qchem shallow',k,qchem(i,k,n)
+<                   write(200+me,*)'qchem shallow',k,qchem(i,k,n)
+<                   call flush(400+me)
+<                endif
+<              endif
+---
+>             if (k <= kmax(i)) qaero(i,k,n) = max(qamin, qtr(i,k,it))
+591c495
+<      &        half * (qchem(i,k,n) + qchem(i,kp1,n))
+---
+>      &        half * (qaero(i,k,n) + qaero(i,kp1,n))
+596c500
+<           ctro2(i,kmax(i),n) = qchem(i,kmax(i),n)
+---
+>           ctro2(i,kmax(i),n) = qaero(i,kmax(i),n)
+598,606d501
+<         if(doprint.and.n==49)then
+<           i=1
+<           do k=1,kmax(i)
+<           write(200+me,*)'ctro2',k,ctro2(1,k,n)
+<           write(400+me,*)'ctro2',k,ctro2(1,k,n)
+<           end do
+<           call flush(200+me)
+<           call flush(400+me)
+<         endif
+616,621d510
+<         if(doprint.and.n==49)then
+<           i=1
+<           do k=1,kb(i)
+<           write(400+me,*)'ecko2',k,ecko2(1,k,n)
+<           end do
+<         endif
+662,664d550
+<         if(doprint.and.n==49.and.i==1)then
+<            write(400+me,*)'ecko2',k,ecko2(i,k,n),'tem1',tem1,'tem',tem
+<          endif
+674c560
+< !                chem_c(i,k,n)=escav*fscav(n)*ecko2(i,k,n)
+---
+>                 chem_c(i,k,n)=escav*fscav(n)*ecko2(i,k,n)
+677,679c563,565
+< !                tem=chem_c(i,k,n)/(one+c0t(i,k)*dz)
+< !                chem_pw(i,k,n)=c0t(i,k)*dz*tem*eta(i,kk) !etah
+< !                ecko2(i,k,n)=tem+ecko2(i,k,n)-chem_c(i,k,n)
+---
+>                 tem=chem_c(i,k,n)/(one+c0t(i,k)*dz)
+>                 chem_pw(i,k,n)=c0t(i,k)*dz*tem*eta(i,kk) !etah
+>                 ecko2(i,k,n)=tem+ecko2(i,k,n)-chem_c(i,k,n)
+790c676
+< !              wet_dep(i,k,n)=chem_pw(i,k,n)*g/delp(i,k)
+---
+>               wet_dep(i,k,n)=chem_pw(i,k,n)*g/delp(i,k)
+833c719
+<                 flx_lo(i,k) = -xmb(i) * tem * qchem(i,k,n)
+---
+>                 flx_lo(i,k) = -xmb(i) * tem * qaero(i,k,n)
+835c721
+<                 flx_lo(i,k) = -xmb(i) * tem * qchem(i,kk,n)
+---
+>                 flx_lo(i,k) = -xmb(i) * tem * qaero(i,kk,n)
+850c736
+<               clipout(i,k)=min(one ,qchem(i,k,n)/max(epsil,totlout(i,k))
+---
+>               clipout(i,k)=min(one ,qaero(i,k,n)/max(epsil,totlout(i,k))
+881,885d766
+<           if(doprint.and.n==57.and.i==1)then
+<        write(400+me,*)'adjust dellae2',k,dellae2(i,k,n),
+<      &  -(flx_lo(i,kp1)-flx_lo(i,k))*dtovdz/dtime_max
+<              call flush(400+me)
+<            endif
+894,901c775,782
+< !      do n = 1, ntc
+< !        do k = 1, km
+< !          do i = 1, im
+< !            if (cnvflg(i) .and. (k < ktcon(i)))
+< !     &        wet_dep(i,k,n) = wet_dep(i,k,n)*xmb(i)*delt*delp(i,k)
+< !          enddo
+< !        enddo
+< !      enddo
+---
+>       do n = 1, ntc
+>         do k = 1, km
+>           do i = 1, im
+>             if (cnvflg(i) .and. (k < ktcon(i)))
+>      &        wet_dep(i,k,n) = wet_dep(i,k,n)*xmb(i)*delt*delp(i,k)
+>           enddo
+>         enddo
+>       enddo
+906,909d786
+<         delesum=0.0
+<         foundneg=.false.
+<         sumchemb=0.0
+<         sumchem=0.0
+913,956c790,794
+<               sumchemb(i)=sumchemb(i)*qchem(i,k,n)*delp(i,k)
+<               changeup=(-.9*qchem(i,k,n)-dellae2(i,k,n)*delt)/delt
+<               if(changeup>0.)then
+< !               this will force minimum to be (1-.9)=.1*qchem(i,k,n)
+<                 dellae2(i,k,n)=dellae2(i,k,n)+changeup
+<                 diffflux=changeup*delp(i,k)
+<                 changeup=diffflux/delp(i,k+1)
+<                 dellae2(i,k+1,n)=dellae2(i,k+1,n)-changeup
+<                 nfixupchem(n)=nfixupchem(n)+1
+<               endif
+<               if(-dellae2(i,k,n)*delt >=qchem(i,k,n))then
+<                  write(200+me,*)'nb',nb,'dellae too big ',
+<      &  dellae2(i,k,n)*delt,'delt',delt,'qchem',qchem(i,k,n)
+<                  write(400+me,*)'nb',nb,'dellae too big ',
+<      &  dellae2(i,k,n)*delt,'delt',delt,'qchem',qchem(i,k,n)
+<        write(200+me,*)'kmax',kmax(i),'i,k,n',i,k,n,'ktcon',ktcon(i)
+<        write(400+me,*)'kmax',kmax(i),'i,k,n',i,k,n,'ktcon',ktcon(i)
+<              call flush(400+me)
+<               endif
+< !              write(200+me,*)'qchem',i,k,n,qchem(i,k,n),'dellae2',
+< !     &   dellae2(i,k,n),'delt',delt
+<               !call flush(200+me)
+<               qchem(i,k,n) = qchem(i,k,n) + dellae2(i,k,n) * delt
+<               delesum(i)=delesum(i)+dellae2(i,k,n)*delt*delp(i,k)
+<               if (qchem(i,k,n) == zero)then
+<        write(200+me,*)'nb',nb,'qchem zero',i,k,n,qchem(i,k,n),'dell*dt'
+<      &    ,dellae2(i,k,n)*delt
+<              call flush(200+me)
+<               endif
+<               sumchem(i)=sumchem(i)*qchem(i,k,n)*delp(i,k)
+<               if (qchem(i,k,n) < zero) then
+<              write(200+me,*)'nb',nb,'qchem neg shalcv',i,k,n,itc+n-1,
+<      &      qchem(i,k,n)
+<              write(400+me,*)'nb',nb,'qchem neg shalcv',i,k,n,itc+n-1,
+<      &      qchem(i,k,n)
+<              call flush(200+me)
+<              call flush(400+me)
+<              write(400+me,*)'diff',(qaminchem-qchem(i,k,n))*delp(i,k)
+<               
+< !               add negative mass to wet deposition
+< !                wet_dep(i,k,n) = wet_dep(i,k,n)-qchem(i,k,n)*delp(i,k)
+<                 foundneg(i)=.true.
+<                 qchem(i,k,n) = qaminchem
+<               endif
+---
+>               qaero(i,k,n) = qaero(i,k,n) + dellae2(i,k,n) * delt
+>               if (qaero(i,k,n) < zero) then
+> c               add negative mass to wet deposition
+>                 wet_dep(i,k,n) = wet_dep(i,k,n)-qaero(i,k,n)*delp(i,k)
+>                 qaero(i,k,n) = qamin
+958,976d795
+<           enddo
+<         enddo
+<         do i=1,im
+<           if(sumchemb(i)/=sumchem(i))then
+<             write(400+me,*)n,'sumchemb',i,sumchemb(i),sumchem(i)
+<           endif
+<           if(abs(delesum(i))>1.e-16.or.foundneg(i))then
+< !            write(6,*)'delesum',i,n,delesum(i),foundneg(i)
+< !            write(400+me,*)'delesum',i,n,delesum(i),foundneg(i)
+< !            write(400+me,*)'sumchemb',sumchemb(i),sumchem(i),sumchemb(i)-sumchem(i)
+<             delesum(i)=0.0
+<             foundneg(i)=.false.
+<             do k = 1, km
+<               if (cnvflg(i) .and. (k <= min(kmax(i),ktcon(i)))) then
+<                 delesum(i)=delesum(i)+dellae2(i,k,n)*delt*delp(i,k)
+< !                write(6,*)'dele',k, dellae2(i,k,n)*delt*delp(i,k),
+< !     &         'newsum',delesum(i)
+< !                write(400+me,*)'dele',k, dellae2(i,k,n)*delt*delp(i,k),
+< !     &         'newsum',delesum(i)
+979d797
+<           endif
+982,991d799
+< !      if(maxval(nfixupchem)>0)then
+< !        do n=1,ntc
+< !          if(nfixupchem(n)>0)then
+< !          write(6,*)'nfixupchem',n,nfixupchem(n),' shallcnv '
+< !          write(400+me,*)'nfixupchem',n,nfixupchem(n),' shallcnv '
+< !          call flush(400+me)
+< !          endif
+< !        enddo
+< !      endif
+< !      write(6,*)'bottom chem qchem',maxval(qchem),minval(qchem)

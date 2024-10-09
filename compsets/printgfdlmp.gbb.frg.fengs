@@ -1,0 +1,65 @@
+
+test cpld_fv3_gfdlmp_gsdchem_gbbepx_frp_fengsha: fv3_gsdchem.exe {
+    use plat
+    use plat%default_resources
+    use fv3_defaults
+    use gsdchem_defaults
+
+    TEST_DESCR="FV3-GSDCHEM with GFDL MP, GBBEPx emissions + FRP, and FENGSHA"
+    CNTL_NAME="@[TEST_NAME]"
+
+    DT_ATMOS='1200'
+
+    COM="@[plat%COMrt]/@[TEST_NAME]"          # Test result area
+    RUNDIR="@[plat%TMPrt]/@[TEST_NAME]"       # Test work area
+    CNTL="@[plat%BASELINE]/@[CNTL_NAME]"      # Control baseline area
+    FV3_input_data="@[plat%INPUTS]/FV3_input_data"
+    GSDCHEM_input_data="@[plat%INPUTS]/GSDCHEM_input_data"
+
+    # The build variable is the fv3.exe or fv3_appbuild.fv3, which
+    # provides the path to the build target, md5 sum, and modulefile.
+    build=fv3_gsdchem.exe
+
+    prep=fv3_prep(
+        RUNDIR="@[RUNDIR]",modules="@[fv3_gsdchem.exe%modules.nems]",
+        CNTL="@[CNTL]")
+
+    # - nems.configure ---
+    nems_configure='atm_chm_between'
+    atm_model='fv3'
+    atm_petlist_bounds="-1 -1"
+    chm_model='gsdchem'
+    chm_petlist_bounds="-1 -1"
+    coupling_interval_sec="@[DT_ATMOS]" # fv3 time step
+
+    # - model_configure ---
+    CPL='.true.'
+
+    # - chemistry namelist ---
+    DUST_OPT="5"
+    DUST_ALPHA="-1."    # use default
+    DUST_GAMMA="-1."    # use default
+    DUST_DATA="@[EMIS_input]/fengsha/@[SMONTH]"
+    CHEM_input="@[EMIS_input]/@[SMONTH]"
+    PLUME_FLAG='2'
+    FIRE_DATA="@[GBBEPx_source]"
+
+    # Specify input files.
+    filters input {
+      #    WORK FILE  <=filter=   SOURCE FILE
+                   'input.nml' <=atparse=  "@[PARMnems]/chm.gfdlmp.nml.IN"
+             'model_configure' <=atparse=  "@[PARMnems]/model_configure.IN"
+                 'aerosol.dat' <=copyfrom= "@[FV3_input_data]/INPUT"
+  'co2historicaldata_201*.txt' <=copyfrom= "@[FV3_input_data]/INPUT"
+      'sfc_emissivity_idx.txt' <=copyfrom= "@[FV3_input_data]/INPUT"
+   'solarconstant_noaa_an.txt' <=copyfrom= "@[FV3_input_data]/INPUT"
+                        '*grb' <=copyfrom= "@[FV3_input_data]"
+                     '*_table' <=copyfrom= "@[FV3_input_data]"
+                  '*configure' <=copyfrom= "@[FV3_input_data]"
+                       'INPUT' <=copy=     "@[FV3_input_data]/INPUT"
+         'global_o3prdlos.f77' <=copy=     "@[FV3_input_data]/INPUT/global_o3prdlos.f77"
+               "@[EMIS_input]" <=copy=     "@[GSDCHEM_input_data]/@[EMIS_base]"
+                 'diag_table'  <=copy=     "@[PARMnems]/chm_diag_table_gfdlmp"
+                 'field_table' <=copy=     "@[PARMnems]/chm_field_table_gfdlmp"
+              'nems.configure' <=atparse=  "@[PARMnems]/nems.configure.@[nems_configure].IN"
+    }

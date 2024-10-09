@@ -1,0 +1,44 @@
+noinst_LIBRARIES = libshr.a
+
+libshr_a_SOURCES = raqmschem_species_mod.F90 raqmschem_config_mod.F90 raqmschem_const_mod.F90 \
+	mpishorthand.F90 raqmschem_pmgrid_mod.F90 raqmschem_model_mod.F90 \
+	raqmschem_data_mod.F90 raqmschem_io_mod.F90 raqmschemcomm_mod.F90 raqmschem_iodata_mod.F90 \
+	raqmschem_comm_mod.F90  \
+	raqmschem_state_mod.F90 raqmschem_vars_mod.F90 \
+	calcdxdy.F90 calcvort_mod.F90 calcvort-dgrid_mod.F90   \
+	raqmschem_map_mod.F90 raqmschemlocaltype_mod.F90 caldyi.F
+
+libshr_a_FCFLAGS = -I. -traceback -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+#libshr_a_FCFLAGS = -I . -C -g -ftrapuv -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+
+libshr_a_DEPENDENCIES = ../../../../GSDCHEM/src/chem/shr/libshr.a 
+
+clean-local:
+	-rm -f *.mod  *.o *.a
+
+libshr_a-mpishorthand.$(OBJEXT):
+libshr_a-raqmschem_species_mod.$(OBJEXT): 
+libshr_a-raqmschem_comm_mod.$(OBJEXT): libshr_a-raqmschem_model_mod.$(OBJEXT)
+libshr_a-raqmschem_const_mod.$(OBJEXT): 
+libshr_a-raqmschem_pmgrid_mod.$(OBJEXT):
+libshr_a-raqmschem_config_mod.$(OBJEXT): \
+	libshr_a-raqmschem_species_mod.$(OBJEXT) 
+libshr_a-raqmschem_data_mod.$(OBJEXT): 
+libshr_a-raqmschem_io_mod.$(OBJEXT): libshr_a-raqmschem_model_mod.$(OBJEXT) libshr_a-mpishorthand.$(OBJEXT)
+libshr_a-raqmschem_iodata_mod.$(OBJEXT): libshr_a-raqmschem_config_mod.$(OBJEXT) \
+        libshr_a-raqmschem_io_mod.$(OBJEXT) libshr_a-raqmschem_model_mod.$(OBJEXT) \
+	libshr_a-raqmschem_species_mod.$(OBJEXT) libshr_a-raqmschem_pmgrid_mod.$(OBJEXT) \
+	libshr_a-raqmschemcomm_mod.$(OBJEXT) libshr_a-raqmschem_const_mod.$(OBJEXT)
+libshr_a-raqmschem_model_mod.$(OBJEXT): \
+	libshr_a-raqmschem_config_mod.$(OBJEXT) libshr_a-raqmschem_data_mod.$(OBJEXT) \
+	libshr_a-raqmschem_state_mod.$(OBJEXT) libshr_a-raqmschem_species_mod.$(OBJEXT) 
+libshr_a-raqmschem_state_mod.$(OBJEXT): 
+libshr_a-calcdxdy.$(OBJEXT): libshr_a-raqmschem_data_mod.$(OBJEXT) libshr_a-raqmschem_comm_mod.$(OBJEXT)
+libshr_a-calcvort_mod.$(OBJEXT): libshr_a-raqmschem_data_mod.$(OBJEXT) libshr_a-raqmschem_comm_mod.$(OBJEXT)
+libshr_a-calcvort-dgrid_mod.$(OBJEXT):  libshr_a-raqmschem_data_mod.$(OBJEXT) libshr_a-raqmschem_comm_mod.$(OBJEXT) \
+	libshr_a-raqmschem_model_mod.$(OBJEXT) libshr_a-raqmschem_const_mod.$(OBJEXT)
+libshr_a-raqmschem_vars_mod.$(OBJEXT): libshr_a-raqmschem_pmgrid_mod.$(OBJEXT)
+libshr_a-raqmschemcomm_mod.$(OBJEXT): libshr_a-raqmschem_pmgrid_mod.$(OBJEXT)
+libshr_a-raqmschem_map_mod.$(OBJEXT): libshr_a-raqmschem_pmgrid_mod.$(OBJEXT) libshr_a-raqmschem_species_mod.$(OBJEXT) \
+	libshr_a-raqmschemlocaltype_mod.$(OBJEXT)
+libshr_a-caldyi.$(OBJEXT): libshr_a-raqmschem_pmgrid_mod.$(OBJEXT) libshr_a-raqmschem_comm_mod.$(OBJEXT)

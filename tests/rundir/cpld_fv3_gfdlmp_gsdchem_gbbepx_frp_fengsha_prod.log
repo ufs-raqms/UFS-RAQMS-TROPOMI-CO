@@ -1,0 +1,32 @@
++ source rt_utils.sh
+++ set -eu
+++ [[ ./rt_fv3gsdchem.sh = \r\t\_\u\t\i\l\s\.\s\h ]]
++ source atparse.bash
++ mkdir -p /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/rundir/cpld_fv3_gfdlmp_gsdchem_gbbepx_frp_fengsha_prod
++ cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/rundir/cpld_fv3_gfdlmp_gsdchem_gbbepx_frp_fengsha_prod
++ cp /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/../NEMS/src/conf/module-setup.sh.inc module-setup.sh
++ echo PATHRT /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests
+PATHRT /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests
++ RUND=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/rundir/cpld_fv3_gfdlmp_gsdchem_gbbepx_frp_fengsha_prod
++ export PATHTR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/
++ PATHTR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/
++ export PATHRT=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/
++ PATHRT=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/tests/
++ SRCD=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/
++ echo RUN
+RUN
++ echo INPUT
+INPUT
++ atparse
++ local __set_x
++ '[' -o xtrace ']'
++ __set_x='set -x'
++ set +x
++ echo MODEL_CONGIFURE
+MODEL_CONGIFURE
++ atparse
++ local __set_x
++ '[' -o xtrace ']'
++ __set_x='set -x'
++ set +x
++ exit 0

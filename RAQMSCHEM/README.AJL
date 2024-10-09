@@ -1,0 +1,68 @@
+touch README NEWS AUTHORS ChangeLog
+need to make a configure.ac and Makefile.am
+need Makefile.am in all subdirectories
+run
+autoreconf -i
+copy config.h
+Need changes to NEMSApbuilder
+Add RAQMSCHEM to global_capabilities
+Add
+1317a1324
+>             RAQMSCHEM="CHM: RAQMS Version of Reduced Chemistry Model"     \
+1526a1534,1535
+>         elif [[ ${COMPOS[0]} == "RAQMSCHEM" ]] ; then 
+>             BUILD_FUNC=build_raqmschem
+1658a1668,1670
+>   elif [[ ${COMPOS[0]} == "RAQMSCHEM" ]] ; then
+>     COMP=$COMP",raqmschem"
+>     COMPDIRS="$COMPDIRS RAQMSCHEM_DIR=$RAQMSCHEM_BINDIR"
+
+Need to change 
+co,psets/fv3.input
+change OPTS=
+> run cpld_fv3_gsdchem_between @ fv3, coupledapp, atmchem_between
+diff -rBbw EMC_FV3GFS-GSDCHEM.OZONE/compsets/fv3.input /home/lenzen/EMC_FV3GFS-GSDCHEM.0316/EMC_FV3GFS-GSDCHEM/compsets/fv3.input
+126c126
+<                          OPTS="app=coupledFV3_RAQMSCHEM",md5sum="@[md5sum]")
+---
+>                          OPTS="app=coupledFV3_GSDCHEM",md5sum="@[md5sum]")
+814a815,1211
+
+
+mv coupledFV_GSDCHEM.appBuilder to coupledFV_GSDCHEM.appBuilder.save
+create a coupledFV3_RAQMSCHEM.appBuilder then will do RAQMSCHEM instead of GSDCHEM
+
+diff -rBbw EMC_FV3GFS-GSDCHEM.OZONE/coupledFV3_GSDCHEM.appBuilder /home/lenzen/EMC_FV3GFS-GSDCHEM.0316/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder
+1c1
+< # Coupled FV3GFS-RAQMSCHEM
+---
+> # Coupled FV3GFS-GSDCHEM
+5c5
+< COMPONENTS=( FV3 RAQMSCHEM)
+---
+> COMPONENTS=( FV3 GSDCHEM )
+15,18d14
+< # RAQMSCHEM
+< RAQMSCHEM_SRCDIR=$ROOTDIR/RAQMSCHEM
+< RAQMSCHEM_BINDIR=$ROOTDIR/RAQMSCHEM/RAQMSCHEM_INSTALL
+
+Change exglobal
+< CHM_model:                      raqmschem
+---
+> CHM_model:                      gsdchem
+
+FIX module-setup.sh
+diff -rBbw EMC_FV3GFS-GSDCHEM.OZONE/release/v0/exp/module-setup.sh /home/lenzen/EMC_FV3GFS-GSDCHEM.0316/EMC_FV3GFS-GSDCHEM/release/v
+0/exp/module-setup.sh
+71,80d70
+< elif [[ -d /scratch && -d /data ]] ; then
+<     # we are on s4 assume module command is there
+<       echo " on inc module purge we are on s4-cardinal "
+<       if ( ! eval module help > /dev/null 2>&1 ) ; then
+<         echo ajl module not there
+<         echo $HOME
+<         source /home/lenzen/.bashrc >& /home/lenzen/trybashrc
+<       fi  
+<       module purge
+<       echo "did module purge at ajl ddd" >& $HOME/outmodulepurge
+

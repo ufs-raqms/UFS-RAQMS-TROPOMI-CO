@@ -1,0 +1,5 @@
+# . set*
+cd NEMS
+#gmake app=coupledFV3_GSDCHEM clean
+#gmake -j8 app=coupledFV3_GSDCHEM build
+gmake  app=coupledFV3_GSDCHEM build

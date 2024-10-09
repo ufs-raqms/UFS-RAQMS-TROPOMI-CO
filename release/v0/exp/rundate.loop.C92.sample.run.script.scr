@@ -1,0 +1,125 @@
+#!/bin/bash -x
+. ../../../setup18.0.4.esmf.8.0.0.bs47
+export new_date=/home/lenzen/UTILS/da_advance_time.exe
+export BEGIN=2019070112
+export BEGIN=2019071712
+export BEGIN=2019072812
+#export BEGIN=2019071612
+#export BEGIN=2019072512
+#export BEGIN=2019090312
+#export BEGIN=2019080112
+#export BEGIN=2019090112
+#export BEGIN=2019071312
+#export BEGIN=2019073112
+#export BEGIN=2019090912
+#export BEGIN=2019071612
+#export BEGIN=2019063012
+export END=$BEGIN
+export CDATE=$BEGIN
+export ENDGSI=$($new_date $CDATE 1d) 
+# ajl test last
+export CDATEEND=$ENDGSI
+export JXX=4
+#export JXX=2
+#export JXX=1
+export PART=s4
+#export PART=ivy
+#export JXX=8
+export JYY=2
+#export JYY=8
+#export JYY=4
+#export JYY=6
+export JYY=2
+export JYY=1
+export JYY=4
+export JYY=8
+export JYY=16
+export DOGSI=off
+#export DOGSI=on
+export PROC=$(( (JXX*JYY+1)*6 ))
+if [ ${DOGSI} = on ] ; then
+  export GSIPROCIN=20
+  export GSIPROCIN=24
+  export GSIPROCIN=96
+  if [ ${JYY} = 16 ]; then
+    export GSIPROCIN=384
+  else
+    if [ ${JYY} = 8 ]; then
+      export GSIPROCIN=192
+    else
+      export GSIPROCIN=96
+    fi
+  fi
+  if [ ${PART} = ivy ] ; then
+    export PROCR=$(( PROC + GSIPROCIN ))
+  else
+    export PROCR=$(( PROC ))
+  fi
+else
+  export GSIPROCIN=1
+  export PROCR=$(( PROC ))
+fi
+#export PROCR=$(( PROC+2 ))
+echo PROCR $PROCR PROC $PROC
+#export SECONDS=600
+#export TIME=06:00:00
+#export TIME=04:10:00
+export TIME=02:30:00
+#kxexport TIME=03:10:00
+#export TIME=00:50:00
+#export TIME=01:50:00
+#export TIME=00:10:00
+#export TIME=00:15:00
+#export TIME=00:30:00
+#export TIME=00:05:00
+export SECONDS=450
+#export SECONDSX=300
+export SECONDSX=450
+#export SECONDS=300
+export HRSAVE=6
+export NHTUW=$(( 3600 / SECONDSX * HRSAVE ))
+echo NHTUW $NHTUW
+export RUN_SCRIPT=runjob.C192.o3.AOD.FCST.201907.TESTAOD.scr
+export RUN_TMP=runjob.submit.o3.2019.AOD.FCST.JUL15.TESTAOD.scr
+while [ $CDATE -le $END ]
+ do
+#  cp -p runjob.rolloff.prod.C192.raqmso3.gen.ivy.scr $RUN_TMP || exit 1
+  cp -p $RUN_SCRIPT $RUN_TMP || exit 1
+  export MMDD=`echo $CDATE | cut -c 5-8`
+  export MDD=`echo $CDATE | cut -c 6-8`
+  export NAME=AFCS$MDD
+  echo sed -i 's/JOBNAME/$NAME/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/CDATEIN/$CDATE/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/CDATEENDIN/$CDATEEND/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/JTASKS/$PROCR/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/RTASKS/$PROC/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/DTSECX/$SECONDSX/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/DTSEC/$SECONDS/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/RTIME/$TIME/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/S4PART/$PART/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo sed -i 's/NGSIPROC/$GSIPROCIN/' $RUN_TMP >outcmd
+  chmod u+x outcmd
+./outcmd
+  echo RUN_TMP $RUN_TMP
+  sbatch --export=ALL $RUN_TMP
+  export CDATE=$($new_date $CDATE 1d) 
+  done
+exit 0

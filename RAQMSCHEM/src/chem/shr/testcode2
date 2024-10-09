@@ -1,0 +1,265 @@
+
+        do m=1,2
+         if(config%cedsemi_inname/=' ')then
+           srcin=0.0
+!          write(6,*)m,'comnth2',cmonth2(m)
+           if(iam==0)then
+           write(6,*)'read path',trim(config % cedsemi_inname)//trim(cmonth2(m))
+           call flush(6)
+           endif   
+           call chem_io_read('emi_CO_molpercm2persec.dat', &
+           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+           bigendian=bigendian,rc=localrc,oldname=oldname)
+           if(iam==0)then
+            write(6,*)'ceds co_emis',maxval(srcin),minval(srcin)
+            call flush(6)
+           endif   
+          else 
+            call chem_io_read('edgar_HTAP_CO_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin, path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+!           write(6,*)'srcco_totl lb ',lbound(srcco_totl),'ub ',ubound(srcco_totl)
+!           call flush(6)
+          endif
+          if(doco85)then
+            srcin=srcin*.85
+          endif
+          srcco_totl(:,:,imonth(m))=srcin
+!        write(6,*)'chem_io_read',localrc
+!        call flush(6)
+!        if(iam.eq.0)then
+!        write(6,*)'diag edgar_HTAP_CO_emi_molpercm2persec_2010',localrc
+!        call flush(6)
+       !endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+           write(6,*)'eror file missing'
+           call killit('file missing')
+            return
+        endif
+        if(debug)then
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," co - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcco_totl(:,:,9)), maxval(srcco_totl(:,:,9))
+           call flush(6)
+        endif 
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_NOx_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds NOx_emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+          if(adjnoxpath/=' ')then
+            call chem_io_read('edgar_HTAP_NOX_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+            path=trim(adjnoxpath), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+          else
+            call chem_io_read('edgar_HTAP_NOX_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+             path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+           endif
+        endif
+         if(donox85)then
+           srcin=srcin*.85
+         endif
+         srcnind(:,:,imonth(m))=srcin
+!     if(iam.eq.0)then
+!     write(6,*)'srcnind',maxval(srcin),minval(srcin)
+!     write(6,*)'emi_inname',config % emi_inname
+         
+!        write(6,*)'diag edgar_HTAP_NOX_emi_molpercm2persec_2010',localrc
+!        call flush(6)
+!     !endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file nox missing'
+          call killit('file nox missing')
+            return
+        endif
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcnind(:,:,9)), maxval(srcnind(:,:,9))
+          endif
+!       ethane
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_ethane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  ehtaneemis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+          file='edgar_HTAP_ethane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat'
+          call chem_io_read(file, srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+!        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+          write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+        else
+          srcethane(:,:,imonth(m))=srcin
+         if(debug)then
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ethane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcethane), maxval(srcethane)
+          endif
+        endif
+!       ethene
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_ethene_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  ehtene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_ethene_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcethene(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ethene - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcethene), maxval(srcethene)
+          call flush(6)
+        endif
+!       propane
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_propane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  propanene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_propane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpropane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," propane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpropane), maxval(srcpropane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_butane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  butane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_butane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcbutane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," butane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcbutane), maxval(srcbutane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_pentane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  pentane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_pentane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpentane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," pentane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpentane), maxval(srcpentane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_hexane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  hexane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_hexane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srchexane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," hexane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srchexane), maxval(srchexane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_propene_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  propene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_propene_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpropene(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," propene - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpropene), maxval(srcpropene)
+          call flush(6)
+        endif
+!        write(6,*)'now ch2o'
+!        call flush(6)
+        call chem_io_read('edgar_HTAP_ch2o_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcch2o(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ch2o - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcch2o), maxval(srcch2o)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_ald_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcald(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ald - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcald), maxval(srcald)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_alkanone_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcalkanone(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," alkanone - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcalkanone), maxval(srcalkanone)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_isop_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcisop(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," isop - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcisop), maxval(srcisop)
+        endif
+        call chem_io_read('edgar_HTAP_terp_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcterp(:,:,imonth(m))=srcin
+
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," terp - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcterp), maxval(srcterp)
+        endif
+      end do

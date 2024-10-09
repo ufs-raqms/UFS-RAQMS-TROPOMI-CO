@@ -1,0 +1,214 @@
+
+    subroutine raqmschem_gsi_write(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+    use raqmschemcomm_mod, only :tau6hr,jo1d_inst,jno_inst,lnox_save,no2ten,sourceno,colnox_save
+    use raqmschemcomm_mod, only : bbco_d,emisco3d,covermx,oxvermx
+    use raqmschemcomm_mod, only : rcav_write,rnav_write
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use raqmschemcomm_mod, only : o3vmr_inst,pblht
+!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem
+    use raqmschem_pmgrid_mod,only : gsidatatype,gsiarray,gsivarr
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co
+    use chem_const_mod, only : grvity
+    use raqmschem_state_mod
+    use raqmschem_pmgrid_mod, only : iam,iamprn,iprnin,jprnin,kprnin,iprn,jprn
+    implicit none
+    integer dims(3),i,j,mype
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    type(chem_data_type) :: data
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout,colno2,tau2d,colnoy,dqdtsum
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bc,ext_oct
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: diffrc,diffrl,aodgsi
+    type(chem_state_type),  pointer :: stateIn, stateOut
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k,kk,nl,ii
+    integer idate
+    type(chem_config_type), pointer :: config => null()
+    REAL,    PARAMETER :: airmw    = 28.97
+    character *12 :: units
+    real(chem_kind_r4) :: fac,facdob
+    character*8,pointer,dimension(:) :: gsicem
+    integer,pointer,dimension(:) :: loccem
+    mype=iam
+    fac=avgro/airmw*10./grvity
+    facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+    cdatestr(1:4)=cdate(1:4)
+    cdatestr(5:5)='-'
+    cdatestr(6:7)=cdate(5:6)
+    cdatestr(8:8)='-'
+    cdatestr(9:10)=cdate(7:8)
+    cdatestr(11:11)=' '
+    cdatestr(12:13)=cdate(9:10)
+    cdatestr(14:)=':00:00'
+    if(iam.eq.0)then
+    write(6,*)'top gsi write chem'
+    endif
+!    write(200+iam,*)'top gsi write chem',trim(cdatestr)
+!    call flush(6)
+!    write(200+iam,*)'presnet fielname ',present(filename),'present cdate',present(cdate)
+!    call flush(200+iam)
+
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='tracer.'//cdate//'.nc'
+      else
+        fileout='tracer.nc'
+      endif
+    endif
+!    write(200+iam,*)'fileout',trim(fileout)
+!    call flush(200+iam)
+!    write(6,*)'at ajl zzyyy itime',present(itime)
+!    call flush(6)
+    nl=dims(3)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      sfcp(:,:)=statein%pr3d(:,:,1)
+      do k=1,dims(3)
+        dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))
+!        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/grvity
+      end do
+      if(present(itime))then
+!        write(200+iam,*)'chem_io_writenc'
+!        call flush(200+iam)
+        if(iam.eq.0)then
+          write(6,*)'gsi_path',trim(config%gsi_path)//'/'//trim(fileout)
+          flush(6)
+        endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='sphum',units='kg/kg',rc=localrc)
+!        call gsivar(numgsicem,gsicem,loccem)
+!        write(6,*)mype,'call gsivar in writenc'
+!        call flush(6)
+        call gsivar
+!        if(iam.eq.0)then
+!          do i=1,numgsicem
+!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+!          end do
+!        endif
+        if(iam.eq.0)then
+           write(6,*)'numgsicem',numgsicem
+        endif
+        if(numgsicem>=14)then
+        endif
+!        write(6,*)'gsi_write numgsicem',numgsicem
+        do ii=1,numgsicem
+          gsicem=>gsiarray(ii)%gsicem
+          loccem=>gsiarray(ii)%loccem
+          if(gsivarr(ii)=='AOD')then
+            if(iam.eq.0)then
+               write(6,*)'aodgsi',shape(aodgsi)
+            endif
+            aodgsi=0.0
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aod',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='incaod',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodbcoc',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aoddust',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodssalt',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodsulf',units=' ',rc=localrc)
+          endif
+            if(iam==0)then
+              write(6,*)'ii=',ii,'nsigvar',gsiarray(ii)%ngsivar,gsivarr(ii)
+             endif
+          do i=1,gsiarray(ii)%ngsivar
+             if(gsivarr(ii).eq.'o3vmr')then
+              call flipz(o3vmr_inst,traceout)
+              units='ppv'
+            elseif(gsivarr(ii)=='AOD')then
+!         convert to gsi units
+              units='ug/kg-dryair' ! these are gsi units for these variables
+!              write(6,*)'gsicem',i,gsicem(i),'loccem',loccem(i)
+              traceout=tr3d(:,:,:,loccem(i))
+            else
+!             write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+              traceout=tr3d(:,:,:,loccem(i))
+              units='ppv'
+            endif
+!            if(iam==0)then
+!              write(6,*)'output i',i,'ii',ii,gsicem(i),'loccem',loccem(i)
+            !endif
+            call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+            varname=gsicem(i),units=units,rc=localrc)
+            traceout=0.0
+            call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+            if(gsivarr(ii)=='o3vmr')then
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+              varname='inco3lp',units=units,rc=localrc)
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+              varname='inco3nm',units=units,rc=localrc)
+            endif
+          end do
+        end do
+!        write(6,*)mype,'gsi ps out'
+!        call flush(6)
+        call chem_io_writenc(trim(fileout),sfcp,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='ps',units='pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),zsurf,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='zsurf',units='m',rc=localrc)
+        call chem_io_writenc(trim(fileout),pblht,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='pblht',units='m',rc=localrc)
+        aodgsi=0.0
+        call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='aodgsi',units=' ',rc=localrc)
+        traceout=dpm
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='delp',units='pa',rc=localrc)
+!        traceout=statein%pr3d
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+!        varname='psol',units='mb',rc=localrc)
+        traceout=statein%prl3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='pres',units='pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='V',units='m/s',rc=localrc)
+      endif
+    end do
+!    write(6,*)mype,'end of gsi_write'
+!    call flush(6)
+    return
+    end subroutine raqmschem_gsi_write

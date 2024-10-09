@@ -1,0 +1,36 @@
+location of V91 Fv3GFS code
+/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM
+to set up environment for compiling or running need to
+. setup18.0.4.esmf.8.0.0.bs47
+
+after copying need to
+/bin/rm -r RAQMSCHEM_INSTALL
+cd GSDCHEM
+/bin/rm -r GSDCHEM_INSTALL
+make clean
+autoreconf
+./configure
+
+then
+cd ..
+cd RAQMSCHEM
+make clean
+autoreconf
+./configure
+cd ..
+
+you should be back to your EMC_FV3GFS-GSDCHEM directory
+
+you should edit your compile file
+uncomment #gmake app=coupledFV3_GSDCHEM clean line
+this will force a complete compile of the code.
+after you have a good compile you can comment that line out again
+with that line commented out, if you recompile you will only compile code which you have changed.
+
+run scripts are in
+release/v0/exp/ directory
+
+An example of a script to do a 24 hour forcast
+runjo.C192.sample.run.script.scr
+There is a driver script which setup a number of the env variables
+

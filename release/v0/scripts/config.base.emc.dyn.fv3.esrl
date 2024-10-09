@@ -1,0 +1,317 @@
+#!/bin/ksh -x
+
+########## config.base ##########
+# Common to all steps
+
+echo "BEGIN: config.base"
+
+# Machine environment
+export machine="@MACHINE@"
+
+# EMC parallel or NCO production
+export RUN_ENVIR="emc"
+
+# Account, queue, etc.
+if [ $machine = "THEIA" -o $machine = "HERA" ]; then
+
+    export ACCOUNT="gsd-fv3-dev"
+    export QUEUE="batch"
+    export QUEUE_ARCH="service"
+
+elif [ $machine = "WCOSS_C" -o $machine = "WCOSS_DELL_P3" ]; then
+
+    export ACCOUNT="FV3GFS-T2O"
+    export QUEUE="dev"
+    export QUEUE_ARCH="dev_transfer"
+
+fi
+
+# Project to use in mass store:
+HPSS_PROJECT=fim
+
+# Directories relative to installation areas:
+export HOMEgfs=@HOMEgfs@
+export PARMgfs=$HOMEgfs/parm
+export FIXgfs=$HOMEgfs/fix
+export USHgfs=$HOMEgfs/ush
+export UTILgfs=$HOMEgfs/util
+export EXECgfs=$HOMEgfs/exec
+export SCRgfs=$HOMEgfs/scripts
+
+########################################################################
+
+# GLOBAL static environment parameters
+if [ $machine = "THEIA" ]; then
+
+    export NWPROD="/scratch4/NCEPDEV/global/save/glopara/nwpara"
+    export DMPDIR="/scratch4/NCEPDEV/global/noscrub/dump"
+    export RTMFIX="/scratch4/NCEPDEV/da/save/Michael.Lueken/nwprod/lib/crtm/2.2.3/fix_update"
+    export EMIDIR="/scratch3/BMC/fim/lzhang/emi_"
+elif [ $machine = "HERA" ]; then
+
+    #export NWPROD="/scratch1/NCEPDEV/global/glopara/nwpara"
+    export DMPDIR="/scratch1/NCEPDEV/global/glopara/dump"
+    export RTMFIX=$CRTM_FIX
+    export EMIDIR="/scratch3/BMC/gsd-fv3-dev/lzhang/emi_"
+
+elif [ $machine = "WCOSS_C" ]; then
+
+    export NWPROD="/gpfs/hps/nco/ops/nwprod"
+    export DMPDIR="/gpfs/dell3/emc/global/dump"
+    export RTMFIX=$CRTM_FIX
+
+elif [ $machine = "WCOSS_DELL_P3" ]; then
+
+    export NWPROD="/gpfs/dell1/nco/ops/nwprod"
+    export DMPDIR="/gpfs/dell3/emc/global/dump"
+    export RTMFIX=$CRTM_FIX
+fi
+
+
+# Machine specific paths used everywhere
+if [ $machine = "THEIA" ]; then
+
+    # USER specific paths
+#JKH    export HOMEDIR="/scratch4/NCEPDEV/global/save/$USER"
+#JKH    export STMP="/scratch4/NCEPDEV/stmp3/$USER"
+#JKH    export PTMP="/scratch4/NCEPDEV/stmp4/$USER"
+#JKH    export NOSCRUB="/scratch4/NCEPDEV/global/noscrub/$USER"
+    export HOMEDIR="/scratch4/BMC/fim/NCEPDEV/global/save/$USER"
+    export STMP="/scratch4/BMC/fim/NCEPDEV/stmp3/$USER"
+    export PTMP="/scratch4/BMC/fim/NCEPDEV/stmp4/$USER"
+    export NOSCRUB="/scratch4/BMC/fim/NCEPDEV/global/noscrub/$USER"
+
+    # Base directories for various builds
+    export BASE_GIT="/scratch4/NCEPDEV/global/save/glopara/git"
+    export BASE_SVN="/scratch4/NCEPDEV/global/save/glopara/svn"
+
+elif [ $machine = "HERA" ]; then
+
+    # USER specific paths
+#JKH    export HOMEDIR="/scratch1/NCEPDEV/global/$USER"
+#JKH    export STMP="/scratch1/NCEPDEV/stmp2/$USER"
+#JKH    export PTMP="/scratch1/NCEPDEV/stmp4/$USER"
+    export HOMEDIR="/scratch1/BMC/gsd-fv3-dev/NCEPDEV/global/$USER"
+    export STMP="/scratch2/BMC/gsd-fv3-dev/NCEPDEV/stmp3/$USER"
+    export PTMP="/scratch2/BMC/gsd-fv3-dev/NCEPDEV/stmp4/$USER"
+    export NOSCRUB="$HOMEDIR"
+
+    # Base directories for various builds
+    export BASE_GIT="/scratch1/NCEPDEV/global/glopara/git"
+    export BASE_SVN="/scratch1/NCEPDEV/global/glopara/svn"
+
+elif [ $machine = "WCOSS_C" ]; then
+
+    # USER specific paths
+    export HOMEDIR="/gpfs/hps3/emc/global/noscrub/$USER"
+    export STMP="/gpfs/hps2/stmp/$USER"
+    export PTMP="/gpfs/hps2/ptmp/$USER"
+    export NOSCRUB="/gpfs/hps3/emc/global/noscrub/$USER"
+
+    # Base directories for various builds
+    export BASE_GIT="/gpfs/hps3/emc/global/noscrub/emc.glopara/git"
+    export BASE_SVN="/gpfs/hps3/emc/global/noscrub/emc.glopara/svn"
+
+elif [ $machine = "WCOSS_DELL_P3" ]; then
+
+    # USER specific paths
+    export HOMEDIR="/gpfs/dell2/emc/modeling/noscrub/$USER"
+    export STMP="/gpfs/dell3/stmp/$USER"
+    export PTMP="/gpfs/dell3/ptmp/$USER"
+    export NOSCRUB="/gpfs/dell2/emc/modeling/noscrub/$USER"
+
+    # Base directories for various builds
+    export BASE_GIT="/gpfs/dell2/emc/modeling/noscrub/emc.glopara/git"
+    export BASE_SVN="/gpfs/dell2/emc/modeling/noscrub/emc.glopara/git"
+
+fi
+
+# Utilities needed in the scripts (mostly post)
+if [ $machine = "THEIA" ]; then
+
+    export NDATE="$NWPROD/util/exec/ndate"
+    export NHOUR="$NWPROD/util/exec/nhour"
+    export WGRIB="$NWPROD/util/exec/wgrib"
+    export WGRIB2="/scratch3/NCEPDEV/nwprod/utils/wgrib2.v2.0.6c/wgrib2/wgrib2"
+    export COPYGB="$NWPROD/util/exec/copygb"
+    export COPYGB2="$NWPROD/util/exec/copygb2"
+    export GRBINDEX="$NWPROD/util/exec/grbindex"
+    export GRB2INDEX="$NWPROD/util/exec/grb2index"
+    export GRBINDEX2="$NWPROD/util/exec/grb2index"
+    export CNVGRIB="/apps/cnvgrib/1.4.0/bin/cnvgrib"
+    export POSTGRB2TBL="/scratch3/NCEPDEV/nwprod/lib/g2tmpl/v1.5.0/sorc/params_grib2_tbl_new"
+
+fi
+
+# Toggle to turn on/off GFS downstream processing.
+export DO_BUFRSND="NO"
+export DO_GEMPAK="NO"
+export DO_AWIPS="NO"
+
+# NO for retrospective parallel; YES for real-time parallel
+export REALTIME="NO"
+
+
+####################################################
+# DO NOT ADD MACHINE DEPENDENT STUFF BELOW THIS LINE
+# IF YOU HAVE TO MAKE MACHINE SPECIFIC CHANGES BELOW
+# FEEL FREE TO MOVE THEM ABOVE THIS LINE TO KEEP IT
+# CLEAR
+####################################################
+# Build paths relative to $HOMEgfs
+export HOMEgsi="$HOMEgfs"
+export FIXgsi="$HOMEgfs/fix/fix_gsi"
+export HOMEfv3gfs="$HOMEgfs/sorc/fv3gfs.fd"
+export HOMEpost="$HOMEgfs"
+export HOMEobsproc_prep="$BASE_GIT/obsproc/OT-obsproc_prep.v5.2.0-20190614"
+export HOMEobsproc_network="$BASE_GIT/obsproc/OT-obsproc_global.v3.2.1-20190613"
+export BASE_VERIF="$BASE_SVN/verif/global/tags/vsdb"
+
+# CONVENIENT utility scripts and other environment parameters
+export NCP="/bin/cp -p"
+export NMV="/bin/mv"
+export NLN="/bin/ln -sf"
+export VERBOSE="YES"
+#export KEEPDATA="NO"  !lzhang
+export KEEPDATA="YES"
+export CHGRP_CMD="chgrp rstprod"
+export NEMSIOGET="$HOMEgfs/exec/nemsio_get"
+
+# Machine environment, jobs, and other utility scripts
+export BASE_ENV="$HOMEgfs/env"
+export BASE_JOB="$HOMEgfs/jobs/rocoto"
+
+# EXPERIMENT specific environment parameters
+export SDATE=@SDATE@
+export EDATE=@EDATE@
+export assim_freq=24
+export PSLOT="@PSLOT@"
+export EXPDIR="@EXPDIR@/$PSLOT"
+export ROTDIR="@ROTDIR@/$PSLOT"
+export ROTDIR_DUMP="YES"                #Note: A value of "NO" does not currently work
+export DUMP_SUFFIX=""
+export RUNDIR="$STMP/RUNDIRS/$PSLOT"
+export DATAROOT="$RUNDIR/$CDATE/$CDUMP"
+export ARCDIR="$NOSCRUB/archive/$PSLOT"
+export ICSDIR="@ICSDIR@"
+export ATARDIR="/BMC/$HPSS_PROJECT/1year/$USER/$machine/scratch/$PSLOT"
+
+export EMITYPE=2 # 1: MODIS, 2: GBBEPx !lzhang
+
+# Commonly defined parameters in JJOBS
+export envir=${envir:-"prod"}
+export NET="gfs"
+export RUN=${RUN:-${CDUMP:-"gfs"}}
+export jlogfile="${EXPDIR}/logs/jlogfile"
+export ERRSCRIPT=${ERRSCRIPT:-'eval [[ $err = 0 ]]'}
+export LOGSCRIPT=${LOGSCRIPT:-""}
+#export ERRSCRIPT=${ERRSCRIPT:-"err_chk"}
+#export LOGSCRIPT=${LOGSCRIPT:-"startmsg"}
+export REDOUT="1>"
+export REDERR="2>"
+
+export SENDECF="NO"
+export SENDCOM="NO"
+export SENDDBN="NO"
+export SENDSDM="NO"
+
+# Resolution specific parameters
+export LEVS=65
+export CASE="@CASECTL@"
+export CASE_ENKF="@CASEENS@"
+
+# Surface cycle update frequency
+if [[ "$CDUMP" == "gdas" ]] ; then
+   export FHCYC=1
+elif [[ "$CDUMP" == "gfs" ]] ; then
+   export FHCYC=24
+fi
+
+# Output frequency of the forecast model (for cycling)
+export FHMIN=0
+export FHMAX=9
+export FHOUT=6
+
+# GFS cycle info
+export gfs_cyc=@gfs_cyc@ # 0: no GFS cycle, 1: 00Z only, 2: 00Z and 12Z only, 4: all 4 cycles.
+
+# GFS output and frequency
+export FHMIN_GFS=0
+
+export FHMAX_GFS_00=120
+export FHMAX_GFS_06=120
+export FHMAX_GFS_12=120
+export FHMAX_GFS_18=120
+#export FHMAX_GFS=$(eval echo \${FHMAX_GFS_$cyc}) !lzhang
+
+#export FHMAX_GFS=240 #lzhang
+export FHMAX_GFS=3  #1-day
+#export FHMAX_GFS=168  #7-day
+#export FHMAX_GFS=120  #5-day
+export FHOUT_GFS=3  
+#export FHOUT_GFS=3 
+export FHMAX_HF_GFS=0 
+export FHOUT_HF_GFS=1 #lzhang
+
+#Coupling option
+export CPL=".true."
+
+# I/O QUILTING, true--use Write Component; false--use GFDL FMS
+# if quilting=true, choose OUTPUT_GRID as cubed_sphere_grid in netcdf or gaussian_grid
+# if gaussian_grid, set OUTPUT_FILE for nemsio or netcdf
+export QUILTING=".true."
+export OUTPUT_GRID="gaussian_grid"
+export OUTPUT_FILE="nemsio"
+# for ajl
+export OUTPUT_GRID="cubed_sphere_grid"
+export OUTPUT_FILE="netcdf"
+
+# Microphysics Options: 99-ZhaoCarr, 8-Thompson; 6-WSM6, 10-MG, 11-GFDL
+export imp_physics=11
+
+# Convection Options: 2-SASAS, 3-GF
+export imfdeepcnv=2
+export imfshalcnv=2
+
+# Shared parameters
+# Hybrid related
+export DOHYBVAR="YES"
+export NMEM_ENKF=@NMEM_ENKF@
+export SMOOTH_ENKF="YES"
+export l4densvar=".true."
+export lwrite4danl=".false."
+
+# EnKF output frequency
+if [ $DOHYBVAR = "YES" ]; then
+    export FHMIN_ENKF=3
+    export FHMAX_ENKF=9
+    if [ $l4densvar = ".true." ]; then
+        export FHOUT=1
+        export FHOUT_ENKF=1
+    else
+        export FHOUT_ENKF=3
+    fi
+fi
+
+# turned on nsst in anal and/or fcst steps, and turn off rtgsst
+export DONST="YES"
+if [ $DONST = "YES" ]; then export FNTSFA="        "; fi
+
+# The switch to apply SST elevation correction or not
+export nst_anl=.true.
+
+# Analysis increments to zero in CALCINCEXEC
+export INCREMENTS_TO_ZERO="'delz_inc','clwmr_inc','icmr_inc'"
+
+
+# Archiving options
+export HPSSARCH="NO"         # save data to HPSS archive
+export ARCH_CYC=00           # Archive data at this cycle for warm_start capability
+export ARCH_WARMICFREQ=4     # Archive frequency in days for warm_start capability
+export ARCH_FCSTICFREQ=1     # Archive frequency in days for gdas and gfs forecast-only capability
+
+# Analysis increments to zero in CALCINCEXEC
+export INCREMENTS_TO_ZERO="'delz_inc','clwmr_inc','icmr_inc'" #lzhang
+#export INCREMENTS_TO_ZERO="'delz_inc','clwmr_inc','icmr_inc','so2_inc','sulf_inc','DMS_inc','msa_inc','pp25_inc','bc1_inc','bc2_inc','oc1_inc','oc2_inc','dust1_inc','dust2_inc','dust3_inc','dust4_inc','dust5_inc','seas1_inc','seas2_inc','seas3_inc','seas4_inc','pp10_inc'"
+
+echo "END: config.base"

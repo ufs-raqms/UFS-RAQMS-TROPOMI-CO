@@ -1,0 +1,80 @@
+diff -Bbw src/MAIN_NEMS.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/MAIN_NEMS.F90
+132c132
+<       print_esmf=.true. ! ajl
+---
+> !      print_esmf=.true. ! ajl
+579a580,581
+>       write(800+mype,*)'esmf_gridcompfinal'
+>       call flush(800+mype)
+653a656,657
+>       write(800+mype,*)'call esmf_finalize'
+>       call flush(800+mype)
+diff -Bbw src/module_EARTH_GRID_COMP.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/module_EARTH_GRID_COMP.F90
+397,400d397
+<         write(6,*)'add dictionary meandownswflux'
+<         call flush(6)
+<         write(0,*)'add dictionary meandownswflux'
+<         call flush(0)
+3133,3157d3128
+< 
+<       if (.not.NUOPC_FieldDictionaryHasEntry( &
+<         "inst_rainfall_amount")) then
+<         call NUOPC_FieldDictionaryAddEntry( &
+<           standardName="inst_rainfall_amount", &
+<           canonicalUnits="kg m-2", &
+<           rc=rc)
+<         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+<           line=__LINE__, &
+<           file=__FILE__)) &
+<           return  ! bail out
+<       endif
+< 
+<       if (.not.NUOPC_FieldDictionaryHasEntry( &
+<         "inst_soil_moisture_content")) then
+<         call NUOPC_FieldDictionaryAddEntry( &
+<           standardName="inst_soil_moisture_content", &
+<           canonicalUnits="kg m-2", &
+<           rc=rc)
+<         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+<           line=__LINE__, &
+<           file=__FILE__)) &
+<           return  ! bail out
+<       endif
+< 
+3207a3179,3202
+> 
+>       if (.not.NUOPC_FieldDictionaryHasEntry( &
+>         "inst_rainfall_amount")) then
+>         call NUOPC_FieldDictionaryAddEntry( &
+>           standardName="inst_rainfall_amount", &
+>           canonicalUnits="kg m-2", &
+>           rc=rc)
+>         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+>           line=__LINE__, &
+>           file=__FILE__)) &
+>           return  ! bail out
+>       endif
+> 
+>       if (.not.NUOPC_FieldDictionaryHasEntry( &
+>         "inst_soil_moisture_content")) then
+>         call NUOPC_FieldDictionaryAddEntry( &
+>           standardName="inst_soil_moisture_content", &
+>           canonicalUnits="kg m-2", &
+>           rc=rc)
+>         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+>           line=__LINE__, &
+>           file=__FILE__)) &
+>           return  ! bail out
+>       endif
+diff -Bbw src/module_NEMS_GRID_COMP.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/NEMS/src/module_NEMS_GRID_COMP.F90
+373,374d372
+<       write(6,*)'total_member',total_member
+<       call flush(6)
+394,395d391
+<       write(6,*)'total_member',total_member
+<       call flush(6)
+404,407d399
+<         write(6,*)'nems i',i
+<         call flush(6)
+<         write(0,*)'nems i',i
+<         call flush(0)

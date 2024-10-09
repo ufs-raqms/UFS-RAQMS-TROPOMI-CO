@@ -1,0 +1,160 @@
+module cedsair_mod
+contains
+  subroutine cedsair_driver(dt,rri,chem,dz,zatw,num_chem, &
+  is,ie,js,je,ks,ke,tile)
+  use  chem_types_mod
+  use cedsair_data_mod,only : intcedsair,intaltair,ktopcedsair,kbotcedsair,num_cedsair 
+  use cedsair_data_mod,only : cem_cedsair,num_cedsair
+  use chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,p_so2
+  use chem_raqms_mod, only : cedsairinc
+  implicit none
+  integer hi,num_chem,is,ie,js,je,i,j,k,n,kup,klo,kk,tile
+  integer ks,ke,m
+  real(chem_kind_r4) :: dt,zlo,zup,aflo,afup,sac,intvallo,intvalup
+  real(chem_kind_r4),dimension(is:ie,ks:ke,js:je) :: rri,dz,zatw
+  real(chem_kind_r4),dimension(is:ie,ks:ke,js:je,num_chem) :: chem
+  logical zloset,zupset
+
+! bc1,2 and oc1,oc2 are in ug/kg
+! rho is in Kg/m2
+! dz is in m
+! best if intairbc, intairoc are in ug/m2/sec
+! then dbc or doc in ug/Kg is delta(intairceds)/rho/dz*dt = delta(intairceds)*rri/dz*dt
+! so2 is in ppmv
+! best if intairso2 is in umole/m2/sec /mwair
+! then dso2 in ppmv is delta(intairceds)*rri/dz/*dt/mwair
+  if(.not.allocated(cedsairinc))then
+    allocate(cedsairinc(is:ie,js:je,ks:ke,3))
+  endif
+  cedsairinc=0.0
+  do j=js,je
+    do i=is,ie
+!      if(tile==5)then
+!      endif
+      if(ktopcedsair(i,j)>=1)then
+DOK:  do k=ks,ke-1
+        zupset=.false.
+        zupset=.false.
+        kup=-1
+        klo=-1
+        afup=0.
+        aflo=0.
+        zlo=zatw(i,k,j)
+        zup=zatw(i,k+1,j)
+        if(tile==5.and.i==5.and.j==150)then
+          write(6,*)k,'zlo',zlo,zup
+        endif
+!        if(tile==5)then
+!        if(is==1)then
+!        write(6,*)'test zlo',i,j,k,zlo,'intaltair',intaltair(ktopcedsair(i,j)),intaltair(kbotcedsair(i,j))
+       !write(6,*)'ktopcedsair',i,j,ktopcedsair(i,j),'kbotcedsair',kbotcedsair(i,j)
+!        flush(6)
+!        endif
+        if(zlo<=intaltair(ktopcedsair(i,j)).and.zup>=intaltair(kbotcedsair(i,j)-1))then
+!          if(tile==5)then
+!            write(6,*)'found zup',zup
+!          endif
+          if(zup>=intaltair(ktopcedsair(i,j)))then
+            kup=ktopcedsair(i,j)
+            afup=1.
+            zupset=.true.
+            klo=kup-1
+            aflo=(zlo-intaltair(klo))/(intaltair(kup)-intaltair(klo))
+            zloset=.true.
+        if(tile==5.and.i==5.and.j==150)then
+          write(6,*)'set klo',klo,'aflo',aflo,'at top'
+          endif
+          if(.not.zloset)then
+          do kk=kbotcedsair(i,j),ktopcedsair(i,j)
+        if(tile==5.and.i==5.and.j==150)then
+           write(6,*)'kk',kk,'zlo',zlo,'intaltair',intaltair(kk-1:kk)
+        endif
+            if(zlo<=intaltair(kk).and.zlo>=intaltair(kk-1))then
+              klo=kk-1
+              aflo=(zlo-intaltair(kk-1))/(intaltair(kk)-intaltair(kk-1))
+              zloset=.true.
+        if(tile==5.and.i==5.and.j==150)then
+               write(6,*)'klo=',klo
+         endif
+            endif
+            if(zup<=intaltair(kk).and.zup>=intaltair(kk-1))then
+              kup=kk-1
+              afup=(zup-intaltair(kk-1))/(intaltair(kk)-intaltair(kk-1))
+              zupset=.true.
+            endif
+            if(zupset.and.zloset)exit
+!            if(is==1)then
+!        if(tile==5)then
+              !write(6,*)'zupset',zupset,zloset
+!            endif
+          end do ! kk
+         endif
+!        if(tile==5)then
+!          write(6,*)'klo',klo,kup
+!        endif
+          if(klo<0)then
+            klo=0
+          endif
+          if(kup<0)then
+            kup=0
+          endif 
+!            if(is==1)then
+!        if(tile==5)then
+!           write(6,*)'i found ',i,j,'klo',klo,'aflo',aflo,'kup',kup,'afup',afup,'zup',zup
+!              endif
+          do m=1,num_cedsair
+            intvallo=intcedsair(i,j,klo+1,m)*aflo+intcedsair(i,j,klo,m)*(1.-aflo)
+            intvalup=intcedsair(i,j,kup+1,m)*afup+intcedsair(i,j,kup,m)*(1.-afup)
+!           here zup, zlo are in meters
+            sac=(intvalup-intvallo)/(zup-zlo)*rri(i,k,j)*dt
+        if(tile==5.and.i==5.and.j==150.and.m==3)then
+               write(6,*)i,j,k,m,'sac',sac,'intvallo',intvallo,intvalup,'klo',klo,kup,'aflo',aflo,afup
+               write(6,*)m,'intcedsairklo',klo,intcedsair(i,j,klo:klo+1,m)
+               write(6,*)m,'intcedsairkup',kup,intcedsair(i,j,kup:kup+1,m)
+               write(6,*)m,'zup',zup,zlo,'rri',rri(i,k,j)
+               write(6,*)'intcedsair',klo,intcedsair(i,j,klo,:)
+               write(6,*)'intcedsair',kup,intcedsair(i,j,kup,:)
+               flush(6)
+            endif
+            if(tile==5)then
+            if(sac<-1.e-9)then
+               write(6,*)i,j,k,m,'sac',sac,'intvallo',intvallo,intvalup,'klo',klo,kup,'aflo',aflo,afup
+               write(6,*)m,'intcedsairklo',klo,intcedsair(i,j,klo:klo+1,m)
+               write(6,*)m,'intcedsairkup',kup,intcedsair(i,j,kup:kup+1,m)
+               write(6,*)m,'zup',zup,zlo,'rri',rri(i,k,j)
+               write(6,*)'intcedsair',klo,intcedsair(i,j,klo,:)
+               write(6,*)'intcedsair',kup,intcedsair(i,j,kup,:)
+               flush(6)
+            endif
+            endif
+            sac=max(0.0,sac)
+            cedsairinc(i,j,k,m)=sac
+!            if(tile==5)then
+!              write(6,*)i,j,k,m,trim(cem_cedsair(m)),' cedsairinc ',cedsairinc(i,j,k,m)
+!            endif
+            select case (cem_cedsair(m))
+            case ('BC')
+              chem(i,k,j,p_bc1)=chem(i,k,j,p_bc1)+.8*sac
+              chem(i,k,j,p_bc2)=chem(i,k,j,p_bc2)+.2*sac
+            case ('OC')
+              chem(i,k,j,p_oc1)=chem(i,k,j,p_oc1)+.8*sac
+              chem(i,k,j,p_oc2)=chem(i,k,j,p_oc2)+.2*sac
+            case ('SO2')
+              chem(i,k,j,p_so2)=chem(i,k,j,p_so2)+sac
+            case default
+            end select
+          end do
+        endif
+      end do DOK
+      endif
+    end do
+  end do
+!  if(tile==5)then
+!    do m=1,3
+!      if(maxval(abs(cedsairinc(:,:,:,m)))/=0.0)then
+!      write(6,*)'cedsairinc',m,maxval(cedsairinc(:,:,:,m)),minval(cedsairinc(:,:,:,m))
+!      endif
+!    !end do
+!  endif
+  end subroutine cedsair_driver
+end module cedsair_mod

@@ -1,0 +1,31 @@
+c common block for model control logic
+c
+c this common block is included in "combined_common.mult"
+c this common block is included in "combined_common.shine"
+c this common block is included in relevant chemistry subroutines
+c
+c        fgge=true if fgge mean tropospheric heating rates are used
+c        trop=true if explicit tropospheric heating rates are used
+c        chem=true if 24 level full chemistry is used
+c        ozint=true if transported ozone feeds back via shine scheme
+c        oztend=true if odd-oxygen tendencies are diagnosed and written
+c        tavflw=true if time-averaged flow fields are generated
+c        aerht=true if aerosol heating rates are included
+c        sad3d=true if 3D time-dependent aerosol climatology is used
+c        sadout=true if gridded SAD files are written
+c        dohet=true if stratospheric heterogenous chemistry is included
+c
+c        NOTE: ozint=true makes no sense unless chem=true
+c
+      common /model_logic/ fgge,trop,chem,ozint,oztend,tavflw,aerht,
+     &       sad3d,sadout,dohet
+      logical fgge,trop,chem,ozint,oztend,tavflw,aerht,
+     &       sad3d,sadout,dohet
+c
+c
+c  include i/o directories and flags for writing output
+      common /prefix/ prefr,prefd,krest,outfil
+      character prefr*80,prefd*80,krest*7,outfil*7
+      common /iodata/ len1,len2,len3,krtest,kotest,kdtest
+      integer len1,len2,len3,krtest,kotest,kdtest
+

@@ -1,0 +1,216 @@
+module raqms_model_mod
+contains
+  subroutine raqms_model_advance(rc)
+  use machine,only : kind_phys
+!  use ozne_def,only : oz_lat,kozpl,kozc
+  use chem_types_mod
+  use chem_state_mod
+  use raqmschem_config_mod
+  use chem_data_mod
+  use chem_model_mod
+  use chem_comm_mod, only : chem_comm_get
+  use chem_io_mod, only : chem_reducetile_pushwithhalo_2dr8,chem_io_write
+  use raqms_mod
+  use calcdxdy, only : initdxdy
+  use calcvort_mod, only :calcvort
+  use calcvort_dgrid_mod, only :calcvortdgrid
+  use chem_const_mod, only : omegx2,degrad
+  implicit none
+  type(chem_state_type),  pointer :: stateIn, stateOut
+  integer rc,localrc,de,is,ie,js,je,ni,nl,i,decount,advancecount
+  integer ihs,ihe,jhs,jhe
+  integer its,ite,jts,jte,ims,ime,jms,jme,mype
+  integer advnaceCount, julday, mm, tz,yy,dd,h,m
+  real(CHEM_KIND_R8) :: dts,f
+  real(CHEM_KIND_R8), dimension(:,:), pointer :: lat, lon 
+  real(CHEM_KIND_R8), dimension(:,:), pointer :: latwithhalo, lonwithhalo
+  type(raqmschem_config_type), pointer :: config
+  type(chem_data_type),   pointer :: data
+  integer icall
+  integer tile,j,k,ii,jj
+  save icall
+  data icall/0/
+  logical first
+  save first
+  data first/.true./
+!  write(6,*)'oz_lat',shape(oz_lat),kozpl,kozc
+!  write(6,*)'max',maxval(oz_lat)
+!  write(6,*)'top raqms_model_advance call raqmschem_model_get'
+!  call flush(6)
+  call raqmschem_model_get(deCount=deCount, tile=tile,rc=localrc)
+!  write(6,*)'raqms_model_advance decount',decount,'localrc',localrc
+!  call flush(6)
+  if (deCount < 1) return
+  call chem_comm_get(localpe=mype)
+!  if(mype.eq.0)then
+!    write(6,*)'top of raqms_model_advance'
+!    write(30,*)'top of raqms_model_advance'
+!    call flush(6)
+!    call flush(30)
+!    write(91,*)'decount',decount
+!    call flush(91)
+!  endif
+  call chem_model_clock_get(advanceCount=advanceCount, dts=dts, yy=yy, mm=mm, dd=dd, h=h, m=m, tz=tz, julday=julday, rc=localrc)
+  if(mype.eq.0)then
+    icall=icall+1
+!    write(6,*)'ajl top of raqms_model_advance ',icall
+!   write(90,*)'top of raqms_model_advance',icall
+!   write(91,*)'top of raqms_model_advance icall',icall
+!   write(92,*)'top of raqms_model_advance icall',icall
+!   write(93,*)'top of raqms_model_advance icall',icall
+!   write(94,*)'top of raqms_model_advance icall',icall,decount
+!   write(95,*)'top of raqms_model_advance icall',icall
+!   write(6,*)'dts',dts,'mm',mm,'tz',tz,'julday',julday
+!   write(6,*)'yy',yy,'dd',dd,'h',h,'m',m
+!   write(6,*)'ntra',config%ntra,'numgas',config%numgas
+!   write(6,*)'advancecount',advancecount
+!   write(91,*)'dts',dts,'mm',mm,'tz',tz,'julday',julday
+!   write(91,*)'yy',yy,'dd',dd,'h',h,'m',m
+!   write(91,*)'advancecount',advancecount
+!   call flush(94)
+!   call flush(6)
+!   call flush(91)
+  endif
+  do de = 0, deCount-1
+!    write(6,*)'call model get',mype
+!    call flush(6)
+!    if(mype.eq.0)then
+!      write(94,*)'call raqmschem_model_get',de
+!      call flush(94)
+!    endif
+      call raqmschem_model_get(de=de, config=config, data=data, &
+        stateIn=stateIn, stateOut=stateOut, rc=localrc)
+!   if(mype.eq.0)then
+!     write(6,*)'ajl did raqmschem_model_get',de,localrc
+!     call flush(6)
+!     write(94,*)'did call raqmschem_model_get',de,localrc
+!     call flush(94)
+!    endif
+!     write(6,*)'call domain',mype
+!     call flush(6)
+     call chem_model_domain_get(de=de, ids=is, ide=ie, jds=js, jde=je, ni=ni, nl=nl, &
+     lon=lon, lat=lat, rc=localrc,its=its,ite=ite,jts=jts,jte=jte,ims=ims,ime=ime,jms=jms,jme=jme) 
+     ihs=max(is-1,its)
+     jhs=max(js-1,jts)
+     ihe=min(ie+1,ite)
+     jhe=min(je+1,jte)
+     if(first)then
+       allocate (lonwithhalo(ihs:ihe,jhs:jhe))
+       allocate (latwithhalo(ihs:ihe,jhs:jhe))
+!       write(6,*)'lonwithalo',ihs,ihe,jhs,jhe
+!       call flush(6)
+!       write(6,*)'LON',shape(lon),lbound(lon),ubound(lon)
+!       call flush(6)
+       call chem_reducetile_pushwithhalo_2dr8(lon,is,ie,js,je,lonwithhalo,ihs,ihe,jhs,jhe,de=de,rc=localrc)
+      
+!       write(6,*)'localrc',localrc
+!       call flush(6)
+       call chem_reducetile_pushwithhalo_2dr8(lat,is,ie,js,je,latwithhalo,ihs,ihe,jhs,jhe,de=de,rc=localrc)
+!       if(tile.eq.1)then
+     
+!       write(6,*)mype,'lonhalo',maxval(lonwithhalo),minval(lonwithhalo)
+!       write(6,*)mype,'shape',shape(lonwithhalo)
+!       write(6,*)mype,'lathalo',maxval(latwithhalo),minval(latwithhalo)
+!       endif
+!      can calculate griddx,and griddy first time
+       call initdxdy(is,ie,js,je,lonwithhalo,latwithhalo,ihs,ihe,jhs,jhe,data%griddx,data%griddy,mype)
+!       if(tile.eq.1)then
+!         write(6,*)mype,'griddx',maxval(data%griddx),minval(data%griddx),'shape',shape(data%griddx)
+!       endif
+     endif
+!    write(6,*)'ajl ni',ni,nl,'tr3d',shape(statein%tr3d)
+    !call flush(6)
+!    write(6,*)'ajl is',is,ie,js,je,'its',its,ite,jts,jte,'ims',ims,ime,jms,jme
+!    call flush(6)
+!   do i=1,4
+     !write(6,*)'ajl i',i,maxval(statein%tr3d(:,:,:,i)),minval(statein%tr3d(:,:,:,i))
+!   end do
+!    if(de.eq.0)then
+!    write(6,*)'prl3d',shape(Statein%prl3d),kind(Statein%prl3d)
+!    call flush(6)
+!    write(6,*)'tk3d',shape(Statein%tk3d),kind(Statein%tk3d)
+!    call flush(6)
+!    endif
+!    write(6,*)'call advance',mype
+!    call flush(6)
+!   if(mype.eq.0)then
+!     write(94,*)'de',de,is,ie,js,je
+!     call flush(94)
+!     write(94,*)'call raqms-advance'
+!     call flush(94)
+!     write(6,*)'raqms_advance',de
+!   endif
+!    if(mype.eq.0)then
+!       write(6,*)'griddx in',maxval(data%griddx),kind(data%griddx)
+       !write(6,*)'shape',shape(data%griddx)
+!       write(6,*)'lbound',lbound(data%griddx),ubound(data%griddx)
+!    endif
+    if(first)then
+    if(.not.allocated(data%vort))then
+      allocate(data%vort(is:ie,js:je,nl))
+    endif
+    call calcvortdgrid(stateIn%us3d,stateIn%vs3d,statein%area,data%griddx,data%griddy, &
+     lat,is,ie,js,je,nl,ihs,ihe,jhs,jhe,data%vort,de,mype)
+     write(6,*)'vort',maxval(data%vort),minval(data%vort)
+    if(.not.allocated(data%absvort))then
+       allocate(data%absvort(is:ie,js:je,nl))
+    endif
+    do j=js,je
+      jj=j-js+1
+      do i=is,ie
+        ii=i-is+1
+        f=omegx2*sin(lat(ii,jj)*degrad)
+        if(i.eq.10)then
+          write(80+mype,*)'f',f,'lat',j,lat(ii,jj),sin(lat(ii,jj)*degrad),data%vort(i,j,1)
+          call flush(80+mype)
+        endif
+        do k=1,nl
+          data%absvort(i,j,k)=data%vort(i,j,k)+f
+        end do
+      end do
+    end do
+          
+        
+    
+    if(ie.eq.96.and.mype<=1)then
+      do j=je,js
+      write(80+mype,*)'vort after',j,data%vort(ie,j,62:63)
+      end do
+    endif
+    call chem_io_write('vort.nc',data%vort,path=trim(config%emi_outname),de=de,rc=localrc)
+    call chem_io_write('absvort.nc',data%absvort,path=trim(config%emi_outname),de=de,rc=localrc)
+    endif
+    call raqms_advance(de,dts,advanceCount, &
+    StateIn%pr3d, &
+    StateIn%prl3d, &
+    Statein%tk3d, &
+    StateIn%tr3d, &
+    StateOut%tr3d, &
+    config%ntra, &
+    config%numgas, &
+    lon,lat, &
+    yy,mm,dd,h,m,tz,julday, &
+    is, ie, js, je, 1, nl, &
+    is, ie, js, je, 1, nl, &
+    rc=localrc)
+  end do
+! if(mype.eq.0)then
+!   write(6,*)'ajl bottom of raqms_model_advance',icall,maxval(stateout%tr3d(:,:,:,4))
+   call flush(6)
+!   write(6,*)'ajl out 111 ',decount,stateout%tr3d(1,1,1,4)
+!   call flush(6)
+!   write(30,*)'ajl bottom of raqms_model_advance',icall,maxval(stateout%tr3d(:,:,:,4))
+!   call flush(6)
+!   call flush(30)
+!   write(90,*)'bottom of raqms_model_advance',icall
+!   write(91,*)'bottom of raqms_model_advance icall',icall
+!   write(92,*)'bottom of raqms_model_advance icall',icall
+!   write(93,*)'bottom of raqms_model_advance icall',icall
+!   write(94,*)'bottom of raqms_model_advance icall',icall,localrc
+!   call flush(94)
+!   write(95,*)'bottom of raqms_model_advance icall',icall
+! endif
+  first=.false.
+  return
+  end subroutine raqms_model_advance
+end module raqms_model_mod

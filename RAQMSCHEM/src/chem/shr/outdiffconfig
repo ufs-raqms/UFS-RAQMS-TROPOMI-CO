@@ -1,0 +1,940 @@
+1c1
+< module raqmschem_config_mod
+---
+> module chem_config_mod
+4a5
+>   use chem_species_mod, only : chem_species_type
+6,7d6
+<   use raqmschem_species_mod, only : raqmschem_species_type
+< !  use machine, only : kind_phys
+12,13c11,18
+<    integer, parameter :: CHEM_OPT_NONE         = 0
+<    integer, parameter :: CHEM_OPT_MAX          = 500
+---
+>   integer, parameter :: CHEM_OPT_NONE         = 0
+>   integer, parameter :: CHEM_OPT_GOCART       = 300
+>   integer, parameter :: CHEM_OPT_GOCART_RACM  = 301
+>   integer, parameter :: CHEM_OPT_RACM_SOA_VBS = 108
+>   integer, parameter :: CHEM_OPT_MAX          = 500
+> 
+>   integer, parameter :: DUST_OPT_GOCART = 1
+>   integer, parameter :: DUST_OPT_AFWA   = 3
+18c23
+<   type raqmschem_config_type
+---
+>   type chem_config_type
+20a26
+>     character(len=CHEM_MAXSTR) :: fireemi_inname     = ''
+21a28
+>     character(len=CHEM_MAXSTR) :: fireemi_outname    = ''
+24c31,67
+<     character(len=CHEM_MAXSTR) :: chem_hist_outname  = 'raqms_out_'
+---
+>     character(len=CHEM_MAXSTR) :: chem_hist_outname  = 'fim_out_'
+>     integer :: io_style_emissions = 0
+>     real(CHEM_KIND_R4) :: bioemdt
+>     real(CHEM_KIND_R4) :: photdt
+>     real(CHEM_KIND_R4) :: chemdt
+>     integer :: kemit
+>     integer :: kfuture
+>     integer :: chem_conv_tr
+>     integer :: chem_opt
+>     integer :: gaschem_onoff
+>     integer :: aerchem_onoff
+>     integer :: wetscav_onoff
+>     integer :: cldchem_onoff
+>     integer :: vertmix_onoff
+>     integer :: chem_in_opt
+>     integer :: phot_opt
+>     integer :: drydep_opt
+>     real(CHEM_KIND_R4) :: depo_fact
+>     integer :: emiss_opt
+>     integer :: dust_opt
+>     integer :: dmsemis_opt
+>     integer :: seas_opt
+>     integer :: bio_emiss_opt
+>     integer :: biomass_burn_opt
+>     integer :: plumerisefire_frq
+>     integer :: emiss_inpt_opt
+>     integer :: gas_bc_opt
+>     integer :: gas_ic_opt
+>     integer :: aer_bc_opt
+>     integer :: aer_ic_opt
+>     logical :: have_bcs_chem
+>     integer :: aer_ra_feedback    = 0
+>     integer :: aer_op_opt
+>     integer :: conv_tr_aqchem
+>     integer :: call_biomass       = 1
+>     integer :: call_chemistry     = 1
+>     integer :: call_radiation     = 1
+26a70,71
+>     real(CHEM_KIND_R4):: ash_mass
+>     real(CHEM_KIND_R4):: ash_height
+31a77,80
+>     integer :: num_emis_ant        = 0
+>     integer :: num_emis_vol        = 0
+>     integer :: num_ebu             = 0
+>     integer :: num_ebu_in          = 0
+32a82,83
+>     integer :: num_emis_season_bb  = 0
+>     integer :: num_emis_season_ant = 0
+34,35d84
+<     integer :: raqmschem_opt       = 0
+<     real(CHEM_KIND_R4) :: raqmschemdt
+36a86,99
+>     integer :: nbands   = 14
+>     integer :: nbandlw  = 16
+>     integer :: num_soil_layers = 4
+>     integer :: num_scalar      = 1
+>     integer :: nvl_gocart      = 55  ! number of input levels from gocart file
+>     integer :: num_ext_coef    = 5
+>     integer :: num_bscat_coef  = 3
+>     integer :: num_asym_par    = 3
+>     INTEGER :: num_emis_dust   = 5
+>     INTEGER :: num_emis_seas   = 4
+>     INTEGER :: num_plumestuff  = 8
+>     INTEGER :: ne_area         = 41
+>     INTEGER :: nmegan          = 1
+>     INTEGER :: mp_physics      = 0
+41c104
+<   type(raqmschem_species_type), pointer :: species => null()
+---
+>     logical :: call_gocart     = .false.
+42a106
+>     type(chem_species_type), pointer :: species => null()
+44c108
+<   end type raqmschem_config_type
+---
+>   end type chem_config_type
+48c112
+<   public :: raqmschem_config_type
+---
+>   public :: chem_config_type
+49a114
+>   public :: chem_species_type
+51c116
+<   public :: raqmschem_config_read
+---
+>   public :: chem_config_read
+54a120,122
+>             CHEM_OPT_GOCART,       &
+>             CHEM_OPT_GOCART_RACM,  &
+>             CHEM_OPT_RACM_SOA_VBS, &
+55a124,125
+>   public :: DUST_OPT_GOCART, &
+>             DUST_OPT_AFWA
+59c129
+<   subroutine raqmschem_config_read(config, rc)
+---
+>   subroutine chem_config_read(config, rc)
+61c131
+<     type(raqmschem_config_type), intent(inout) :: config
+---
+>     type(chem_config_type), intent(inout) :: config
+68,71c138,139
+<     integer                :: raqmschem_opt
+<     integer                :: buffer(1)
+<     real(CHEM_KIND_R4)     :: raqmschemdt
+<     real(CHEM_KIND_R4)     :: rbuffer(1)
+---
+>     integer                :: buffer(24)
+>     real(CHEM_KIND_R4)     :: rbuffer(6)
+81a150,185
+>     integer :: io_style_emissions
+>     real(CHEM_KIND_R4)   :: bioemdt
+>     real(CHEM_KIND_R4)   :: photdt
+>     real(CHEM_KIND_R4)   :: chemdt
+>     integer :: kemit
+>     integer :: kfuture
+>     integer :: chem_conv_tr
+>     integer :: chem_opt
+>     integer :: gaschem_onoff
+>     integer :: aerchem_onoff
+>     integer :: wetscav_onoff
+>     integer :: cldchem_onoff
+>     integer :: vertmix_onoff
+>     integer :: chem_in_opt
+>     integer :: phot_opt
+>     integer :: drydep_opt
+>     real(CHEM_KIND_R4)   :: depo_fact
+>     integer :: emiss_opt
+>     integer :: dust_opt
+>     integer :: dmsemis_opt
+>     integer :: seas_opt
+>     integer :: bio_emiss_opt
+>     integer :: biomass_burn_opt
+>     integer :: plumerisefire_frq
+>     integer :: emiss_inpt_opt
+>     integer :: gas_bc_opt
+>     integer :: gas_ic_opt
+>     integer :: aer_bc_opt
+>     integer :: aer_ic_opt
+>     logical :: have_bcs_chem
+>     integer :: aer_ra_feedback
+>     integer :: aer_op_opt
+>     integer :: conv_tr_aqchem
+>     integer :: archive_step
+>     real(CHEM_KIND_R4) :: ash_mass
+>     real(CHEM_KIND_R4) :: ash_height
+84c188
+<     namelist /raqmschem_nml/          &
+---
+>     namelist /chem_nml/          &
+91c195,231
+<       chem_hist_outname         
+---
+>       chem_hist_outname,         &
+>       io_style_emissions,        &
+>       bioemdt,                   &
+>       photdt,                    &
+>       chemdt,                    &
+>       kemit,                     &
+>       kfuture,                   &
+>       chem_conv_tr,              &
+>       chem_opt,                  &
+>       gaschem_onoff,             &
+>       aerchem_onoff,             &
+>       wetscav_onoff,             &
+>       cldchem_onoff,             &
+>       vertmix_onoff,             &
+>       chem_in_opt,               &
+>       phot_opt,                  &
+>       drydep_opt,                &
+>       depo_fact,                 &
+>       emiss_opt,                 &
+>       dust_opt,                  &
+>       dmsemis_opt,               &
+>       seas_opt,                  &
+>       bio_emiss_opt,             &
+>       biomass_burn_opt,          &
+>       plumerisefire_frq,         &
+>       emiss_inpt_opt,            &
+>       gas_bc_opt,                &
+>       gas_ic_opt,                &
+>       aer_bc_opt,                &
+>       aer_ic_opt,                &
+>       have_bcs_chem,             &
+>       aer_ra_feedback,           &
+>       aer_op_opt,                &
+>       conv_tr_aqchem,            &
+>       archive_step,              &
+>       ash_mass,                  &
+>       ash_height
+96a237,272
+>     chem_opt          = CHEM_OPT_NONE
+>     chemdt            = 3._CHEM_KIND_R4
+>     bioemdt           = 3._CHEM_KIND_R4
+>     kemit             = 1
+>     kfuture           = 0
+>     phot_opt          = 1
+>     photdt            = 60._CHEM_KIND_R4
+>     ash_mass          = -999._CHEM_KIND_R4
+>     ash_height        = -999._CHEM_KIND_R4
+>     depo_fact         = 0._CHEM_KIND_R4
+>     drydep_opt        = 0
+>     DUST_OPT          = 3
+>     DMSEMIS_OPT       = 1
+>     SEAS_OPT          = 1
+>     EMISS_OPT         = 5
+>     BIO_EMISS_OPT     = 0
+>     BIOMASS_BURN_OPT  = 1
+>     PLUMERISEFIRE_FRQ = 60
+>     EMISS_INPT_OPT    = 1
+>     GAS_BC_OPT        = 1
+>     GAS_IC_OPT        = 1
+>     AER_BC_OPT        = 1
+>     AER_IC_OPT        = 1
+>     gaschem_onoff     = 1
+>     aerchem_onoff     = 1
+>     wetscav_onoff     = 0
+>     cldchem_onoff     = 0
+>     vertmix_onoff     = 1
+>     chem_conv_tr      = 1
+>     aer_ra_feedback   = 0
+>     aer_op_opt        = 0
+>     chem_in_opt       = 0
+>     archive_step      = 1
+>     conv_tr_aqchem    = 0
+>     have_bcs_chem     = .false.
+>     io_style_emissions = 0
+116c292
+<       read(unit, nml=raqmschem_nml, iostat=iostat )
+---
+>       read(unit, nml=chem_nml, iostat=iostat )
+118c294
+<       write(6, nml=raqmschem_nml)
+---
+>       write(6, nml=chem_nml)
+127c303,326
+<       raqmschem_opt          &
+---
+>       chem_opt,          &
+>       kemit,             &
+>       phot_opt,          &
+>       DUST_OPT,          &
+>       DMSEMIS_OPT,       &
+>       SEAS_OPT,          &
+>       EMISS_OPT,         &
+>       BIO_EMISS_OPT,     &
+>       BIOMASS_BURN_OPT,  &
+>       PLUMERISEFIRE_FRQ, &
+>       EMISS_INPT_OPT,    &
+>       GAS_BC_OPT,        &
+>       GAS_IC_OPT,        &
+>       AER_BC_OPT,        &
+>       AER_IC_OPT,        &
+>       gaschem_onoff,     &
+>       aerchem_onoff,     &
+>       wetscav_onoff,     &
+>       cldchem_onoff,     &
+>       vertmix_onoff,     &
+>       chem_conv_tr,      &
+>       aer_ra_feedback,   &
+>       chem_in_opt,       &
+>       archive_step       &
+133c332,355
+<     config % raqmschem_opt          = buffer( 1 )
+---
+>     config % chem_opt          = buffer( 1 )
+>     config % kemit             = buffer( 2 )
+>     config % phot_opt          = buffer( 3 )
+>     config % dust_opt          = buffer( 4 )
+>     config % dmsemis_opt       = buffer( 5 )
+>     config % seas_opt          = buffer( 6 )
+>     config % emiss_opt         = buffer( 7 )
+>     config % bio_emiss_opt     = buffer( 8 )
+>     config % biomass_burn_opt  = buffer( 9 )
+>     config % plumerisefire_frq = buffer( 10 )
+>     config % emiss_inpt_opt    = buffer( 11 )
+>     config % gas_bc_opt        = buffer( 12 )
+>     config % gas_ic_opt        = buffer( 13 )
+>     config % aer_bc_opt        = buffer( 14 )
+>     config % aer_ic_opt        = buffer( 15 )
+>     config % gaschem_onoff     = buffer( 16 )
+>     config % aerchem_onoff     = buffer( 17 )
+>     config % wetscav_onoff     = buffer( 18 )
+>     config % cldchem_onoff     = buffer( 19 )
+>     config % vertmix_onoff     = buffer( 20 )
+>     config % chem_conv_tr      = buffer( 21 )
+>     config % aer_ra_feedback   = buffer( 22 )
+>     config % chem_in_opt       = buffer( 23 )
+>     config % archive_step      = buffer( 24 )
+136c358
+<     rbuffer = (/ raqmschemdt/)
+---
+>     rbuffer = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, depo_fact /)
+141c363,368
+<     config % raqmschemdt     = rbuffer(1)
+---
+>     config % bioemdt    = rbuffer(1)
+>     config % photdt     = rbuffer(2)
+>     config % chemdt     = rbuffer(3)
+>     config % ash_mass   = rbuffer(4)
+>     config % ash_height = rbuffer(5)
+>     config % depo_fact  = rbuffer(6)
+152,153d378
+< !    write(6,*)'ajl bottom raqmschem_config_read'
+< !    call flush(6)
+155c380
+<   end subroutine raqmschem_config_read
+---
+>   end subroutine chem_config_read
+159c384
+<     type(raqmschem_config_type), intent(inout) :: config
+---
+>     type(chem_config_type), intent(inout) :: config
+165,166d389
+< !    write(6,*)'ajl top chemconfigcontrolinit'
+< !    call flush(6)
+171a395,398
+>     config % num_ebu    = 0
+>     config % num_ebu_in = 0
+> 
+>     if (config % mp_physics == 0) then
+173c400,408
+<           config % num_chem            = 1
+---
+>       select case (config % chem_opt)
+>         case(CHEM_OPT_GOCART)
+>           config % num_chem            = 19
+>           config % num_ebu             = 7
+>           config % num_ebu_in          = 7
+>           config % num_emis_ant        = 7
+>           config % num_emis_vol        = 0
+>           config % num_emis_season_ant = 7
+>           config % num_emis_season_bb  = 7
+177a413,453
+>         case(CHEM_OPT_GOCART_RACM)
+>           config % num_chem            = 66
+>           config % num_ebu             = 25
+>           config % num_ebu_in          = 25
+>           config % num_emis_ant        = 25
+>           config % num_emis_vol        = 0
+>           config % num_emis_season_ant = 0
+>           config % num_emis_season_bb  = 0
+>           config % numgas              = 49
+>           config % num_moist           = 3
+>           ! compute total # of tracers - no ice variable transported
+>           config % ntrb = config % ntrb + config % num_moist + config % num_chem - 3
+> 
+>         case(CHEM_OPT_RACM_SOA_VBS)
+>           config % num_chem            = 103
+>           config % num_ebu             = 25
+>           config % num_ebu_in          = 25
+>           config % num_emis_ant        = 25
+>           config % num_emis_vol        = 0
+>           config % num_emis_season_ant = 0
+>           config % num_emis_season_bb  = 0
+>           config % numgas              = 65
+>           config % num_moist           = 3
+>           ! compute total # of tracers - no ice variable transported
+>           config % ntrb = config % ntrb + config % num_moist + config % num_chem - 3
+> 
+>         case default
+>           call chem_rc_set(CHEM_RC_FAILURE, msg="chem_opt not implemented", &
+>             file=__FILE__, line=__LINE__, rc=rc)
+>           return
+> 
+>       end select
+> 
+>     else
+> 
+>       call chem_rc_set(CHEM_RC_FAILURE, msg="mp_physics option not implemented", &
+>         file=__FILE__, line=__LINE__, rc=rc)
+>       return
+> 
+>     end if
+> 
+190c466
+<     type(raqmschem_config_type), intent(inout) :: config
+---
+>     type(chem_config_type), intent(inout) :: config
+197,198d472
+< !    write(6,*)'ajl top  config_species_init'
+< !    call flush(6)
+211,213c485,509
+< 
+<         if (chem_rc_test((config % num_chem    /= 1), &
+<           msg="num_chem is not equal to 1", &
+---
+>     if (config % aer_ra_feedback == 1) then
+>       config % species % p_extcof3    = 1
+>       config % species % p_extcof55   = 2
+>       config % species % p_extcof106  = 3
+>       config % species % p_extcof3_5  = 4
+>       config % species % p_extcof8_12 = 5
+>       config % species % p_bscof3     = 1
+>       config % species % p_bscof55    = 2
+>       config % species % p_bscof106   = 3
+>       config % species % p_asympar3   = 1
+>       config % species % p_asympar55  = 2
+>       config % species % p_asympar106 = 3
+>     endif
+> 
+>     select case (config % chem_opt)
+>       case (CHEM_OPT_GOCART)
+>         ! -- gocart simple
+>         if (chem_rc_test((config % num_chem    /= 19), &
+>           msg="num_chem is not equal to 19", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+>         if (chem_rc_test((config % num_emis_ant < 4), &
+>           msg="num_emis_ant smaller than 4", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+>         if (chem_rc_test(((config % num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)), &
+>           msg="num_emis_ant smaller than 6 with biomass_burn_opt=1", &
+218c514
+<         config % species % p_o3vm2=1
+---
+>         config % species % p_so2=1
+220,222c516,576
+< !    write(6,*)'ajl bot  config_species_init'
+< !    call flush(6)
+<   end subroutine chem_config_species_init
+---
+>         config % species % p_sulf=2
+>         config % species % p_dms=3
+>         config % species % p_msa=4
+>         config % species % p_p25=5
+>         config % species % p_bc1=6
+>         config % species % p_bc2=7
+>         config % species % p_oc1=8
+>         config % species % p_oc2=9
+>         config % species % p_dust_1=10
+>         config % species % p_dust_2=11
+>         config % species % p_dust_3=12
+>         config % species % p_dust_4=13
+>         config % species % p_dust_5=14
+>         config % species % p_seas_1=15
+>         config % species % p_seas_2=16
+>         config % species % p_seas_3=17
+>         config % species % p_seas_4=18
+>         config % species % p_p10   =19
+>         config % species % p_e_bc  =1
+>         config % species % p_e_oc  =2
+>         config % species % p_e_sulf=3
+>         config % species % p_e_pm_25=4
+>         config % species % p_e_so2=5
+>         config % species % p_e_pm_10=6
+>         config % species % p_e_dms=7
+> 
+>         config % species % p_ebu_bc  =1
+>         config % species % p_ebu_oc  =2
+>         config % species % p_ebu_sulf=3
+>         config % species % p_ebu_pm25=4
+>         config % species % p_ebu_so2=5
+>         config % species % p_ebu_pm10=6
+>         config % species % p_ebu_dms=7
+> 
+>         config % species % p_ebu_in_bc  =1
+>         config % species % p_ebu_in_oc  =2
+>         config % species % p_ebu_in_sulf=3
+>         config % species % p_ebu_in_pm25=4
+>         config % species % p_ebu_in_so2=5
+>         config % species % p_ebu_in_pm10=6
+>         config % species % p_ebu_in_dms=7
+> 
+>         ! -- diagnostic dust and seasale stuff
+>         config % species % p_edust1=1
+>         config % species % p_edust2=2
+>         config % species % p_edust3=3
+>         config % species % p_edust4=4
+>         config % species % p_edust5=5
+>         config % species % p_eseas1=1
+>         config % species % p_eseas2=2
+>         config % species % p_eseas3=3
+>         config % species % p_eseas4=4
+> 
+>       case (CHEM_OPT_GOCART_RACM)
+>         ! -- gocart + racm
+>         if (chem_rc_test((config % num_chem    /= 66), &
+>           msg="num_chem is not equal to 66", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+>         if (chem_rc_test((config % num_emis_ant < 25), &
+>           msg="num_emis_ant smaller than 25", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+223a578,594
+>         ! -- initialize pointers for gas phase and aerosol stuff
+>         config % conv_tr_aqchem = 1
+>         call gocartracm_pointers_init(config)
+>         ! -- initializing photolysis pointers so far done in chem_alloc (no pointers yet)
+>         ! -- hydrometeors
+>         config % species % p_qv=1
+>         config % species % p_qc=2
+>         config % species % p_qi=3
+> 
+>       case (CHEM_OPT_RACM_SOA_VBS)
+>         ! -- racm + soa
+>         if (chem_rc_test((config % num_chem   /= 103), &
+>           msg="num_chem is not equal to 103", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+>         if (chem_rc_test((config % num_emis_ant < 25), &
+>           msg="num_emis_ant smaller than 25", &
+>           file=__FILE__, line=__LINE__, rc=rc)) return
+224a596,604
+>         ! -- initialize pointers for gas phase and aerosol stuff
+>         config % conv_tr_aqchem = 1
+>         call racmsoavbs_pointers_init(config)
+>         ! -- initializing photolysis pointers so far done in chem_alloc (no pointers yet)
+>         ! -- hydrometeors
+>         config % species % p_qv=1
+>         config % species % p_qc=2
+>         config % species % p_qi=3
+>       case default
+225a606,994
+>         call chem_rc_set(CHEM_RC_FAILURE, msg="chem_opt not implemented", &
+>           file=__FILE__, line=__LINE__, rc=rc)
+>         return
+> 
+>     end select
+> 
+> 
+>   contains
+> 
+> !package   gocartracm_kpp     chem_opt==301                   -
+> !(chem:so2,sulf,no2,no,o3,hno3,h2o2,ald,hcho,op1,op2,paa,ora1,ora2,nh3,n2o5,no3,pan,hc3,hc5,hc8,eth,co,ete,olt,oli,tol,xyl,aco3,tpan,hono,hno4,ket,gly,mgly,dcb,onit,csl,iso,co2,ch4,udd,hket,api,lim,dien,macr,ho,ho2,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,seas_1,seas_2,seas_3,seas_4,p10
+>     subroutine gocartracm_pointers_init(config)
+> 
+>       type(chem_config_type), intent(inout) :: config
+>     ! -- this module will initialize variable pointers for chem_opt "301"
+>     ! -- June 2015
+> 
+>     ! -- 51 variabkes for RACM gas phase
+>       config % species % p_so2  = 1
+>       config % species % p_sulf  = 2
+>       config % species % p_no2  = 3
+>       config % species % p_no  = 4
+>       config % species % p_o3  = 5
+>       config % species % p_hno3  = 6
+>       config % species % p_h2o2  = 7
+>       config % species % p_ald  = 8
+>       config % species % p_hcho  = 9
+>       config % species % p_op1  = 10
+>       config % species % p_op2  = 11
+>       config % species % p_paa  = 12
+>       config % species % p_ora1  = 13
+>       config % species % p_ora2  = 14
+>       config % species % p_nh3  = 15
+>       config % species % p_n2o5  = 16
+>       config % species % p_no3  = 17
+>       config % species % p_pan  = 18
+>       config % species % p_hc3  = 19
+>       config % species % p_hc5  = 20
+>       config % species % p_hc8  = 21
+>       config % species % p_eth  = 22
+>       config % species % p_co  = 23
+>       config % species % p_ete  = 24
+>       config % species % p_olt  = 25
+>       config % species % p_oli  = 26
+>       config % species % p_tol  = 27
+>       config % species % p_xyl  = 28
+>       config % species % p_aco3  = 29
+>       config % species % p_tpan  = 30
+>       config % species % p_hono  = 31
+>       config % species % p_hno4  = 32
+>       config % species % p_ket  = 33
+>       config % species % p_gly  = 34
+>       config % species % p_mgly  = 35
+>       config % species % p_dcb  = 36
+>       config % species % p_onit  = 37
+>       config % species % p_csl  = 38
+>       config % species % p_iso  = 39
+>       config % species % p_co2  = 40
+>       config % species % p_ch4  = 41
+>       config % species % p_udd  = 42
+>       config % species % p_hket  = 43
+>       config % species % p_api  = 44
+>       config % species % p_lim  = 45
+>       config % species % p_dien  = 46
+>       config % species % p_macr  = 47
+>       config % species % p_ho  = 48
+>       config % species % p_ho2  = 49
+>       config % species % p_dms  = 50
+>       config % species % p_msa  = 51
+> !
+> ! 15 more for GOCART
+> !
+>       config % species % p_p25  = 52
+>       config % species % p_bc1  = 53
+>       config % species % p_bc2  = 54
+>       config % species % p_oc1  = 55
+>       config % species % p_oc2  = 56
+>       config % species % p_dust_1  = 57
+>       config % species % p_dust_2  = 58
+>       config % species % p_dust_3  = 59
+>       config % species % p_dust_4  = 60
+>       config % species % p_dust_5  = 61
+>       config % species % p_seas_1  = 62
+>       config % species % p_seas_2  = 63
+>       config % species % p_seas_3  = 64
+>       config % species % p_seas_4  = 65
+>       config % species % p_p10  = 66
+> ! emissions
+> !package   ecptec          emiss_opt==5                   -
+> !emis_ant:e_iso,e_so2,e_no,e_no2,e_co,e_eth,e_hc3,e_hc5,e_hc8,e_xyl,e_ol2,e_olt,e_oli,e_tol,e_csl,e_hcho,e_ald,e_ket,e_ora2,e_nh3,e_pm_25,e_pm_10,e_oc,e_sulf,e_bc
+> 
+>       config % species % p_e_iso = 1
+>       config % species % p_e_so2 = 2
+>       config % species % p_e_no = 3
+>       config % species % p_e_no2 = 4
+>       config % species % p_e_co = 5
+>       config % species % p_e_eth = 6
+>       config % species % p_e_hc3 = 7
+>       config % species % p_e_hc5 = 8
+>       config % species % p_e_hc8 = 9
+>       config % species % p_e_xyl = 10
+>       config % species % p_e_olt = 11
+>       config % species % p_e_oli = 12
+>       config % species % p_e_tol = 13
+>       config % species % p_e_csl = 14
+>       config % species % p_e_hcho = 15
+>       config % species % p_e_ald = 16
+>       config % species % p_e_ket = 17
+>       config % species % p_e_ora2 = 18
+>       config % species % p_e_nh3 = 19
+>       config % species % p_e_pm_25 = 20
+>       config % species % p_e_pm_10 = 21
+>       config % species % p_e_oc = 22
+>       config % species % p_e_sulf = 23
+>       config % species % p_e_bc = 24
+>       config % species % p_e_dms = 25
+> ! biomass burning
+>       config % species % p_ebu_iso = 1
+>       config % species % p_ebu_so2 = 2
+>       config % species % p_ebu_no = 3
+>       config % species % p_ebu_no2=4
+>       config % species % p_ebu_co =5
+>       config % species % p_ebu_eth=6
+>       config % species % p_ebu_hc3=7
+>       config % species % p_ebu_hc5=8
+>       config % species % p_ebu_hc8=9
+>       config % species % p_ebu_xyl=10
+>       config % species % p_ebu_olt=11
+>       config % species % p_ebu_oli=12
+>       config % species % p_ebu_tol=13
+>       config % species % p_ebu_csl=14
+>       config % species % p_ebu_hcho=15
+>       config % species % p_ebu_ald=16
+>       config % species % p_ebu_ket=17
+>       config % species % p_ebu_ora2=18
+>       config % species % p_ebu_nh3=19
+>       config % species % p_ebu_pm25=20
+>       config % species % p_ebu_pm10=21
+>       config % species % p_ebu_oc=22
+>       config % species % p_ebu_sulf=23
+>       config % species % p_ebu_bc=24
+>       config % species % p_ebu_dms=25
+> 
+>       config % species % p_ebu_in_iso = 1
+>       config % species % p_ebu_in_so2 = 2
+>       config % species % p_ebu_in_no = 3
+>       config % species % p_ebu_in_no2=4
+>       config % species % p_ebu_in_co =5
+>       config % species % p_ebu_in_eth=6
+>       config % species % p_ebu_in_hc3=7
+>       config % species % p_ebu_in_hc5=8
+>       config % species % p_ebu_in_hc8=9
+>       config % species % p_ebu_in_xyl=10
+>       config % species % p_ebu_in_olt=11
+>       config % species % p_ebu_in_oli=12
+>       config % species % p_ebu_in_tol=13
+>       config % species % p_ebu_in_csl=14
+>       config % species % p_ebu_in_hcho=15
+>       config % species % p_ebu_in_ald=16
+>       config % species % p_ebu_in_ket=17
+>       config % species % p_ebu_in_ora2=18
+>       config % species % p_ebu_in_nh3=19
+>       config % species % p_ebu_in_pm25=20
+>       config % species % p_ebu_in_pm10=21
+>       config % species % p_ebu_in_oc=22
+>       config % species % p_ebu_in_sulf=23
+>       config % species % p_ebu_in_bc=24
+>       config % species % p_ebu_in_dms=25
+> 
+> !dust and seasalt
+> ! diagnostic dust and seasale stuff
+>       config % species % p_edust1=1
+>       config % species % p_edust2=2
+>       config % species % p_edust3=3
+>       config % species % p_edust4=4
+>       config % species % p_edust5=5
+>       config % species % p_eseas1=1
+>       config % species % p_eseas2=2
+>       config % species % p_eseas3=3
+>       config % species % p_eseas4=4
+> 
+>     end subroutine gocartracm_pointers_init
+> !
+> !package   gocartracm_kpp     chem_opt==108                   -
+> !(chem:so2,sulf,no2,no,o3,hno3,h2o2,ald,hcho,op1,op2,paa,ora1,ora2,nh3,n2o5,no3,pan,hc3,hc5,hc8,eth,co,ete,olt,oli,tol,xyl,aco3,tpan,hono,hno4,ket,gly,mgly,dcb,onit,csl,iso,co2,ch4,udd,hket,api,lim,dien,macr,ho,ho2,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,seas_1,seas_2,seas_3,seas_4,p10
+>     subroutine racmsoavbs_pointers_init(config)
+> 
+>       type(chem_config_type), intent(inout) :: config
+> 
+>     ! -- this subroutine will initialize variable pointers for chem_opt "108"
+>     ! -- June 2015
+> 
+>     ! -- 51 variabkes for RACM gas phase
+>       config % species % p_so2  = 1
+>       config % species % p_sulf  = 2
+>       config % species % p_no2  = 3
+>       config % species % p_no  = 4
+>       config % species % p_o3  = 5
+>       config % species % p_hno3  = 6
+>       config % species % p_h2o2  = 7
+>       config % species % p_ald  = 8
+>       config % species % p_hcho  = 9
+>       config % species % p_op1  = 10
+>       config % species % p_op2  = 11
+>       config % species % p_paa  = 12
+>       config % species % p_ora1  = 13
+>       config % species % p_ora2  = 14
+>       config % species % p_nh3  = 15
+>       config % species % p_n2o5  = 16
+>       config % species % p_no3  = 17
+>       config % species % p_pan  = 18
+>       config % species % p_hc3  = 19
+>       config % species % p_hc5  = 20
+>       config % species % p_hc8  = 21
+>       config % species % p_eth  = 22
+>       config % species % p_co  = 23
+>       config % species % p_ete  = 24
+>       config % species % p_olt  = 25
+>       config % species % p_oli  = 26
+>       config % species % p_tol  = 27
+>       config % species % p_xyl  = 28
+>       config % species % p_aco3  = 29
+>       config % species % p_tpan  = 30
+>       config % species % p_hono  = 31
+>       config % species % p_hno4  = 32
+>       config % species % p_ket  = 33
+>       config % species % p_gly  = 34
+>       config % species % p_mgly  = 35
+>       config % species % p_dcb  = 36
+>       config % species % p_onit  = 37
+>       config % species % p_csl  = 38
+>       config % species % p_iso  = 39
+>       config % species % p_co2  = 40
+>       config % species % p_ch4  = 41
+>       config % species % p_udd  = 42
+>       config % species % p_hket  = 43
+>       config % species % p_api  = 44
+>       config % species % p_lim  = 45
+>       config % species % p_dien = 46
+>       config % species % p_macr = 47
+>       config % species % p_hace = 48
+>       config % species % p_ishp = 49
+>       config % species % p_ison = 50
+>       config % species % p_mahp = 51
+>       config % species % p_mpan = 52
+>       config % species % p_nald = 53
+>       config % species % p_sesq = 54
+>       config % species % p_mbo  = 55
+>       config % species % p_cvasoa1 = 56
+>       config % species % p_cvasoa2 = 57
+>       config % species % p_cvasoa3 = 58
+>       config % species % p_cvasoa4 = 59
+>       config % species % p_cvbsoa1 = 60
+>       config % species % p_cvbsoa2 = 61
+>       config % species % p_cvbsoa3 = 62
+>       config % species % p_cvbsoa4 = 63
+>       config % species % p_ho  = 64
+>       config % species % p_ho2 = 65
+>       config % species % p_so4aj = 66
+>       config % species % p_so4ai = 67
+>       config % species % p_nh4aj = 68
+>       config % species % p_nh4ai = 69
+>       config % species % p_no3aj = 70
+>       config % species % p_no3ai = 71
+>       config % species % p_naaj  = 72
+>       config % species % p_naai  = 73
+>       config % species % p_claj  = 74
+>       config % species % p_clai  = 75
+>       config % species % p_asoa1j = 76
+>       config % species % p_asoa1i = 77
+>       config % species % p_asoa2j = 78
+>       config % species % p_asoa2i = 79
+>       config % species % p_asoa3j = 80
+>       config % species % p_asoa3i = 81
+>       config % species % p_asoa4j = 82
+>       config % species % p_asoa4i = 83
+>       config % species % p_bsoa1j = 84
+>       config % species % p_bsoa1i = 85
+>       config % species % p_bsoa2j = 86
+>       config % species % p_bsoa2i = 87
+>       config % species % p_bsoa3j = 88
+>       config % species % p_bsoa3i = 89
+>       config % species % p_bsoa4j = 90
+>       config % species % p_bsoa4i = 91
+>       config % species % p_orgpaj = 92
+>       config % species % p_orgpai = 93
+>       config % species % p_ecj    = 94
+>       config % species % p_eci    = 95
+>       config % species % p_p25j   = 96
+>       config % species % p_p25i   = 97
+>       config % species % p_antha  = 98
+>       config % species % p_seas   = 99
+>       config % species % p_soila  = 100
+>       config % species % p_nu0    = 101
+>       config % species % p_ac0    = 102
+>       config % species % p_corn   = 103
+> !
+> ! emissions
+> !package   ecptec          emiss_opt==5                   -
+> !emis_ant:e_iso,e_so2,e_no,e_no2,e_co,e_eth,e_hc3,e_hc5,e_hc8,e_xyl,e_ol2,e_olt,e_oli,e_tol,e_csl,e_hcho,e_ald,e_ket,e_ora2,e_nh3,e_pm_25,e_pm_10,e_oc,e_sulf,e_bc
+>       config % species % p_e_iso = 1
+>       config % species % p_e_so2 = 2
+>       config % species % p_e_no = 3
+>       config % species % p_e_no2 = 4
+>       config % species % p_e_co = 5
+>       config % species % p_e_eth = 6
+>       config % species % p_e_hc3 = 7
+>       config % species % p_e_hc5 = 8
+>       config % species % p_e_hc8 = 9
+>       config % species % p_e_xyl = 10
+>       config % species % p_e_olt = 11
+>       config % species % p_e_oli = 12
+>       config % species % p_e_tol = 13
+>       config % species % p_e_csl = 14
+>       config % species % p_e_hcho = 15
+>       config % species % p_e_ald = 16
+>       config % species % p_e_ket = 17
+>       config % species % p_e_ora2 = 18
+>       config % species % p_e_nh3 = 19
+>       config % species % p_e_pm_25 = 20
+>       config % species % p_e_pm_10 = 21
+>       config % species % p_e_oc = 22
+>       config % species % p_e_sulf = 23
+>       config % species % p_e_bc = 24
+>       config % species % p_e_dms = 25
+> 
+> ! biomass burning
+>       config % species % p_ebu_iso = 1
+>       config % species % p_ebu_so2 = 2
+>       config % species % p_ebu_no = 3
+>       config % species % p_ebu_no2=4
+>       config % species % p_ebu_co =5
+>       config % species % p_ebu_eth=6
+>       config % species % p_ebu_hc3=7
+>       config % species % p_ebu_hc5=8
+>       config % species % p_ebu_hc8=9
+>       config % species % p_ebu_xyl=10
+>       config % species % p_ebu_olt=11
+>       config % species % p_ebu_oli=12
+>       config % species % p_ebu_tol=13
+>       config % species % p_ebu_csl=14
+>       config % species % p_ebu_hcho=15
+>       config % species % p_ebu_ald=16
+>       config % species % p_ebu_ket=17
+>       config % species % p_ebu_ora2=18
+>       config % species % p_ebu_nh3=19
+>       config % species % p_ebu_pm25=20
+>       config % species % p_ebu_pm10=21
+>       config % species % p_ebu_oc=22
+>       config % species % p_ebu_sulf=23
+>       config % species % p_ebu_bc=24
+>       config % species % p_ebu_dms=25
+> 
+>       config % species % p_ebu_in_iso = 1
+>       config % species % p_ebu_in_so2 = 2
+>       config % species % p_ebu_in_no = 3
+>       config % species % p_ebu_in_no2=4
+>       config % species % p_ebu_in_co =5
+>       config % species % p_ebu_in_eth=6
+>       config % species % p_ebu_in_hc3=7
+>       config % species % p_ebu_in_hc5=8
+>       config % species % p_ebu_in_hc8=9
+>       config % species % p_ebu_in_xyl=10
+>       config % species % p_ebu_in_olt=11
+>       config % species % p_ebu_in_oli=12
+>       config % species % p_ebu_in_tol=13
+>       config % species % p_ebu_in_csl=14
+>       config % species % p_ebu_in_hcho=15
+>       config % species % p_ebu_in_ald=16
+>       config % species % p_ebu_in_ket=17
+>       config % species % p_ebu_in_ora2=18
+>       config % species % p_ebu_in_nh3=19
+>       config % species % p_ebu_in_pm25=20
+>       config % species % p_ebu_in_pm10=21
+>       config % species % p_ebu_in_oc=22
+>       config % species % p_ebu_in_sulf=23
+>       config % species % p_ebu_in_bc=24
+>       config % species % p_ebu_in_dms=25
+> !dust and seasalt
+> ! diagnostic dust and seasale stuff
+>       config % species % p_edust1=1
+>       config % species % p_edust2=2
+>       config % species % p_edust3=3
+>       config % species % p_edust4=4
+>       config % species % p_edust5=5
+>       config % species % p_eseas1=1
+>       config % species % p_eseas2=2
+>       config % species % p_eseas3=3
+>       config % species % p_eseas4=4
+226a996
+>     end subroutine racmsoavbs_pointers_init
+227a998
+>   end subroutine chem_config_species_init
+229c1000
+< end module raqmschem_config_mod
+---
+> end module chem_config_mod

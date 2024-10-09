@@ -1,0 +1,329 @@
+module raqms_mod
+  use chem_rc_mod
+  use chem_types_mod,only : CHEM_KIND_R8,CHEM_KIND_R4
+contains
+  subroutine raqms_advance(de,dts,advancecount, &
+    pr3d, &
+    prl3d, &
+    tk3d, &
+!    us3d, &
+!    vs3d, &
+    tr3d_in, &
+    tr3d_out, &
+    ntra, &
+    numgas, &
+    deg_lon,deg_lat, &
+    yy,mm,dd,h,m,tz,julday, &
+    is, ie, js, je, nb, nl, &
+    iso, ieo, jso, jeo, nbo, nlo, &
+    data, &
+    rc)
+  use ozne_def,only : oz_lat,kozpl,kozc
+  use ozne_def,only : levozp,oz_coeff,oz_pres
+  use chem_comm_mod, only : chem_comm_get
+  use raqmschem_data_mod, only : chem_data_type
+  use field_manager_mod, only : find_field_index
+  implicit none
+  integer localrec,is,ie,js,je,nl,yy,mm,dd,h,m,julday,ntra,numgas,nb
+  integer iso,ieo,jso,jeo,nbo,nlo,tz,npts,de
+  integer,save :: idate(4)
+  integer advancecount,mype,iprint
+  integer,optional :: rc
+  real(CHEM_KIND_R8), intent(in) :: dts
+  real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: pr3d
+  real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: prl3d
+  real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: tk3d
+!  real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: us3d
+!  real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: vs3d
+  real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in
+  real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
+  real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
+  real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
+  real(CHEM_KIND_R8), dimension(is:ie,js:je,nl) :: delp,diffozone
+  integer jindx1(is:ie,js:je),jindx2(is:ie,js:je),i,j,k
+  real(CHEM_KIND_R8), dimension(is:ie,js:je) :: ddy
+  real(CHEM_KIND_R8) :: fhour
+  real(CHEM_KIND_R8),dimension(is:ie,js:je,levozp,oz_coeff) :: ozplout
+  real(CHEM_KIND_R8),dimension((ie-is+1)*(je-js+1),nl,oz_coeff+5) :: ozp_loc
+  real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: dens
+  logical  :: first=.true.
+  logical  :: ldiag3d=.false.
+  character *20 setall
+  real*8 latat,lonat
+  type(chem_data_type) :: data
+  integer ip,jp
+  integer ico,ino2,io3mr,io3mr2,ipotvort
+  save ico,ino2,io3mr,io3mr2,ipotvort
+  if(first)then
+    ico=find_field_index(1,'co')
+    ino2=find_field_index(1,'no2')
+    io3mr=find_field_index(1,'o3mr')
+    io3mr2=find_field_index(1,'o3mr2')
+    ipotvort=find_field_index(1,'potvort')
+    if(mype.eq.0)then
+      write(6,*)'ico',ico,' ino2 ',ino2,' io3mr ',io3mr
+      write(6,*)'io3mr2',io3mr2,'potvort',ipotvort
+      call flush(6)
+     endif
+  endif
+  latat=-43.3454
+  lonat=333.1037
+!  write(6,*)'inside potvort',maxval(data%potvort),lbound(data%potvort),ubound(data%potvort)
+
+  call chem_comm_get(localpe=mype)
+!  if(mype.eq.0)then
+!    write(6,*)'us3d',maxval(us3d),maxval(vs3d)
+!  endif
+!  if(mype.eq.0)then
+!  write(6,*)'prl3d',shape(prl3d),maxval(prl3d)
+!  write(6,*)'tk3d',shape(tk3d),maxval(tk3d)
+!  write(6,*)'dts',dts,tz,julday
+!  write(6,*)'ntra',ntra,numgas,'yy',yy,mm,dd,h,m
+!  write(6,*)'is',is,ie,js,je,nl
+!  write(6,*)'lon',maxval(deg_lon),maxval(deg_lat)
+  !write(94,*)'top raqms-advance'
+!  call flush(94)
+!  endif
+  npts=(je-js+1)*(ie-is+1)
+!  iprint=0
+#if 0
+  if(mype.eq.0)then
+    do j=js,je
+      jp=j-js+1
+      do i=is,ie
+        ip=i-is+1
+        if(abs(deg_lon(ip,jp)-lonat)<.001.and.abs(deg_lat(ip,jp)-latat)<.001)then
+          iprint=ip+(ie-is+1)*(jp-1)
+           write(94,*)'kind',kind(deg_lat)
+           write(94,*)'shape',shape(deg_lat),ie-is+1,je-js+1,'npts',npts
+           write(94,*)'raqms deg_lat ',i,j,deg_lat(ip,jp),'iprint',iprint
+!           write(95,*)i,j,'is',is,ie,'js',js,je,'iprint',iprint
+           exit
+        endif
+      end do
+    end do
+  endif
+#endif
+!  if(iprint>1)then
+!    write(95,*)'raqms',iprint
+!    do j=js,je
+!      jp=j-js+1
+!      do i=is,ie
+!        ip=i-is+1
+!        write(95,*)i,j,deg_lat(ip,jp)
+!      end do
+!    end do
+!    call setindxozp(npts,deg_lat,jindx1,jindx2,ddy,iprint)
+!  else
+    call setindxoz(npts,deg_lat,jindx1,jindx2,ddy)
+!  endif
+!  if(mype.eq.0)then
+!  write(6,*)'jindx1',jindx1(is,js),jindx2(is,js),ddy(is,js)
+!  write(6,*)'levozp',levozp,'oz_coeff',oz_coeff
+!  endif
+  do k=1,nl
+    do j=js,je
+      jp=j-js+1
+      do i=is,ie
+        ip=i-is+1
+        delp(i,j,k)=pr3d(ip,jp,k)-pr3d(ip,jp,k+1)
+        dens(i,j,k)=7.2431122e+18*prl3d(ip,jp,k)/tk3d(ip,jp,k)
+!        if(mype.eq.0.and.i.eq.is.and.j.eq.js)then
+!          write(6,*)k,'delp',delp(i,j,k),'pr3d top',pr3d(ip,jp,k+1),'pmid',prl3d(ip,jp,k)
+!          !write(6,*)'pave',.5*(pr3d(ip,jp,k)+pr3d(ip,jp,k+1)),'q',tr3d_in(ip,jp,k,1)
+!        endif
+      end do
+    end do
+!    if(mype.eq.0)then
+!      write(6,*)'psoltop',k+1,maxval(pr3d(:,:,k+1)),minval(pr3d(:,:,k))
+!      write(6,*)'delp',maxval(delp(:,:,k)),minval(delp(:,:,k))
+!    endif
+  end do
+  if(first)then
+    idate(1)=h
+    idate(2)=mm
+    idate(3)=dd
+    idate(4)=yy
+    if(ipotvort>0)then
+      tr3d_out(:,:,:,ipotvort)=data%potvort
+    endif
+    if(ico>0)then
+!      tr3d_out(:,:,:,ico)=0.
+!      tr3d_out(:,:,1,ico)=data%srcco_totl(:,:)*dts
+      tr3d_out(:,:,2:nl,ico)=tr3d_in(:,:,2:nl,ico)
+      tr3d_out(:,:,1,ico)=tr3d_in(:,:,1,ico)+data%srcco_totl(:,:)*dts/dens(:,:,1)
+    endif
+    if(ino2>0)then
+!      tr3d_out(:,:,:,ino2)=0.
+!      tr3d_out(:,:,1,ino2)=data%srcnind(:,:)*dts
+!      write(6,*)'ino2 in 2:nl',nl,maxval(tr3d_in(:,:,2:nl,ino2)),minval(tr3d_in(:,:,2:nl,ino2))
+!      write(6,*)'ino2 in 1',maxval(tr3d_in(:,:,1:nl,ino2))
+      tr3d_out(:,:,2:nl,ino2)=tr3d_in(:,:,2:nl,ino2)
+!      write(6,*)'ino2 out 2:nl',nl,maxval(tr3d_out(:,:,2:nl,ino2))
+      tr3d_out(:,:,1,ino2)=tr3d_in(:,:,1,ino2)+data%srcnind(:,:)*dts/dens(:,:,1)
+!      write(6,*)'ino2 out 1',maxval(tr3d_out(:,:,1:nl,ino2)),'srcind',maxval(data%srcnind),'dts',dts
+    endif
+    if(io3mr>0.and.io3mr2>0)then
+      tr3d_out(:,:,:,io3mr2)=tr3d_in(:,:,:,io3mr)
+    endif
+    if(io3mr>0)then
+      tr3d_out(:,:,:,io3mr)=tr3d_in(:,:,:,io3mr)
+    endif
+  else
+    if(io3mr>0)then
+      tr3d_out(:,:,:,io3mr)=tr3d_in(:,:,:,io3mr)
+    endif
+    
+    if(ico>0)then
+      tr3d_out(:,:,2:nl,ico)=tr3d_in(:,:,2:nl,ico)
+      tr3d_out(:,:,1,ico)=tr3d_in(:,:,1,ico)+data%srcco_totl(:,:)*dts/dens(:,:,1)
+    endif
+    if(ino2>0)then
+!      write(6,*)'ino2 in 2:nl',nl,maxval(tr3d_in(:,:,2:nl,ino2)),minval(tr3d_in(:,:,2:nl,ino2))
+!      write(6,*)'ino2 in 1',maxval(tr3d_in(:,:,1:nl,ino2))
+!      call flush(6)
+      tr3d_out(:,:,2:nl,ino2)=tr3d_in(:,:,2:nl,ino2)
+!      write(6,*)'ino2 out 2:nl',nl,maxval(tr3d_out(:,:,2:nl,ino2))
+!      call flush(6)
+
+      tr3d_out(:,:,1,ino2)=tr3d_in(:,:,1,ino2)+data%srcnind(:,:)*dts/dens(:,:,1)
+!      write(6,*)'ino2 out 1',maxval(tr3d_out(:,:,1:nl,ino2))
+!      call flush(6)
+    endif
+!    write(6,*)'whold ino2 out ',maxval(tr3d_out(:,:,:,ino2)),minval(tr3d_out(:,:,:,ino2))
+!    write(6,*)'max diff potvort ',maxval(tr3d_in(:,:,:,ipotvort)-data%potvort)
+!    if(js<=1.and.je>=10.and.mype<=1.and.is<=40.and.ie>=40)then
+!      do j=1,10
+!        write(6,*)'trace ',j,tr3d_in(40,j,63,4:6),' potvort ',data%potvort(40,j,63),'lat',deg_lat(40,j),deg_lon(40,j)
+!        call flush(6)
+!      end do
+!    endif
+  endif
+! first step might be after timestep
+  fhour=float(advancecount+1)*dts/3600.
+  if(mype.eq.0)then
+  write(6,*)'fhour',fhour,'idate',idate
+!  write(91,*)'advancecount',advancecount,'dts',dts
+!  write(91,*)'raqms fhour',fhour,'idate',idate
+  endif
+  ozplout=0.0
+!  if(iprint>0)then
+!    write(94,*)'raqms ozinterpolp'
+!    call ozinterpolp(mype,npts,idate,fhour,jindx1,jindx2,ozplout,ddy,iprint)
+!  else
+    call ozinterpol(mype,npts,idate,fhour,jindx1,jindx2,ozplout,ddy)
+!  endif
+!  if(mype.eq.0)then
+!   do k=1,4
+!    write(6,*)'ajl raqmsozplout',k,maxval(ozplout(:,:,:,k))
+!   end do
+!   write(6,*)'ajl kind',kind(ozplout),shape(ozplout)
+!  endif
+!  write(6,*)'shape pr3d',shape(pr3d),'is',is,ie,'js',js,je,'nl',nl
+!  call flush(6)
+#if 0
+  if(mype.eq.0)then
+    write(6,*)'raqms tr3d_in(4) ',maxval(tr3d_in(:,:,:,4))
+!    write(6,*)'nl',nl,'levozp',levozp
+!    call flush(6)
+    do j=js,je
+      do i=is,ie
+        if(abs(deg_lon(i,j)-lonat)<.001.and.abs(deg_lat(i,j)-latat)<.001)then
+          write(91,*)'de',de,'ajl physics driver ozone4',advancecount,maxval(tr3d_in(:,:,:,4))
+          iprint=i-is+1+(ie-is+1)*(j-js)
+          write(91,*)'iprint',iprint,i,j
+          do k=1,80
+            write(91,*)'raqms ozpl',k,ozplout(i,j,k,1:2)
+          end do
+          do k=1,nl
+            write(91,*)'raqms oz',k,tr3d_in(i,j,k,3),' tr3d_in 4 ',tr3d_in(i,j,k,4)
+          end do
+        endif
+      end do
+    end do
+  endif
+#endif
+!  if(iprint>0)then
+!    call ozphysp(npts,npts,nl,levozp,dts,tr3d_in(1,1,1,4),tr3d_out(1,1,1,4),tk3d,oz_pres,prl3d,ozplout &
+!   ,oz_coeff,delp,ldiag3d,ozp_loc(1,1,6),mype,iprint)
+!  else
+  if(.not.first)then
+     call ozphys(npts,npts,nl,levozp,dts,tr3d_in(1,1,1,io3mr2),tr3d_out(1,1,1,io3mr2),tk3d,oz_pres,prl3d,ozplout &
+   ,oz_coeff,delp,ldiag3d,ozp_loc(1,1,6),mype)
+  endif
+!  endif
+#if 0
+   diffozone=abs(tr3d_out(:,:,:,4)-tr3d_in(:,:,:,3))
+   do j=js,je
+     do i=is,ie
+       do k=1,nl
+         if(diffozone(i,j,k).ne.0.0)then
+           write(6,*)'diffozone',i,j,k,diffozone(i,j,k),'old',tr3d_out(i-is+1,j-js+1,k,4),tr3d_in(i-is+1,j-js+1,k,3)
+           call flush(6)
+         endif
+
+       end do
+     end do
+   end do
+#endif
+   
+  if(mype.eq.10000)then
+    write(94,*)'did ozphys',maxval(tr3d_out(:,:,:,4))
+    call flush(94)
+    write(6,*)'raqms ozphysoz3',maxval(tr3d_in(:,:,:,3)),'out',maxval(tr3d_out(:,:,:,4))
+    write(63,*)'raqms ozphysoz3',maxval(tr3d_in(:,:,:,3)),'out',maxval(tr3d_out(:,:,:,4))
+    call flush(63)
+    write(63,*)'advancecount',advancecount
+    call flush(63)
+    write(6,*)'raqms max diffozone ',maxval(diffozone)
+    write(6,*)'max difozone',maxval(tr3d_out(:,:,:,4))
+    do j=js,je
+      jp=j-js+1
+      do i=is,ie   
+        ip=i-is+1
+        if(abs(deg_lon(ip,jp)-lonat)<.001.and.abs(deg_lat(ip,jp)-latat)<.001)then
+          do k=1,nl
+            if(diffozone(i,j,k).ne.0.0)then
+              write(91,*)'de',de,advancecount,'aft ozone ',k,tr3d_out(i,j,k,4),' diff ',diffozone(i,j,k),'lat',deg_lat(i,j),deg_lon(i,j)
+            endif
+          end do
+        endif
+      end do
+    end do 
+    do k=1,nl
+      do j=js,je
+      jp=j-js+1
+        do i=is,ie
+          ip=i-is+1
+          if(diffozone(i,j,k)>1.e-7)then
+             write(6,*)'is',is,ie,'js',js,je,'nl',nl,'adv',advancecount
+             write(6,*)'raqms diff ','de',de,i,j,k,diffozone(i,j,k),'new',tr3d_out(ip,jp,k,4),' d4in',&
+             tr3d_in(ip,jp,k,4),'old',tr3d_in(ip,jp,k,3),'lat',deg_lat(ip,jp),deg_lon(ip,jp)
+             write(91,*)'advance count',advancecount
+             write(94,*)'raqms diff ','de',de,i,j,k,diffozone(i,j,k),'new',tr3d_out(i,j,k,4),' d4in',&
+             tr3d_in(i,j,k,4),'old',tr3d_in(i,j,k,3),'lat',deg_lat(i,j),deg_lon(i,j)
+             write(94,*)'advance count',advancecount
+             call flush(94)
+             write(91,*)'diff',abs(deg_lon(i,j)-lonat),abs(deg_lat(i,j)-latat)
+             write(91,*)'raqms diff ',i,j,k,diffozone(i,j,k),'new',tr3d_out(i,j,k,4),' d4in',&
+             tr3d_in(i,j,k,4),'old',tr3d_in    (i,j,k,3),deg_lat(i,j),deg_lon(i,j)
+             write(94,*)'raqms diff ',i,j,k,diffozone(i,j,k),'new',tr3d_out(i,j,k,4),' d4in',&
+             tr3d_in(i,j,k,4),'old',tr3d_in    (i,j,k,3),deg_lat(i,j),deg_lon(i,j)
+             call flush(94)
+             write(6,*)'ozplouta',ozplout(i,j,:,1)
+             write(6,*)'ozploutb',ozplout(i,j,:,2)
+             call flush(6)
+          endif
+        end do
+      end do
+    end do
+    call flush(6)
+  endif
+!  if(mype.eq.0)then
+!     write(94,*)'bottom raqms_advance'
+!     call flush(94)
+!  endif
+    first=.false.
+  
+  end subroutine raqms_advance
+end module raqms_mod

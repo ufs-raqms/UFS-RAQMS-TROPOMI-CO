@@ -1,0 +1,52 @@
+c*** ikmult is number of transported species in chemistry ***
+c***  and does not include water vapor, so should be one  ***
+c***  less than the number of tracers in dynamics core    ***
+c
+c  number of transported species/families
+        integer ikmult,inl,imf,imfp,img,imgd2,imgpp,ijg,ijg2,itspd,inwj2,ilwj2,inwjv,idm2
+        integer idm1,idm3,idm4,idm5,idm6,inum,iphot,ireac,ihreac
+	parameter (ikmult=80)
+c  number of vertical levels
+	parameter (inl=24)
+c  number of waves
+	parameter (imf=32)
+c  number of waves + 1
+	parameter (imfp=imf+1)
+c  number of longitudes
+	parameter (img=128)
+c  number of longitudes divided by 2
+	parameter (imgd2=img/2)
+c  number of longitudes plus 2
+	parameter (imgpp=img+2)
+c  number of latitudes / 2.
+	parameter (ijg=32)
+c  number of latitudes
+	parameter (ijg2=ijg*2)
+c  number of time steps in a day
+	parameter (itspd=96)
+c  561
+	parameter (inwj2=(imf+1)*(imf+2)/2.)
+c  13464
+	parameter (ilwj2=inwj2*inl)
+c  594
+	parameter (inwjv=inwj2+(imf+1))
+c  3120
+	parameter (idm1=(img+2)*inl)
+c  112320
+	parameter (idm2=idm1*ikmult)
+c  13464 = 561 * inl
+	parameter (idm3=inwj2*inl)
+c  484704
+	parameter (idm4=idm3*ikmult)
+c  969408
+	parameter (idm5=2*idm4)
+c  55296
+	parameter (idm6=inl*ijg2*ikmult)
+c  number of calculated species
+	parameter (inum=92)
+c  number of photolysis reactions
+	parameter (iphot=53)
+c  number of gas-phase chemical reactions
+	parameter (ireac=221)
+c  number of heterogeneous chemical reactions
+	parameter (ihreac=9)

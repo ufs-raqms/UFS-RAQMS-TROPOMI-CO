@@ -1,0 +1,63 @@
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for cut... /usr/bin/cut
+checking for ESMF library... checking for /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk... yes
+checking whether the Fortran compiler works... yes
+checking for Fortran compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU Fortran compiler... no
+checking whether mpiifort accepts -g... yes
+checking whether MPI is supported... yes
+checking for Fortran flag to compile preprocessed .F90 files... none
+checking for Fortran compiler vendor... intel
+checking compiler for optimization options... -O2 -fp-model source -ftz -align array64byte -xCORE-AVX2 -qno-opt-dynamic-align
+checking for Fortran flag needed to accept unlimited column source lines... none
+checking Fortran 90 module extension... mod
+checking Fortran 90 module inclusion flag... -I
+checking whether ESMF include flags work... yes
+checking whether ESMF works... yes
+checking for ranlib... ranlib
+checking for style of include used by make... GNU
+checking for gcc... icc
+checking whether we are using the GNU C compiler... yes
+checking whether icc accepts -g... yes
+checking for icc option to accept ISO C89... none needed
+checking whether icc understands -c and -o together... yes
+checking dependency style of icc... none
+checking for ar... ar
+checking the archiver (ar) interface... ar
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating src/chem/Makefile
+config.status: creating src/chem/shr/Makefile
+config.status: creating src/chem/gocart/Makefile
+config.status: creating src/chem/plume/Makefile
+config.status: creating src/chem/vash/Makefile
+config.status: creating src/chem/seas/Makefile
+config.status: creating src/chem/dust/Makefile
+config.status: creating src/chem/aero/Makefile
+config.status: creating src/chem/dep/Makefile
+config.status: creating src/chem/opt/Makefile
+config.status: executing depfiles commands
+
+gsdchem version 0.9.0 successfully configured.
+
+Compiler settings:
+=======================
+  FC      = mpiifort
+  FCFLAGS = -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include  -g -O2 -fp-model source -ftz -align array64byte -xCORE-AVX2 -qno-opt-dynamic-align
+=======================
+NOTE: Settings imported from ESMF Makefile fragment: /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk
+
+Type 'make' to build.

@@ -1,0 +1,12 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	worktree = ../../../../../../../NEMS/tests/produtil/NCEPLIBS-pyprodutil
+[remote "origin"]
+	url = https://github.com/NOAA-EMC/NCEPLIBS-pyprodutil
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "develop"]
+	remote = origin
+	merge = refs/heads/develop

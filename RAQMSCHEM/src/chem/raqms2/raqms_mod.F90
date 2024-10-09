@@ -1,0 +1,583 @@
+module raqms_mod
+use chem_rc_mod
+use chem_types_mod,only : CHEM_KIND_R8,CHEM_KIND_R4
+contains
+subroutine raqms_advance(de,dts,advancecount, &
+                pr3d, &
+                prl3d, &
+                tk3d, &
+                u3d, &
+                v3d, &
+                ws3d, &
+                ph3d, &
+                phl3d, &
+                rn2d, &
+                rc2d, &
+                tr3d_in8, &
+                gsdchem_tr3d_inout8, &
+                vtype2d, &
+                exch, &
+                dqdt, &
+                tr3d_out, &
+                ntra, &
+                nbegin, &
+                numgas, &
+                num_moist, &
+nchem, &
+deg_lon,deg_lat, &
+yy,mm,dd,h,m,s,tz,juldayin, &
+is, ie, js, je, nbin, nl, &
+iso, ieo, jso, jeo, nbo, ni, &
+data,doaod, &
+rc)
+use mpi
+use chem_comm_mod, only : chem_comm_get
+use raqmschem_data_mod, only : chem_data_type
+use raqmschem_iodata_mod,only : dofirehr
+use field_manager_mod, only : find_field_index
+use raqmschem_species_mod
+use raqmschem_pmgrid_mod, only : initraqmschem_pmgrid,iam,masterproc,begj,endj,nc,nstepat,iprn,jprn, &
+iprnin,jprnin,kprnin,iamprn,tile,nhtuw,juldayat,aerosol_in_old,beglat
+!  use raqmschemcomm_mod, only : allocatechemcommperm,allocatechemcommtemp,deallocatechemcommtemp
+!  use raqmschemcomm_mod, only : deallocatechemcommperm
+!  use raqmschemcomm_mod, only : lcedsair,numcedsair,cedsairstep
+  use raqmschem_cedsair_mod, only : lcedsair,numcedsair,cedsairstep
+use raqmschemcomm_mod
+use raqmschemlocaltype_mod
+use raqmschem_map_mod
+use raqmschem_model_mod, only : chem_model_get => raqmschem_model_get
+use raqmschem_const_mod, only : mw_so4_aer,epsilc2
+use chem_const_mod, only : grvity
+use wetdep_mod
+use raqms_plume_mod, only : raqms_plumerise_driver
+use raqmschem_config_mod, only : cedsairemis_frq
+implicit none
+include 'comtim.H'
+#include <comcdate.h>
+integer localrec,is,ie,js,je,nl,yy,mm,dd,h,m,ntra,numgas,nbin,s,nbegin
+        integer iso,ieo,jso,jeo,nbo,ni,tz,npts,de,numi,numj,num_moist
+integer,save :: idate(4),ihrplumeold
+data ihrplumeold/0/
+        integer advancecount,mype,iprint,ndate
+        integer,optional :: rc
+        real(CHEM_KIND_R8), intent(in) :: dts
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: pr3d,exch,dqdt
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: prl3d
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: tk3d,u3d,v3d,ph3d,phl3d,ws3d
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in8
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(inout)  :: gsdchem_tr3d_inout8
+        real(CHEM_KIND_R4), dimension(is:ie,js:je,nl,nchem) :: tr3d_inout4
+        real(CHEM_KIND_R8), dimension(:,:), intent(in) :: rn2d,rc2d,vtype2d
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
+        real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
+        real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
+        !  real(CHEM_KIND_R8), dimension(is:ie,js:je,nl) :: delp,diffozone
+        real(CHEM_KIND_R8), dimension(is:ie,js:je,nl) :: diffozone
+        integer jindx1(is:ie,js:je),jindx2(is:ie,js:je),i,j,k,n
+        real(CHEM_KIND_R8), dimension(is:ie,js:je) :: ddy
+        real(CHEM_KIND_R8) :: fhour,curr_secs
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: dens,difftrace
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: difftrace
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je) :: sorcpar
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je) :: dz ! cm
+        real(CHEM_KIND_R8),dimension(is:ie) :: draw2d
+        real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: dzaod
+        real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: rv3d
+        real caldayfv
+        logical  :: first=.true.
+        logical  :: ldiag3d=.false.
+        logical :: doaod
+        character *20 setall
+        real*8 latat,lonat
+        real(CHEM_KIND_R8) :: chemutc,hrchemutc,hrout
+
+        type(chem_data_type) :: data
+        integer ip,jp,mchem,nchem,juldayin,ii,jj,ierr
+        type(chemlocaltype) :: chemlocal
+        integer mbcurfv,mscurfv,mcdatefv,mcsecfv,localrc
+        character *10 cwetdep,cenv
+        logical dowetdep,plumestep
+        real(CHEM_KIND_R8) :: wallchem,wallchemcum,rtime1
+        integer mpi_comm_chem,ihrplume
+        data dowetdep/.true./
+        save dowetdep,wallchemcum
+!        REAL,    PARAMETER :: airmw    = 28.97
+        real,    parameter :: mwo3=47.98
+        save first
+
+
+        julday=juldayin
+        nstepat=advancecount
+        curr_secs=float(nstepat)*dts
+        call chem_comm_get(localpe=mype)
+        call chem_model_get(modelcomm=mpi_comm_chem,rc=ierr)
+npts=(je-js+1)*(ie-is+1)
+        ! note 1 is at sfc in FV3 GFS
+        !  do k=1,nl
+        !    write(6,*)'pr3d',k,maxval(pr3d(:,:,k))
+        !  end do
+!  call flush(6)
+        !  do k=1,nl
+        !    do j=js,je
+        !      jp=j-js+1
+        !      do i=is,ie
+        !        ip=i-is+1
+        !        delp(i,j,k)=pr3d(ip,jp,k)-pr3d(ip,jp,k+1)
+!        dens(i,j,k)=7.2431122e+18*prl3d(ip,jp,k)/tk3d(ip,jp,k)
+        !      end do
+        !    end do
+        !  end do
+        !  numi=ie-is+1
+        !  numj=je-js+1
+!  call initraqmschem_pmgrid(numi,numj,nl,js,je,12,mype)
+        !  call allocatechemcommperm
+        !  call allocatechemcommtemp
+        idate(1)=h
+        idate(2)=mm
+        idate(3)=dd
+        idate(4)=yy
+        !  write(6,*)'shape4',shape4
+        !  write(6,*)'ntra',ntra,'nchem',nchem
+!  call flush(6)
+        write(cdate,'(i4.4,3i2.2)')yy,mm,dd,h
+        !  if(mype.eq.0)then
+        !  write(6,*)'cdate fv3 ',cdate
+!  call flush(6)
+        !  endif
+        ! first step might be after timestep
+        !  fhour=float(advancecount+1)*dts/3600.
+        fhour=float(advancecount)*dts/3600. ! since inc advancecount 4/6/2022
+        if(mype.eq.0)then
+        write(6,*)'fhour',fhour,'idate',idate
+call flush(6)
+        endif
+        !  nstep=advancecount+1
+        nstep=advancecount ! since inc advancecount 4/6/2022
+        dtime=dts
+        if(first)then
+        if(iam.eq.150)then
+        write(6,*)'is',is,ie,'js',js,je
+call flush(6)
+        endif
+        wallchemcum=0.0
+        cwetdep=' '
+        call getenv('WETDEP',cwetdep)
+        if(cwetdep.ne.' ')then
+        if(cwetdep.eq.'NO')then
+        write(6,*)'turn off wetdep'
+call flush(6)
+        dowetdep=.false.
+        endif
+        endif
+        nnbdat=(mod(yy,100)*100+mm)*100+dd
+        !    nnbsec=fhour*3600.
+        nnbsec=h*3600.+m*60.
+
+
+        mbdate=(yy*100+mm)*100+dd
+        !  write(6,*)'mbdate ',mbdate,' yy ',yy,mm,dd,'julday',julday
+!  call flush(6)
+        mbsec=0
+        endif
+        ! ajl try caldyi here to get date we need since ours is one dts greater than
+        ! input
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+        write(6,*)'nnbdat',nnbdat,'nnbsec',nnbsec,'mbdate',mbdate,'mbsec',mbsec
+        endif
+call advdatehr(yy,mm,dd,h,m,s,dts,ndate,julday,hrout)
+        chemutc=hrout
+        gmt=hrout
+        write(cdate,'(i10.10)')ndate
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+        write(6,*)'cdate new',cdate
+        endif
+#ifdef OLDCAL
+        call caldyi(nstep,dtime,nnbdat,nnbsec,mbdate,mbsec, &
+                        mbcurfv,mscurfv,mcdatefv,mcsecfv,caldayfv)
+        ! caldayfv does not have julian feb while fv3gfs does
+        if(mype.eq.0)then
+        write(6,*)'mcdatefv',mcdatefv,'mcsecfv',mcsecfv,'caldayfv',caldayfv
+        write(6,*)'hour',mcsecfv/3600.,'julday',julday
+        !  endif
+        !   had only for mype.eq.0 error 3/25/2019
+        !      julday=int(caldayfv)+1
+        !  if(mype.eq.0)then
+        !      write(6,*)'julday error chem',julday
+        endif
+        write(cdate,'(i8.8,i2.2)')mcdatefv,int(mcsecfv/3600.)
+        if(mype.eq.0)then
+        write(6,*)'cdatenew ',cdate,'mcsecfv',mcsecfv,'mscurfv',mscurfv
+        write(6,*)'caldayfv',caldayfv
+        endif
+        ! we assumed that were dts later in raqms
+        !  chemutc=float(h)+float(m)/60.+float(s)/3600.
+        !  caldayfv wont match julday if leap year since ccm3 did not do leap year so
+        !  don't use it for julday
+        chemutc=float(mcsecfv)/3600.
+        if(chemutc>=24.0)then
+        julday=julday+1
+        chemutc=chemutc-24.0
+        endif
+        gmt=chemutc
+#endif
+
+        dy_jdgmt=float(julday)+chemutc/24.0
+        juldayat=dy_jdgmt
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+          write(6,*)'chemutc',chemutc,'dtime',dtime,'gmt',gmt,'dy_jdgmt',dy_jdgmt
+        endif
+        call chem_driver(julday)
+        tr3d_inout4=tr3d_in8
+
+        do j=js,je
+        do i=is,ie
+        do k=1,nl
+        if(tr3d_inout4(i,j,k,P_co)<-1.e-20)then
+          write(200+iam,*)nstepat,'co neg input ',i,j,k,tr3d_inout4(i,j,k,p_co),'tile',tile
+          call flush(200+iam)
+        endif
+        end do
+        end do
+        end do
+        o3mr=tr3d_inout4(:,:,:,p_atm_o3mr)
+        ! need to convert from wrf units to what raqms wants for aerosols
+        !  if(iam.eq.iamprn)then
+        !     write(6,*)'dustin',tr3d_inout4(iprnin,jprnin,1,p_dust1)
+        !  endif
+        ! copy is gschem aerosol values
+        ! new 10/14/2021 gsdchem_tr3d instead of tr3d to get updated aerosols
+    tr3d_inout4(:,:,:,p_bc1)=gsdchem_tr3d_inout8(:,:,:,p_bc1)
+    tr3d_inout4(:,:,:,p_bc2)=gsdchem_tr3d_inout8(:,:,:,p_bc2)
+    tr3d_inout4(:,:,:,p_oc1)=gsdchem_tr3d_inout8(:,:,:,p_oc1)
+    tr3d_inout4(:,:,:,p_oc2)=gsdchem_tr3d_inout8(:,:,:,p_oc2)
+    tr3d_inout4(:,:,:,p_dust1)=gsdchem_tr3d_inout8(:,:,:,p_dust1)
+    tr3d_inout4(:,:,:,p_dust2)=gsdchem_tr3d_inout8(:,:,:,p_dust2)
+    tr3d_inout4(:,:,:,p_dust3)=gsdchem_tr3d_inout8(:,:,:,p_dust3)
+    tr3d_inout4(:,:,:,p_dust4)=gsdchem_tr3d_inout8(:,:,:,p_dust4)
+    tr3d_inout4(:,:,:,p_dust5)=gsdchem_tr3d_inout8(:,:,:,p_dust5)
+    tr3d_inout4(:,:,:,p_seas1)=gsdchem_tr3d_inout8(:,:,:,p_seas1)
+    tr3d_inout4(:,:,:,p_seas2)=gsdchem_tr3d_inout8(:,:,:,p_seas2)
+    tr3d_inout4(:,:,:,p_seas3)=gsdchem_tr3d_inout8(:,:,:,p_seas3)
+    tr3d_inout4(:,:,:,p_seas4)=gsdchem_tr3d_inout8(:,:,:,p_seas4)
+    tr3d_inout4(:,:,:,p_sulf)=gsdchem_tr3d_inout8(:,:,:,p_sulf)
+    tr3d_inout4(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl add 6/16/2023
+    tr3d_inout4(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+    tr3d_inout4(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,p_msa) ! ajl end add 6/16/2023
+! so2 now ppm makd ppv for raqms
+  tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2)*1.e-6
+  tr3d_inout4(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms)*1.e-6
+  tr3d_inout4(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa)*1.e-6
+! can update in in4 in wetdep
+! rn2d and rc2d are cumulative precip even though dictionary says  instantantaneous
+! could do wetdep separate or in j loop and before chemistry or after chemistry
+  w10=sqrt(u3d(:,:,1)**2.+v3d(:,:,1)**2.)
+  rv3d=tr3d_inout4(:,:,:,1)
+  if(lcedsair)then
+!    if(97>=is.and.97<=ie.and.js<=145.and.145<=je.and.tile==5)then
+!      write(6,*)'nstepat',nstepat,'cedsairemis_frq',cedsairemis_frq,'dts',dts
+    !endif
+    cedsairstep=(mod(nstepat, max(1, int(60*cedsairemis_frq/dts))) == 1) & 
+                        .or. (nstepat<= 1) 
+    if(cedsairemis_frq<=1)then
+      cedsairstep=.true.
+    endif
+!    if(cedsairstep)then
+!    if(97>=is.and.97<=ie.and.js<=145.and.145<=je.and.tile==5)then
+!       write(6,*)'cedsairstep',cedsairstep,'nstepat',nstepat,'cedsairemis_frq',cedsairemis_frq
+    !endif
+!    endif
+  endif
+  if(masterproc)then
+    write(6,*)'doplumerise',doplumerise
+    flush(6)
+  endif
+  if(doplumerise)then
+    if(dofirehr)then
+      plumestep=(mod(nstepat, max(1, int(60*plumerisefire_frq/dts))) == 1) & 
+                        .or. (nstepat<= 1) 
+    else
+      plumestep=(mod(nstepat, max(1, int(60*plumerisefire_frq/dts))) == 0) & 
+                        .or. (nstepat<= 1) 
+    endif
+    if(plumestep)then
+      if(allocated(data%bbco_hr))then
+         ihrplume=h+1
+!        read(cdate(9:10),*)ihrplume
+!        ihrplume=ihrplume+1
+        if(ihrplume/=ihrplumeold)then
+          ihrplumeold=ihrplume
+          if(iam.eq.0)then
+            write(6,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+            write(6,*)'raqmsuse plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+            write(800,*)'raqms curr_secs',curr_secs,'nstepat',nstepat
+            write(800,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+            write(800,*)'raqms use plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+            write(800,*)'path',cdate(1:4)//'/'//cdate(1:8)
+            write(800,*)'raqms advancecount',advancecount,'nstepat',nstepat
+            if(allocated(data%bbco_hr))then
+              write(6,*)'allocated bbco_hr',shape(data%bbco_hr)
+            endif
+          endif
+          bbco_d=data%bbco_hr(:,:,ihrplume)
+          data%plume(:,:,1)=data%plume_hr(:,:,ihrplume)
+        else
+          if(iam.eq.0)then
+          write(6,*)'call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+          write(800,*)'raqms call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+          endif
+        endif
+      endif
+!      write(6,*)'pr3d',shape(pr3d),'prl3d',shape(prl3d)
+      
+!      call raqms_plumerise_driver(tk3d,rv3d,ws3d,u3d,v3d,pr3d,ph3d,vtype2d, &
+      call raqms_plumerise_driver(tk3d,rv3d,ws3d,u3d,v3d,prl3d,ph3d,vtype2d, &
+      data%num_plume_data,data%plume,is,ie,js,je,nl) 
+      if(.not.allocated(emisco3dave))then
+        navgfire=0
+        allocate (emisco3dave(ie-is+1,js:je,nl))
+        emisco3dave=0.0
+      endif
+      emisco3dave=emisco3dave+emisco3d
+      navgfire=navgfire+1
+!      write(200+iam,*)'emisco3dave',maxval(emisco3dave),navgfire
+    endif
+  endif
+  if(MASTERPROC)then
+   write(6,*)'dowetdep',dowetdep
+   flush(6)
+  endif
+  
+  if(dowetdep)then
+    call wetdep_advance(advancecount,dts,rc2d,rn2d,ph3d,phl3d,pr3d,prl3d,tk3d,u3d,v3d,ws3d,exch,dqdt,tr3d_inout4, &
+    nchem,num_moist,ntra,is, ie, js, je, 1, nl, &
+    is, ie, js, je, 1, ni, &
+    rc=localrc)
+!   second shoujld be ni
+  endif
+  rtime1=mpi_wtime()
+!$OMP parallel do default(none) shared(js,je,dy_jdgmt,tr3d_inout4,nchem,pr3d,prl3d,tk3d,u3d,v3d,ph3d,phl3d,tr3d_out,nstepat,iam,tile,deg_lon,deg_lat,masterproc) &
+!$OMP private(chemlocal,jj,ii)
+  do j=js,je
+!   if(masterproc)then
+!       write(6,*)'c all maptochem',j
+!       flush(6)
+!   endif
+    
+    call maptochem(j,chemlocal,tr3d_inout4,nchem,pr3d,prl3d,tk3d,u3d,v3d,ph3d,phl3d)
+    call doloop(j,chemlocal)
+    call mapfromchem(j,chemlocal,tr3d_out,nchem)
+    call deallocatechemlocal(chemlocal)
+    call deallocatechemlocal2(chemlocal)
+  end do
+  wallchem=mpi_wtime()-rtime1
+  wallchemcum=wallchemcum+wallchem
+  if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+    write(6,*)'wallchem ',wallchem,' cum ',wallchemcum/60.,' min'
+    call flush(6)
+  endif
+!   if(masterproc)then
+!     write(6,*)'call chem_diag'
+!     flush(6)
+!   endif
+  call chem_diagnostics
+  do mchem=p_atm_o3mr+1,nchem
+!    if(.not.ischemfull(mchem))then
+    if(.not.lraqmschem(mchem))then
+      if(lcedsair)then
+        if(mchem==p_bc1.or.mchem==p_bc2.or.mchem==p_oc1.or.mchem==p_oc2) cycle
+        if(mchem==p_so2) cycle
+      endif
+      tr3d_out(:,:,:,mchem)=tr3d_in8(:,:,:,mchem)
+      if(.not.lcedsair)then
+      endif
+    else
+      do k=1,nl
+        do j=js,je
+          jj=j-js+1
+          do i=is,ie
+            ii=i-is+1
+            if(tr3d_out(ii,jj,k,mchem)<epsilc2)then
+              tr3d_out(ii,jj,k,mchem)=epsilc2
+            endif
+          end do
+        end do
+      enddo
+    endif
+  end do
+  tr3d_out(:,:,:,1)=tr3d_in8(:,:,:,1)
+    first=.false.
+    do j=js,je
+      jj=j-js+1
+      do i=is,ie
+        ii=i-is+1
+        do k=1,nl
+          if(tr3d_inout4(i,j,k,P_co)<-1.e-20)then
+            write(200+iam,*)'co neg output ',i,j,k,tr3d_inout4(i,j,k,p_co)
+            call flush(200+iam)
+          endif
+        end do
+      end do
+    end do
+
+ do j=js,je
+   jj=j-js+1
+   do i=is,ie
+     ii=i-is+1
+     do k=1,nl
+       if(abs(tr3d_inout4(i,j,k,p_sulf)-gsdchem_tr3d_inout8(ii,jj,k,p_sulf))>1.e-22)then
+         write(6,*)'diffsulf',i,j,k,p_sulf,tr3d_inout4(i,j,k,p_sulf),gsdchem_tr3d_inout8(ii,jj,k,p_sulf)
+       endif
+     enddo
+    end do
+  end do
+  if(masterproc)then
+      write(6,*)'bottom raqms_advance'
+     flush(6)
+  endif
+!  write(300+iam,*)'bottom raqms_advance'
+!  flush(300+iam)
+  end subroutine raqms_advance
+  subroutine advdatehr(yyin,monin,ddin,hrin,minin,secin,dts,ndate,julday,hrout)
+  implicit none
+  integer, intent(in) :: yyin,monin,ddin,hrin,minin,secin
+  real(CHEM_KIND_R8), intent(in) :: dts
+  real(CHEM_KIND_R8), intent(out) :: hrout
+  integer min,sec,minadd,julday
+  integer, intent(out) :: ndate
+  integer yy,mm,dd,hr,mdh,dh,dhr
+  integer daysmon(12,2),il,ileap,hradd
+  data daysmon/31,28,31,30,31,30,31,31,30,31,30,31, &
+               31,29,31,30,31,30,31,31,30,31,30,31/ 
+  yy=yyin
+  il=mod(yy,4)
+  ileap=1
+  if(il.eq.0)ileap=2
+  mm=monin
+  dd=ddin
+  hr=hrin
+  min=minin
+  sec=secin
+  sec=sec+dts
+  if(sec>=60.0)then
+    minadd=sec/60
+    min=min+minadd
+    sec=sec-minadd*60
+  elseif(sec<0)then
+    min=min-1
+    sec=sec+60.
+  endif
+  if(min>=60.)then
+    hradd=min/60.
+    hr=hr+hradd
+    min=min-hradd*60
+  elseif(min<0)then
+    hr=hr-1
+    min=min+60.
+  endif
+  if(hr>23)then
+    hr=hr-24
+    dd=dd+1
+    julday=julday+1
+    if(dd>daysmon(mm,ileap))then
+      dd=dd-daysmon(mm,ileap)
+      mm=mm+1
+      if(mm>12)then
+        mm=1
+        yy=yy+1
+      endif
+    endif
+  elseif(hr<0)then
+    hr=hr+24
+    dd=dd-1
+    if(dd<1)then
+      mm=mm-1
+      if(mm<1)then
+        mm=12
+        yy=yy-1
+      endif
+     ileap=1
+     if(il.eq.0)ileap=2
+      dd=daysmon(mm,ileap)
+    endif
+  endif
+  ndate=(((yy*100+mm)*100+dd)*100)+hr
+  hrout=float(hr)+float(min)/60.+float(sec)/3600.
+  return
+   end 
+  subroutine advcdatehr(ndatein,dts,ndate,julday,hrout)
+  implicit none
+  integer, intent(in) :: ndatein
+  integer  :: yyin,monin,ddin,hrin,minin,secin,dts
+  real(CHEM_KIND_R8), intent(out) :: hrout
+  integer min,sec,minadd,julday
+  integer, intent(out) :: ndate
+  integer yy,mm,dd,hr,mdh,dh,dhr
+  integer daysmon(12,2),il,ileap,hradd
+  data daysmon/31,28,31,30,31,30,31,31,30,31,30,31, &
+               31,29,31,30,31,30,31,31,30,31,30,31/ 
+  yyin=ndatein/1000000
+  mdh=ndatein-1000000*yyin
+  yy=yyin
+  il=mod(yy,4)
+  ileap=1
+  if(il.eq.0)ileap=2
+  monin=mdh/10000
+  dh=mdh-monin*10000
+  mm=monin
+  ddin=dh/100
+  hrin=dh-100*ddin
+  dd=ddin
+  hr=hrin
+  min=minin
+  secin=0
+  sec=secin
+  sec=sec+dts
+  if(sec>=60.0)then
+    minadd=sec/60
+    min=min+minadd
+    sec=sec-minadd*60
+  elseif(sec<0)then
+    min=min-1
+    sec=sec+60.
+  endif
+  if(min>=60.)then
+    hradd=min/60.
+    hr=hr+hradd
+    min=min-hradd*60
+  elseif(min<0)then
+    hr=hr-1
+    min=min+60.
+  endif
+  if(hr>23)then
+    hr=hr-24
+    dd=dd+1
+    julday=julday+1
+    if(dd>daysmon(mm,ileap))then
+      dd=dd-daysmon(mm,ileap)
+      mm=mm+1
+      if(mm>12)then
+        mm=1
+        yy=yy+1
+      endif
+    endif
+  elseif(hr<0)then
+    hr=hr+24
+    dd=dd-1
+    if(dd<1)then
+      mm=mm-1
+      if(mm<1)then
+        mm=12
+        yy=yy-1
+      endif
+     ileap=1
+     if(il.eq.0)ileap=2
+      dd=daysmon(mm,ileap)
+    endif
+  endif
+  ndate=(((yy*100+mm)*100+dd)*100)+hr
+  hrout=float(hr)+float(min)/60.+float(sec)/3600.
+  return
+   end subroutine advcdatehr
+  
+
+end module raqms_mod

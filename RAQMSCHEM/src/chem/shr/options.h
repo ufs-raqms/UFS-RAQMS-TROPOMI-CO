@@ -1,0 +1,2 @@
+#define NOWETDEPDIAG
+#define DIAGCO

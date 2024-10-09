@@ -1,0 +1,30 @@
+     real (kind=kind_phys), pointer :: cmdrag (:)   => null()  !< ajl drag coefficient
+834a836,844
+     !--- instantaneous quantities for RAQMSCHEM coupling
+     !-- convective ktop*1000+kbot for RAQMSCHEM lightning nox calculation ajl
+     real (kind=kind_phys), pointer :: cktopkbotcnv(:) => null() 
+ !   < convective ktop index *1000 +kbot index ajl
+ !   tau for water+ice with mie weight
+     real (kind=kind_phys), pointer :: cldtau_frac(:,:)   => null()  
+ !   < cloud tau for water+ice with mie weigh
+     real (kind=kind_phys), pointer :: vort(:,:) =>null() ! vort back 
+ 
+2133c2143
+< !! | GFS_Data(cdata%blk_no)%Intdiag%aecm                 | instantaneous_aerosol_column_mass_densities              | instantaneous aerosol column mass densities for pm2.5, black carbon, organic carbon, sulfate, dust, sea salt  | kg m-2      | 2 | real | kind_phys | none | F |
+---
+ !! | GFS_Data(cdata%blk_no)%Intdiag%aecm                 | instantaneous_aerosol_column_mass_densities              | instantaneous aerosol column mass densities for pm2.5, black carbon, organic carbon, sulfate, dust, sea salt  | g m-2      | 2 | real | kind_phys | none | F |
+3187a3198,3200
+     allocate (Sfcprop%cmdrag  (IM)) ! ajl
+ 
+ 
+3199a3213,3214
+     Sfcprop%cmdrag  = clear_val ! ajl
+ 
+3627a3642,3643
+       allocate (Coupling%cktopkbotcnv(im)) ! ajl
+       Coupling%cktopkbotcnv = clear_val ! ajl
+3674a3691,3694
+       allocate (Coupling%cldtau_frac (IM,Model%levs)) ! ajl
+       Coupling%cldtau_frac  = clear_val ! ajl
+       allocate (Coupling%vort(im,Model%levs)) ! ajl
+       Coupling%vort=clear_val ! ajl

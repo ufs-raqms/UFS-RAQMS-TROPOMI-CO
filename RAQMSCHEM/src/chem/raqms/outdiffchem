@@ -1,0 +1,89 @@
+3007,3009c2976
+< !            plume rise now has emisco3d in molec/cm3/sec so don't need
+< !            to divide by dz anymore per Brad 3/29/2022
+< !             dz=(zgeoh(ip-1)-zgeoh(ip))*1.e5 ! make cm
+---
+>              dz=(zgeoh(ip-1)-zgeoh(ip))*1.e5 ! make cm
+3013c2980
+<                 sorcco = sorcco+.85*xbbco
+---
+>                 sorcco = sorcco+.85*xbbco/dz 
+3015c2982
+<                  sorcbbcod5025=.85*xbbco
+---
+>                  sorcbbcod5025=.85*xbbco/dz
+3017c2984
+<                  sorcbbcod25=.85*xbbco
+---
+>                  sorcbbcod25=.85*xbbco/dz
+3019c2986
+<                sorcco = sorcco+xbbco
+---
+>                sorcco = sorcco+xbbco/dz
+3022c2989
+<                sorcbbcod5025=xbbco
+---
+>                sorcbbcod5025=xbbco/dz
+3024c2991
+<                sorcbbcod25=xbbco
+---
+>                sorcbbcod25=xbbco/dz
+3035c3002
+<                sorcno = sorcno+.85*bbno
+---
+>                sorcno = sorcno+.85*bbno/dz
+3037c3004
+<                sorcno = sorcno+bbno
+---
+>                sorcno = sorcno+bbno/dz
+3043,3044c3010,3011
+< c            sorcc2h6 = sorcc2h6+bbc*.00061
+<              sorcc2h6 = sorcc2h6+bbc*.00061/2.
+---
+> c            sorcc2h6 = sorcc2h6+bbc*.00061/dz
+>              sorcc2h6 = sorcc2h6+bbc*.00061/2./dz
+3047,3053c3014,3020
+< c     1      5.*.00007*bbc+1.*.00066*bbc)
+<              sorcpar = sorcpar+(bbc*.00005+bbc*.00007+bbc*.00066)
+< c            sorceth = sorceth+.00123*bbc
+<              sorceth = sorceth+.00123*bbc/2.
+<              sorcolet = sorcolet+.00066*bbc
+< c            sorcproppar = sorcproppar+3.0*bbc*.00019
+<              sorcproppar = sorcproppar+bbc*.00019
+---
+> c     1      5.*.00007*bbc+1.*.00066*bbc)/dz
+>              sorcpar = sorcpar+(bbc*.00005+bbc*.00007+bbc*.00066)/dz
+> c            sorceth = sorceth+.00123*bbc/dz
+>              sorceth = sorceth+.00123*bbc/2./dz
+>              sorcolet = sorcolet+.00066*bbc/dz
+> c            sorcproppar = sorcproppar+3.0*bbc*.00019/dz
+>              sorcproppar = sorcproppar+bbc*.00019/dz
+3058,3059c3025,3026
+<              sorchcn = xbbco * 0.0027
+<              sorcch3cn = xbbco * 0.002
+---
+>              sorchcn = xbbco * 0.0027/dz
+>              sorcch3cn = xbbco * 0.002/dz
+3073,3076c3040,3043
+<              sorcbc1 = sorcbc1+0.1*bbbc !phobic
+<              sorcbc2 = sorcbc2+0.9*bbbc  !philic
+<              sorcoc1 = sorcoc1+0.1*bboc  !phobic
+<              sorcoc2 = sorcoc2+0.9*bboc  !philic
+---
+>              sorcbc1 = sorcbc1+0.1*bbbc/dz  !phobic
+>              sorcbc2 = sorcbc2+0.9*bbbc/dz  !philic
+>              sorcoc1 = sorcoc1+0.1*bboc/dz  !phobic
+>              sorcoc2 = sorcoc2+0.9*bboc/dz  !philic
+3078,3081c3045,3048
+<              sorcbc1 = sorcbc1+0.8*bbbc  !phobic
+<              sorcbc2 = sorcbc2+0.2*bbbc  !philic
+<              sorcoc1 = sorcoc1+0.5*bboc  !phobic
+<              sorcoc2 = sorcoc2+0.5*bboc  !philic
+---
+>              sorcbc1 = sorcbc1+0.8*bbbc/dz  !phobic
+>              sorcbc2 = sorcbc2+0.2*bbbc/dz  !philic
+>              sorcoc1 = sorcoc1+0.5*bboc/dz  !phobic
+>              sorcoc2 = sorcoc2+0.5*bboc/dz  !philic
+3089,3090d3055
+< !         write(6,*)'no plumeris usescale',usescale_factor
+< 

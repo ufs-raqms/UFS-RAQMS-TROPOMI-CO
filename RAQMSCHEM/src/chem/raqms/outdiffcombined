@@ -1,0 +1,300 @@
+649d648
+<       real dcpos,dcneg
+712c711
+< !      write(200+iam,*)'iatchem',iatchem,jatchem,katchem
+---
+> !      write(200+iam,*)iatchem,jatchem,katchem
+714d712
+< !      write(200+iam,*)'iat',iat,jat,kat
+1623,1627d1620
+< #ifdef CHECKCHEM
+<       if(rho2oh<0.0)then
+<         write(6,*)'rho2oh one ',rho2oh,' neg pho2',pho2,dho2,'dens',dens
+<       endif
+< #endif
+1897,1898d1889
+< !        write(6,*)'dn1',dn(1),'roo3',roo3,ro1do3
+< !        call flush(6)
+2621,2631d2611
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 two',dn(19),'dens',dens
+<         do ii=1,inum
+<           if(dn(ii)<0.0)then
+<             write(6,*)'dn neg',ii,dn(ii)
+<           endif
+<         end do
+<        
+<       endif
+< #endif
+2650,2654d2629
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 three',dn(19)
+<       endif
+< #endif
+2662,2666d2636
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 four',dn(19)
+<       endif
+< #endif
+2966,2992d2935
+< #ifdef CHECKCHEM
+<       dcpos = r(6)*dn(2)+r(12)*dn(1)+2.*r(16)*dn(9)+r(17)*dn(10)+
+<      1  r(18)*dens*dn(4)+r(21)*dn(8)+r(29)*dn(5)*hno3g_r+r(31)*dn(37)+
+<      2 r(52)*dn(38)+r(53)*dn(14)+2.*r(64)*dens*dn(9)+r(66)*dn(18)+
+<      3 r(70)*dn(39)+r(72)*dn(36)+(r(80)+r(81))*dn(25)+r(83)*dn(19)+
+<      4  r(85)*dn(20)+r(86)*dn(23)+0.7*r(87)*dn(21)
+<      5  +r(212)*dn(84)
+<        dcneg=r(15)*dn(1)*rhoh
+<        if(dcpos/dcneg<2.0)then
+<          write(6,*)iat,jat,kat,'tile',tile,'dcpos',dcpos,'dcneg',dcneg,'ratio',dcpos/dcneg
+<          write(6,*)'dens',dens
+<          write(6,*)'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+< !        limit dcneg to be at most .9 dcpos
+<          dcneg=min(.5*dcpos,dcneg)
+<          dctmp=dcpos-dcneg
+<        endif
+< #endif
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 1',dctmp,'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'neg term',-r(15)*dn(1)*rhoh,'r15',r(15),'dn1',dn(1),'rhoh',rhoh
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+<        endif
+< #endif
+2995,2999d2937
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 2',dctmp,dn(20),r(76),dens
+<        endif
+< #endif
+3011,3021d2948
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 3',dctmp,'fac_olei',fac_olei,'dens',dens
+<             write(6,*)'rate',maxval(r),minval(r),'fac_isop',fac_isop
+<             do ii=1,inum
+<               if(dn(ii)<0.0)then
+<                 write(6,*)'dn ii neg cd',ii,dn(ii)
+<               endif
+<             end do
+<        endif
+< #endif
+3026,3030d2952
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 4',dctmp
+<        endif
+< #endif
+3034,3038d2955
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 5',dctmp
+<        endif
+< #endif
+3045,3049d2961
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 6',dctmp
+<        endif
+< #endif
+3053,3063d2964
+< #ifdef CHECKCHEM
+<        if(rho2oh<0.0)then
+<          write(6,*)'rho2oh neg',rho2oh,'datmp',datmp,'dn10',dn(10),'dbtmp',dbtmp,'dctmp',dctmp
+<          write(6,*)'dens',dens
+<          do ii=1,inum
+<            if(dn(ii)<0.0)then
+<              write(6,*)'dn',ii,'neg rho2oh dn ii',dn(ii)
+<           endif
+<          end do
+<        endif
+< #endif
+3161,3166d3061
+< #ifdef CHECKCHEM
+<       if(dn(10)<0.0)then
+<         write(6,*)'dn10 neg rho2oh',rho2oh,'dn9',dn(9)
+<         call flush(6)
+<       endif
+< #endif
+3946,3950d3840
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 tendr',dn(19)
+<       endif
+< #endif
+6492d6380
+<       real*8 ratiodt
+6499c6387
+<       integer ibin,iadj,ncount
+---
+>       integer ibin,iadj
+6524,6529d6411
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'before dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6532,6545d6413
+< #ifdef CHECKCHEM
+<         if(n>500)then 
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<           write(6,*)'dt',dt,'n',n,'t',t,'timinc',timinc,'xhbr',xhbr
+<           write(6,*)'xhobr',xhobr,'xbrcl',xbrcl,'xbr2',xbr2,'xbro',xbro,'xbr',xbr
+<           call flush(6)
+<         endif
+<         if(n>1000)then
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<            write(6,*)'error n brintg',n,t,'dt',dt,'timinc',timinc
+<            call flush(6)
+<            call killit('brintg 10')
+<         endif
+< #endif
+6549,6554d6416
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6564,6595d6425
+<         if(xbr<0.0)then
+<           write(6,*)'input brintg xbr neg',xbr
+<           call flush(6)
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'input brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'input brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'input brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'input brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'input brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'input bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+<         endif 
+<         if(dn(19)<0.0)then
+<           write(6,*)'dn19 neg',dn(19)
+<         endif
+6604,6620d6433
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'top xbr neg',xbr,'n',n,'t',t
+<            call flush(6)
+<         endif
+<         if(dn(3)>1.d24)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'dn3 big',n,dn(3),'r99',r(99),'pbr',pbr,'dbr',dbr,'prod',r(99)*dn(3)
+<           call flush(6)
+<         endif
+<         if(pbr/dbr>1.e15)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'n',n,'t',t,'pbr',pbr,'dbr',dbr,'dn',dn(2),dn(3),dn(25)
+<           write(6,*)'xbro',xbro,'dn9',dn(9),'xhbr',xhbr
+<           write(6,*)'xvf2',xvf2,'xbrno3',xbrno3
+<           write(6,*)'phoj',phoj(32),phoj(31),phoj(34),phoj(35)
+<           call flush(6)
+<         endif
+< #endif
+6628,6634d6440
+< #ifdef CHECKCHEM
+<         if(phbr<0.0)then
+<           write(6,*)'phbr',phbr,'dn10',dn(10),'dn(19)',dn(19),'xbr',xbr,'r',r(95),r(96)
+<           call flush(6)
+<         endif
+< #endif
+< 
+6678,6683d6483
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'xbrnegative',xbr,'dbr',dbr,'dt',dt,'prod',dbr*dt,'ratio',pbr/dbr,'old',xbrold
+<            call flush(6)
+<         endif
+< #endif
+6704,6710d6503
+< #ifdef CHECKCHEM
+<         if(xhbr<0.0)then
+<           write(6,*)'xhbr neg',xhbr,'phbr',phbr,dhbr,'dt',dt,exp(-dhbr*dt)
+<           write(6,*)'old',xhbrold
+<           call flush(6)
+<         endif
+< #endif
+6884,6887d6674
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/1.e-20/1.2
+<               else
+6889d6675
+<               endif
+6893,6898d6678
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/dlimit/1.2
+<                 write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+<                 call flush(6)
+<               else 
+6901d6680
+<             endif
+6922d6700
+<         ncount=0
+6924,6931d6701
+<         ncount=ncount+1
+< #ifdef CHECKCHEM
+<         if(ncount>1000)then
+<             write(6,*)iatchem,jatchem,katchem,'ncount',ncouunt,'dt',dt,'t',t,'n',n
+<             call flush(6)
+<              call killit('bringg')
+<         endif
+< #endif
+6999,7001d6768
+<         if(xbr<0.0)then
+<             write(6,*)'xbr neg night',xbr,pbr,dbr
+<         endif
+7200,7228d6966
+<         if(xbr<0.0)then
+<           write(6,*)'output brintg xbr neg',xbr
+<           call flush(6)
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'output brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'output brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'output brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'output brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'output brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'output bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+<         endif

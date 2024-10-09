@@ -1,0 +1,1440 @@
+1c1
+< #!/bin/ksh -x
+---
+> #!/bin/bash -x
+4c4
+< # Script name:         exglobal_fcst_nemsfv3gfs.sh.ecf
+---
+> # Script name:         exglobal_fcst_fv3gfs.sh.ecf
+17,21d16
+< # 2017-05-24  Rahul Mahajan  Updated for cycling with NEMS FV3GFS
+< # 2017-09-13  Fanglin Yang   Updated for using GFDL MP and Write Component
+< # 2019-03-21  Fanglin Yang   Add restart capability for running gfs fcst from a break point.
+< #
+< # $Id$
+27,32c22
+< #source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base
+< export NDATE=/data/prod/ncep_libs/intel/18.0.3/util/exec/ndate
+< echo CASE $CASE
+< echo ROTDIR $ROTDIR
+< echo PSLOT $PSLOT
+< echo top IAER $IAER
+---
+> 
+34,35c24,27
+< VERBOSE=${VERBOSE:-"YES"}
+< if [ $VERBOSE = "YES" ] ; then
+---
+> ulimit -a >$HOME/outulimit.submit
+> export VERBOSE="NO"
+> export VERBOSE=${VERBOSE:-"YES"}
+> if [ $VERBOSE = YES ] ; then
+39,42d30
+< # ajl added lgocart
+< 
+< machine=${machine:-"WCOSS_C"}
+< machine=$(echo $machine | tr '[a-z]' '[A-Z]')
+43a32
+> #  dust_uthres=0.065,0.18,0.27,0.30,0.35,0.38,0.35,0.41,0.41,0.45,0.5,0.45,9999.0
+45,60c34,42
+< CASE=${CASE:-C96}
+< CDATE=${CDATE:-2016100300}
+< CDUMP=${CDUMP:-gdas}
+< FHMIN=${FHMIN:-0}
+< FHMAX=${FHMAX:-9}
+< FHOUT=${FHOUT:-6}
+< FHZER=${FHZER:-6}
+< FHCYC=${FHCYC:-24}
+< FHMAX_HF=${FHMAX_HF:-0}
+< FHOUT_HF=${FHOUT_HF:-6}
+< NSOUT=${NSOUT:-"-1"}
+< FDIAG=$FHOUT
+< if [ $FHMAX_HF -gt 0 -a $FHOUT_HF -gt 0 ]; then FDIAG=$FHOUT_HF; fi
+< 
+< PDY=$(echo $CDATE | cut -c1-8)
+< cyc=$(echo $CDATE | cut -c9-10)
+---
+> export PSLOT=${PSLOT:-fv3gfs}
+> export CASE=${CASE:-C768}
+> export CDATE=${CDATE:-2017032500}
+> export CDUMP=${CDUMP:-gfs}
+> export FHMIN=${FHMIN:-0}
+> export FHMAX=${FHMAX:-240}
+> export FHOUT=${FHOUT:-3}
+> export FHZER=${FHZER:-6}
+> export FHCYC=${FHCYC:-24}
+63,83c45,54
+< pwd=$(pwd)
+< NWPROD=${NWPROD:-${NWROOT:-$pwd}}
+< HOMEgfs=${HOMEgfs:-$NWPROD}
+< FIX_DIR=${FIX_DIR:-$HOMEgfs/fix}
+< FIX_AM=${FIX_AM:-$FIX_DIR/fix_am}
+< FIXfv3=${FIXfv3:-$FIX_DIR/fix_fv3_gmted2010}
+< DATA=${DATA:-$pwd/fv3tmp$$}    # temporary running directory
+< mkdir -p $DATA
+< ROTDIR=${ROTDIR:-$pwd}         # rotating archive directory
+< ICSDIR=${ICSDIR:-$pwd}         # cold start initial conditions
+< DMPDIR=${DMPDIR:-$pwd}         # global dumps for seaice, snow and sst analysis
+< EMIDIR=${EMIDIR:-$pwd}         # anthro. emission 
+< EMITYPE=2 # we want GBBEPx
+< EMITYPE=${EMITYPE:-1}         # 1:MODIS, 2:GBBEPx 
+< # Model resolution specific parameters
+< DELTIM=${DELTIM:-225}
+< layout_x=${layout_x:-8}
+< layout_y=${layout_y:-16}
+< LEVS=${LEVS:-65}
+< 
+<  OUTTIME=$(( $FHOUT*3600/ $DELTIM ))
+---
+> export PTMP=${PTMP:-/gpfs/hps/ptmp}
+> export STMP=${STMP:-/gpfs/hps/stmp}
+> export NWPROD=${NWPROD:-${NWROOT:-/nwprod}}
+> export BASE_DATA=${BASE_DATA:-$NWPROD}
+> export FIX_DIR=${FIX_DIR:-$BASE_DATA/fix}
+> export FIX_AM=${FIX_AM:-$FIX_DIR/fix_am}
+> export FIX_FV3=${FIX_FV3:-$FIX_DIR/fix_fv3}
+> export DATA=${DATA:-$STMP/$LOGNAME/pr${PSLOT}${CASE}_${CDATE}}    #temporary running directory
+> export ROTDIR=${ROTDIR:-$PTMP/$LOGNAME/pr${PSLOT}}                #rorating archive directory
+> export IC_DIR=${IC_DIR:-$PTMP/$LOGNAME/ICs}                       #cold start initial conditions
+85,86c56,60
+< if [ $imp_physics -eq 99 ]; then NTRACER=0; fi
+< if [ $imp_physics -eq 11 ]; then NTRACER=1; fi
+---
+> # Model resolution specific parameters
+> export DELTIM=${DELTIM:-225}
+> export layout_x=${layout_x:-8}
+> export layout_y=${layout_y:-16}
+> export LEVS=${LEVS:-64}
+89,94c63,67
+< NCP=${NCP:-"/bin/cp -p"}
+< NLN=${NLN:-"/bin/ln -sf"}
+< NMV=${NMV:-"/bin/mv"}
+< SEND=${SEND:-"YES"}   #move final result to rotating directory
+< ERRSCRIPT=${ERRSCRIPT:-'eval [[ $err = 0 ]]'}
+< KEEPDATA=${KEEPDATA:-"NO"}
+---
+> export NCP=${NCP:-"/bin/cp -p"}
+> export NLN=${NLN:-"/bin/ln -sf"}
+> export SEND=${SEND:-"YES"}   #move final result to rotating directory
+> export ERRSCRIPT=${ERRSCRIPT:-'eval [[ $err = 0 ]]'}
+> export NDATE=${NDATE:-$NWPROD/util/exec/ndate}
+97,98c70,71
+< MEMBER=${MEMBER:-"-1"} # -1: control, 0: ensemble mean, >0: ensemble member $MEMBER
+< ENS_NUM=${ENS_NUM:-1}  # Single executable runs multiple members (e.g. GEFS)
+---
+> export MEMBER=${MEMBER:-"-1"} # -1: control, 0: ensemble mean, >0: ensemble member $MEMBER
+> export ENS_NUM=${ENS_NUM:-1}
+101,103c74,76
+< FCSTEXECDIR=${FCSTEXECDIR:-$HOMEgfs/sorc/fv3gfs.fd/NEMS/exe}
+< FCSTEXEC=${FCSTEXEC:-fv3_gfs.x}
+< PARM_FV3DIAG=${PARM_FV3DIAG:-$HOMEgfs/parm/parm_fv3diag}
+---
+> export FCSTEXECDIR=${FCSTEXECDIR:-${EXECDIR:-$BASE_DATA/sorc/fv3gfs.fd/BUILD/bin}}
+> export FCSTEXEC=${FCSTEXEC:-fv3_gfs.x}
+> export PARM_FV3DIAG=${PARM_FV3DIAG:-$FV3DIR_RELREASE/parm/parm_fv3diag}
+106,135c79,86
+< APRUN_FV3=${APRUN_FV3:-${APRUN_FCST:-${APRUN:-""}}}
+< NTHREADS_FV3=${NTHREADS_FV3:-${NTHREADS_FCST:-${nth_fv3:-1}}}
+< cores_per_node=${cores_per_node:-${npe_node_max:-24}}
+< ntiles=${ntiles:-6}
+< NTASKS_FV3=${NTASKS_FV3:-$npe_fv3}
+< 
+< TYPE=${TYPE:-"nh"}                  # choices:  nh, hydro
+< MONO=${MONO:-"non-mono"}            # choices:  mono, non-mono
+< 
+< CPL=${CPL:-".true."}
+< QUILTING=${QUILTING:-".true."}
+< OUTPUT_GRID=${OUTPUT_GRID:-"gaussian_grid"}
+< OUTPUT_FILE=${OUTPUT_FILE:-"nemsio"}
+< WRITE_NEMSIOFLIP=${WRITE_NEMSIOFLIP:-".true."}
+< WRITE_FSYNCFLAG=${WRITE_FSYNCFLAG:-".true."}
+< 
+< rCDUMP=${rCDUMP:-$CDUMP}
+< 
+< #------------------------------------------------------------------
+< # setup the runtime environment
+< if [ $machine = "WCOSS_C" ] ; then
+<   HUGEPAGES=${HUGEPAGES:-hugepages4M}
+<   . $MODULESHOME/init/sh 2>/dev/null
+<   module load iobuf craype-$HUGEPAGES 2>/dev/null
+<   export MPICH_GNI_COLL_OPT_OFF=${MPICH_GNI_COLL_OPT_OFF:-MPI_Alltoallv}
+<   export MKL_CBWR=AVX2
+<   export WRTIOBUF=${WRTIOBUF:-"4M"}
+<   export NC_BLKSZ=${NC_BLKSZ:-"4M"}
+<   export IOBUF_PARAMS="*nemsio:verbose:size=${WRTIOBUF},*:verbose:size=${NC_BLKSZ}"
+< fi
+---
+> export FCST_LAUNCHER=${FCST_LAUNCHER:-${APRUN:-""}}
+> export tasks=${tasks:-$((6*layout_x*layout_y))}
+> export nthreads=${nthreads:-${nth_f:-1}}
+> export cores_per_node=${cores_per_node:-${task_per_node:-24}}
+> export ntiles=${ntiles:-6}
+> export TYPE=${TYPE:-nh}                  # choices:  nh, hydro
+> export MONO=${MONO:-non-mono}            # choices:  mono, non-mono
+> export use_hyper_thread=${hyperthread:-".false."}
+139,156c90,91
+< mkdata=NO
+< if [ ! -d $DATA ]; then
+< #   mkdata=YES !lzhang
+<    mkdir -p $DATA
+< fi
+< # Stage the FV3 initial conditions to ROTDIR  
+< export OUTDIR="$ICSDIR/$CDATE/$CDUMP/$CASE/INPUT" #lzhang
+< COMOUT="$ROTDIR/$CDUMP.$PDY/$cyc"
+< [[ ! -d $COMOUT ]] && mkdir -p $COMOUT
+< cd $COMOUT || exit 99
+< [[ ! -d $INPUT ]] && $NLN $OUTDIR .
+< #----------------------------------------------------
+< cd $DATA || exit 8
+< 
+< mkdir -p $DATA/RESTART $DATA/INPUT
+< mkdir -p $DATA/GBBEPx
+< 
+< 
+---
+> if [ ! -d $DATA ]; then mkdir -p $DATA ;fi
+> mkdir -p $DATA/RESTART $DATA/INPUT $DATA/GBBEPx
+165d99
+<     if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+167,170d100
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_bc.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+172,175d101
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_oc.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+177,180d102
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_so2.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+182,185d103
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_pm_25.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+187,189d104
+<     else
+<       $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/plumefrp.nc
+<     fi
+194,198d108
+<     $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_bc.$ctile.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_oc.$ctile.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_so2.$ctile.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.pm_25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_pm_25.$ctile.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.pm_25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_pm25.$ctile.nc
+202,232d111
+< #lzhang we do not need so much restart file in the output
+< #if [ $CDUMP = "gfs" -a $restart_interval -gt 0 ]; then
+< #    RSTDIR_TMP=${RSTDIR:-$ROTDIR}/${CDUMP}.${PDY}/${cyc}/RERUN_RESTART
+< #    if [ ! -d $RSTDIR_TMP ]; then mkdir -p $RSTDIR_TMP ; fi
+< #    $NLN $RSTDIR_TMP RESTART
+< #else
+< #    mkdir -p $DATA/RESTART
+< #fi
+< 
+< #-------------------------------------------------------
+< # determine if restart IC exists to continue from a previous forecast
+< RERUN="NO"
+< filecount=$(find $RSTDIR_TMP -type f | wc -l) 
+< if [ $CDUMP = "gfs" -a $restart_interval -gt 0 -a $FHMAX -gt $restart_interval -a $filecount -gt 10 ]; then
+<     SDATE=$($NDATE +$FHMAX $CDATE)
+<     EDATE=$($NDATE +$restart_interval $CDATE)
+<     while [ $SDATE -gt $EDATE ]; do
+<         PDYS=$(echo $SDATE | cut -c1-8)
+<         cycs=$(echo $SDATE | cut -c9-10)
+<         flag1=$RSTDIR_TMP/${PDYS}.${cycs}0000.coupler.res
+<         flag2=$RSTDIR_TMP/coupler.res
+<         if [ -s $flag1 ]; then
+<             mv $flag1 ${flag1}.old
+<             if [ -s $flag2 ]; then mv $flag2 ${flag2}.old ;fi
+<             RERUN="YES"
+<             CDATE_RST=$($NDATE -$restart_interval $SDATE)
+<             break
+<         fi 
+<         SDATE=$($NDATE -$restart_interval $SDATE)
+<     done
+< fi
+237,239c116,117
+<   prefix=$CDUMP
+<   rprefix=$rCDUMP
+<   memchar=""
+---
+>   PREINP=$CDUMP
+>   MEMCHAR=""
+241,243c119,120
+<   prefix=enkf$CDUMP
+<   rprefix=enkf$rCDUMP
+<   memchar=mem$(printf %03i $MEMBER)
+---
+>   PREINP=enkf.$CDUMP
+>   MEMCHAR=mem`printf %03i $MEMBER`
+245,252c122,125
+< memdir=$ROTDIR/${prefix}.$PDY/$cyc/$memchar
+< if [ ! -d $memdir ]; then mkdir -p $memdir; fi
+< assim_freq=0
+< GDATE=$($NDATE -$assim_freq $CDATE)
+< gPDY=$(echo $GDATE | cut -c1-8)
+< gcyc=$(echo $GDATE | cut -c9-10)
+< #gmemdir=$ROTDIR/${rprefix}.$gPDY/$gcyc/$memchar #lzhang
+< gmemdir=$ROTDIR/${prefix}.$gPDY/$gcyc/$memchar
+---
+> yyyymmdd=`echo $CDATE | cut -c1-8`
+> hh=`echo       $CDATE | cut -c9-10`
+> MEMDIR=$ROTDIR/${PREINP}.$yyyymmdd/$hh/$MEMCHAR
+> if [ ! -d $MEMDIR ]; then mkdir -p $MEMDIR; fi
+256,284c129,135
+< warm_start=${warm_start:-".false."}
+< read_increment=${read_increment:-".false."}
+< restart_interval=${restart_interval:-0}
+< 
+< # Determine if this is a warm start or cold start
+< if [ -f $gmemdir/RESTART/${PDY}.${cyc}0000.coupler.res ]; then
+<   export warm_start=".true."
+< fi
+< 
+< #-------------------------------------------------------
+< if [ $warm_start = ".true." -o $RERUN = "YES" ]; then
+<    CHEMIN=1 #lzhang
+< #-------------------------------------------------------
+< #.............................
+<   if [ $RERUN = "NO" ]; then
+< #.............................
+< 
+<   # Link all (except sfc_data) restart files from $gmemdir
+<   for file in $gmemdir/RESTART/${PDY}.${cyc}0000.*.nc; do
+<     file2=$(echo $(basename $file))
+<     file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
+<     fsuf=$(echo $file2 | cut -d. -f1)
+<     if [ $fsuf != "sfc_data" ]; then
+<        $NLN $file $DATA/INPUT/$file2
+<     fi
+<   done
+< 
+<   # Link sfcanl_data restart files from $memdir
+<   for file in $memdir/RESTART/${PDY}.${cyc}0000.*.nc; do
+---
+> export warm_start=${warm_start:-".false."}
+> if [ $warm_start = ".false." ]; then
+>   $NCP $BASE_DATA/ICs/C192_2018081400/gfs_ctrl.nc $DATA/INPUT/.
+>  if [ -d $IC_DIR/${CASE}_$CDATE ]; then
+>   $NCP $IC_DIR/${CASE}_$CDATE/* $DATA/INPUT/.
+>  else
+>   for file in $MEMDIR/INPUT/*.nc; do
+286,289c137,138
+<     file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
+<     fsufanl=$(echo $file2 | cut -d. -f1)
+<     if [ $fsufanl = "sfcanl_data" ]; then
+<       file2=$(echo $file2 | sed -e "s/sfcanl_data/sfc_data/g")
+---
+>     fsuf=`echo $file2 | cut -c1-3`
+>     if [ $fsuf = "gfs" -o $fsuf = "sfc" ]; then
+293,307d141
+<   
+< #lzhang cp atminc.nc to output dir
+<    cd $DATA
+<    $NCP ../calcinc/atminc.nc $memdir/${CDUMP}.t${cyc}z.atminc.nc
+< 
+<   # Handle coupler.res file for DA cycling
+<   if [ ${USE_COUPLER_RES:-"NO"} = "YES" ]; then
+<     # In DA, this is not really a "true restart",
+<     # and the model start time is the analysis time
+<     # The alternative is to replace
+<     # model start time with current model time in coupler.res
+<     file=$gmemdir/RESTART/${PDY}.${cyc}0000.coupler.res
+<     file2=$(echo $(basename $file))
+<     file2=$(echo $file2 | cut -d. -f3-) # remove the date from file
+<     $NLN $file $DATA/INPUT/$file2
+309,315d142
+< 
+<   increment_file=$memdir/${CDUMP}.t${cyc}z.atminc.nc #lzhang 
+<   #increment_file=$gmemdir/${CDUMP}.t${cyc}z.atminc.nc
+<   if [ -f $increment_file ]; then
+<     $NLN $increment_file $DATA/INPUT/fv3_increment.nc
+<     read_increment=".true."
+<     res_latlon_dynamics="fv3_increment.nc"
+317,321c144
+<     read_increment=".false."
+<     res_latlon_dynamics="''"
+<   fi
+< #lzhang: link sfc data from gfs initial conditions
+<   for file in $memdir/INPUT/*.nc; do
+---
+>   for file in $MEMDIR/RESTART/*.nc; do
+323,326c146
+<     fsuf=$(echo $file2 | cut -c1-3)
+<     if [ $fsuf = $fsuf = "sfc" ]; then
+<       $NLN $file $DATA/INPUT/$file2
+<     fi
+---
+>     $NLN $file $DATA/IrNPUT/$file2
+328,339c148,154
+< #lzhang
+< #.............................
+<   else  ##RERUN                         
+< 
+<     PDYT=$(echo $CDATE_RST | cut -c1-8)
+<     cyct=$(echo $CDATE_RST | cut -c9-10)
+<     for file in $RSTDIR_TMP/${PDYT}.${cyct}0000.*; do
+<       file2=$(echo $(basename $file))
+<       file2=$(echo $file2 | cut -d. -f3-)
+<       $NLN $file $DATA/INPUT/$file2
+<     done
+< 
+---
+>   $NLN $MEMDIR/RESTART/coupler.res $DATA/INPUT/coupler.res
+>   export read_increment=${read_increment:-".false."}
+>   if [ $read_increment == ".true." ]; then
+>     if [ -f $MEMDIR/$increment_file ]; then
+>       $NLN $MEMDIR/$increment_file $DATA/INPUT/$increment_file
+>     else
+>       export read_increment=".false."
+341,354d155
+< #.............................
+< else ## cold start                            
+<   CHEMIN=0 #lzhang
+<   echo "COLD START"
+< # ajl need to change to our path on s4
+< 
+<  if [ -d $IC_DIR/${CASE}_$CDATE ]; then
+<   $NCP $IC_DIR/${CASE}_$CDATE/* $DATA/INPUT/.
+<  else # ajl
+<    for file in $memdir/INPUT/*.nc; do
+<      file2=$(echo $(basename $file))
+<      fsuf=$(echo $file2 | cut -c1-3)
+<      if [ $fsuf = "gfs" -o $fsuf = "sfc" ]; then
+<        $NLN $file $DATA/INPUT/$file2
+356,360d156
+<     done
+<   fi # ajl
+<   CHEMIN=1 # ajl for now since we put it all in with met
+< 
+< #-------------------------------------------------------
+362,366c158,159
+< #-------------------------------------------------------
+< 
+< 
+< nfiles=$(ls -1 $DATA/INPUT/* | wc -l)
+< if [ $nfiles -le 0 ]; then
+---
+> nfiles=`ls -1 $DATA/INPUT/* | wc -l`
+> if [ $nfiles -lt 0 ]; then
+368,369d160
+<   msg=”"Initial conditions must exist in $DATA/INPUT, ABORT!"
+<   postmsg "$jlogfile" "$msg"
+375,379c166,173
+< for n in $(seq 1 $ntiles); do
+<   $NLN $FIXfv3/$CASE/${CASE}_grid.tile${n}.nc     $DATA/INPUT/${CASE}_grid.tile${n}.nc
+<   $NLN $FIXfv3/$CASE/${CASE}_oro_data.tile${n}.nc $DATA/INPUT/oro_data.tile${n}.nc
+< done
+< $NLN $FIXfv3/$CASE/${CASE}_mosaic.nc  $DATA/INPUT/grid_spec.nc
+---
+> for n in `seq 1 $ntiles`; do
+>   $NLN $FIX_FV3/$CASE/${CASE}_grid.tile${n}.nc     $DATA/INPUT/${CASE}_grid.tile${n}.nc
+>   $NLN $FIX_FV3/$CASE/${CASE}_oro_data.tile${n}.nc $DATA/INPUT/oro_data.tile${n}.nc
+>   $NLN $FIX_FV3/$CASE/angle.tile${n}.nc $DATA/INPUT/angle.tile${n}.nc
+> done
+> $NLN $FIX_FV3/$CASE/${CASE}_mosaic.nc  $DATA/INPUT/grid_spec.nc
+> # new ajl
+> $NLN $FIX_FV3/$CASE/${CASE}_mosaic.nc  $DATA/INPUT/atmos_mosaic.nc
+382,388c176,179
+< echo IAER $IAER
+< export IAER=111
+< IALB=${IALB:-1}
+< IEMS=${IEMS:-1}
+< ISOL=${ISOL:-2}
+< IAER=${IAER:-111}
+< ICO2=${ICO2:-2}
+---
+> export iems=${iems:-1}
+> export isol=${isol:-2}
+> export iaer=${iaer:-111}
+> export ico2=${ico2:-2}
+390,397d180
+< if [ ${new_o3forc:-YES} = YES ]; then
+<     O3FORC=ozprdlos_2015_new_sbuvO3_tclm15_nuchem.f77
+< else
+<     O3FORC=global_o3prdlos.f77
+< fi
+< H2OFORC=${H2OFORC:-"global_h2o_pltc.f77"}
+< $NLN $FIX_AM/${O3FORC}                         $DATA/global_o3prdlos.f77
+< $NLN $FIX_AM/${H2OFORC}                        $DATA/global_h2oprdlos.f77
+398a182,183
+> #$NLN $FIX_AM/global_o3prdlos.f77               $DATA/INPUT/global_o3prdlos.f77
+> $NLN $FIX_AM/global_o3prdlos.f77               $DATA/global_o3prdlos.f77
+403,404c188,189
+< if [ $ICO2 -gt 0 ]; then
+<   for file in $(ls $FIX_AM/fix_co2_proj/global_co2historicaldata*) ; do
+---
+> if [ $ico2 -gt 0 ]; then
+>   for file in `ls $FIX_AM/fix_co2_proj/global_co2historicaldata* ` ; do
+410,411c195,196
+< if [ $IAER -gt 0 ] ; then
+<   for file in $(ls $FIX_AM/global_volcanic_aerosols*) ; do
+---
+> if [ $iaer -gt 0 ] ; then
+>   for file in `ls $FIX_AM/global_volcanic_aerosols* ` ; do
+415,463d199
+< #------------------------------------------------------------------
+< # changeable parameters
+< # dycore definitions
+< res=$(echo $CASE |cut -c2-5)
+< resp=$((res+1))
+< npx=$resp
+< npy=$resp
+< npz=$((LEVS-1))
+< io_layout="1,1"
+< #ncols=$(( (${npx}-1)*(${npy}-1)*3/2 ))
+< 
+< # spectral truncation and regular grid resolution based on FV3 resolution
+< JCAP_CASE=$((2*res-2))
+< LONB_CASE=$((4*res))
+< LATB_CASE=$((2*res))
+< 
+< JCAP=${JCAP:-$JCAP_CASE}
+< LONB=${LONB:-$LONB_CASE}
+< LATB=${LATB:-$LATB_CASE}
+< 
+< LONB_IMO=${LONB_IMO:-$LONB_CASE}
+< LATB_JMO=${LATB_JMO:-$LATB_CASE}
+< 
+< # Fix files
+< FNGLAC=${FNGLAC:-"$FIX_AM/global_glacier.2x2.grb"}
+< FNMXIC=${FNMXIC:-"$FIX_AM/global_maxice.2x2.grb"}
+< FNTSFC=${FNTSFC:-"$FIX_AM/RTGSST.1982.2012.monthly.clim.grb"}
+< FNSNOC=${FNSNOC:-"$FIX_AM/global_snoclim.1.875.grb"}
+< FNZORC=${FNZORC:-"igbp"}
+< FNALBC2=${FNALBC2:-"$FIX_AM/global_albedo4.1x1.grb"}
+< FNAISC=${FNAISC:-"$FIX_AM/CFSR.SEAICE.1982.2012.monthly.clim.grb"}
+< FNTG3C=${FNTG3C:-"$FIX_AM/global_tg3clim.2.6x1.5.grb"}
+< FNVEGC=${FNVEGC:-"$FIX_AM/global_vegfrac.0.144.decpercent.grb"}
+< FNMSKH=${FNMSKH:-"$FIX_AM/seaice_newland.grb"}
+< FNVMNC=${FNVMNC:-"$FIX_AM/global_shdmin.0.144x0.144.grb"}
+< FNVMXC=${FNVMXC:-"$FIX_AM/global_shdmax.0.144x0.144.grb"}
+< FNSLPC=${FNSLPC:-"$FIX_AM/global_slope.1x1.grb"}
+< FNALBC=${FNALBC:-"$FIX_AM/global_snowfree_albedo.bosu.t${JCAP}.${LONB}.${LATB}.rg.grb"}
+< FNVETC=${FNVETC:-"$FIX_AM/global_vegtype.igbp.t${JCAP}.${LONB}.${LATB}.rg.grb"}
+< FNSOTC=${FNSOTC:-"$FIX_AM/global_soiltype.statsgo.t${JCAP}.${LONB}.${LATB}.rg.grb"}
+< FNABSC=${FNABSC:-"$FIX_AM/global_mxsnoalb.uariz.t${JCAP}.${LONB}.${LATB}.rg.grb"}
+< FNSMCC=${FNSMCC:-"$FIX_AM/global_soilmgldas.statsgo.t${JCAP}.${LONB}.${LATB}.grb"}
+< 
+< # If the appropriate resolution fix file is not present, use the highest resolution available (T1534)
+< [[ ! -f $FNALBC ]] && FNALBC="$FIX_AM/global_snowfree_albedo.bosu.t1534.3072.1536.rg.grb"
+< [[ ! -f $FNVETC ]] && FNVETC="$FIX_AM/global_vegtype.igbp.t1534.3072.1536.rg.grb"
+< [[ ! -f $FNSOTC ]] && FNSOTC="$FIX_AM/global_soiltype.statsgo.t1534.3072.1536.rg.grb"
+< [[ ! -f $FNABSC ]] && FNABSC="$FIX_AM/global_mxsnoalb.uariz.t1534.3072.1536.rg.grb"
+< [[ ! -f $FNSMCC ]] && FNSMCC="$FIX_AM/global_soilmgldas.statsgo.t1534.3072.1536.grb"
+465c201,219
+< # NSST Options
+---
+> export FNGLAC=${FNGLAC:-"$FIX_AM/global_glacier.2x2.grb"}
+> export FNMXIC=${FNMXIC:-"$FIX_AM/global_maxice.2x2.grb"}
+> export FNTSFC=${FNTSFC:-"$FIX_AM/RTGSST.1982.2012.monthly.clim.grb"}
+> export FNSNOC=${FNSNOC:-"$FIX_AM/global_snoclim.1.875.grb"}
+> export FNZORC=${FNZORC:-"igbp"}
+> export FNALBC=${FNALBC:-"$FIX_AM/global_snowfree_albedo.bosu.t1534.3072.1536.rg.grb"}
+> export FNALBC2=${FNALBC2:-"$FIX_AM/global_albedo4.1x1.grb"}
+> export FNAISC=${FNAISC:-"$FIX_AM/CFSR.SEAICE.1982.2012.monthly.clim.grb"}
+> export FNTG3C=${FNTG3C:-"$FIX_AM/global_tg3clim.2.6x1.5.grb"}
+> export FNVEGC=${FNVEGC:-"$FIX_AM/global_vegfrac.0.144.decpercent.grb"}
+> export FNVETC=${FNVETC:-"$FIX_AM/global_vegtype.igbp.t1534.3072.1536.rg.grb"}
+> export FNSOTC=${FNSOTC:-"$FIX_AM/global_soiltype.statsgo.t1534.3072.1536.rg.grb"}
+> export FNSMCC=${FNSMCC:-"$FIX_AM/global_soilmgldas.t1534.3072.1536.grb"}
+> export FNMSKH=${FNMSKH:-"$FIX_AM/seaice_newland.grb"}
+> export FNVMNC=${FNVMNC:-"$FIX_AM/global_shdmin.0.144x0.144.grb"}
+> export FNVMXC=${FNVMXC:-"$FIX_AM/global_shdmax.0.144x0.144.grb"}
+> export FNSLPC=${FNSLPC:-"$FIX_AM/global_slope.1x1.grb"}
+> export FNABSC=${FNABSC:-"$FIX_AM/global_mxsnoalb.uariz.t1534.3072.1536.rg.grb"}
+> 
+467,471c221,225
+< # nstf_name(1) : NST_MODEL (NSST Model) : 0 = OFF, 1 = ON but uncoupled, 2 = ON and coupled
+< # nstf_name(2) : NST_SPINUP : 0 = OFF, 1 = ON,
+< # nstf_name(3) : NST_RESV (Reserved, NSST Analysis) : 0 = OFF, 1 = ON
+< # nstf_name(4) : ZSEA1 (in mm) : 0
+< # nstf_name(5) : ZSEA2 (in mm) : 0
+---
+> # nstf_name(1) : 0 = NSSTM off, 1 = NSSTM on but uncoupled, 2 = NSSTM on and coupled
+> # nstf_name(2) : 1 = NSSTM spin up on, 0 = NSSTM spin up off
+> # nstf_name(3) : 1 = NSST analysis on, 0 = NSSTM analysis off
+> # nstf_name(4) : zsea1 in mm
+> # nstf_name(5) : zsea2 in mm
+473,479c227
+< NST_MODEL=${NST_MODEL:-0}
+< NST_SPINUP=${NST_SPINUP:-0}
+< NST_RESV=${NST_RESV-0}
+< ZSEA1=${ZSEA1:-0}
+< ZSEA2=${ZSEA2:-0}
+< nstf_name=${nstf_name:-"$NST_MODEL,$NST_SPINUP,$NST_RESV,$ZSEA1,$ZSEA2"}
+< nst_anl=${nst_anl:-".false."}
+---
+> export nstf_name=${nstf_name:-"2,0,1,0,5"}
+481a230,241
+> #------------------------------------------------------------------
+> # changeable parameters
+> # dycore definitions
+> res=`echo $CASE |cut -c2-5`
+> resp=`expr $res + 1 `
+> export npx=$resp
+> export npy=$resp
+> export npz=`expr $LEVS - 1 `
+> export io_layout="1,1"
+> export ncld=5
+> #export ncols=$(( (${npx}- 1)*(${npy}-1)*3/2 ))
+> 
+483,486c243,246
+< #nyblocks=`expr \( $npy - 1 \) \/ $layout_y `
+< #nxblocks=`expr \( $npx - 1 \) \/ $layout_x \/ 32`
+< #if [ $nxblocks -le 0 ]; then nxblocks=1 ; fi
+< blocksize=${blocksize:-32}
+---
+> #export nyblocks=`expr \( $npy - 1 \) \/ $layout_y `
+> #export nxblocks=`expr \( $npx - 1 \) \/ $layout_x \/ 32`
+> #if [ $nxblocks -le 0 ]; then export nxblocks=1 ; fi
+> export blocksize=${blocksize:-32}
+488c248
+< # the pre-conditioning of the solution
+---
+> # export the pre-conditioning of the solution
+492,493c252
+< na_init=${na_init:-1}
+< [[ $warm_start = ".true." ]] && na_init=0
+---
+> export na_init=${na_init:-1}
+496,497c255,256
+< filtered_terrain=${filtered_terrain:-".true."}
+< gfs_dwinds=${gfs_dwinds:-".true."}
+---
+> export filtered_terrain=${filtered_terrain:-".true."}
+> export gfs_dwinds=${gfs_dwinds:-".true."}
+499,514c258,259
+< # various debug options
+< no_dycore=${no_dycore:-".false."}
+< dycore_only=${adiabatic:-".false."}
+< chksum_debug=${chksum_debug:-".false."}
+< print_freq=${print_freq:-6}
+< 
+< if [ ${TYPE} = "nh" ]; then # non-hydrostatic options
+< 
+<   hydrostatic=".false."
+<   phys_hydrostatic=".false."     # enable heating in hydrostatic balance in non-hydrostatic simulation
+<   use_hydro_pressure=".false."   # use hydrostatic pressure for physics
+<   if [ $warm_start = ".true." ]; then
+<     make_nh=".false."              # restarts contain non-hydrostatic state
+<   else
+<     make_nh=".true."               # re-initialize non-hydrostatic state
+<   fi
+---
+> # determines whether FV3 or GFS physics calculate geopotential
+> export gfs_phil=${gfs_phil:-".false."}
+516,521c261,262
+< else # hydrostatic options
+< 
+<   hydrostatic=".true."
+<   phys_hydrostatic=".false."     # ignored when hydrostatic = T
+<   use_hydro_pressure=".false."   # ignored when hydrostatic = T
+<   make_nh=".false."              # running in hydrostatic mode
+---
+> # determine whether ozone production occurs in GFS physics
+> export ozcalc=${ozcalc:-".true."}
+522a264,284
+> # export various debug options
+> export no_dycore=${no_dycore:-".false."}
+> export dycore_only=${adiabatic:-".false."}
+> export chksum_debug=${chksum_debug:-".false."}
+> # export chksum_debug=".true."
+> export print_freq=${print_freq:-6}
+> 
+> if [ ${TYPE} = "nh" ]; then
+>   # non-hydrostatic options
+>   export make_nh=".true."
+>   export hydrostatic=".false."
+>   export phys_hydrostatic=".false."     # can be tested
+>   export use_hydro_pressure=".false."   # can be tested
+>   export consv_te="1."
+> else
+>   # hydrostatic options
+>   export make_nh=".false."
+>   export hydrostatic=".true."
+>   export phys_hydrostatic=".false."     # will be ignored in hydro mode
+>   export use_hydro_pressure=".true."    # have to be .true. in hydro mode
+>   export consv_te="0."
+525,527d286
+< # Conserve total energy as heat globally
+< consv_te=${consv_te:-1.} # range 0.-1., 1. will restore energy to orig. val. before physics
+< 
+529,555c288,318
+< k_split=${k_split:-2}
+< n_split=${n_split:-6}
+< 
+< if [ $(echo $MONO | cut -c-4) = "mono" ];  then # monotonic options
+< 
+<   d_con=${d_con_mono:-"0."}
+<   do_vort_damp=".false."
+<   if [ ${TYPE} = "nh" ]; then # non-hydrostatic
+<     hord_mt=${hord_mt_nh_mono:-"10"}
+<     hord_xx=${hord_xx_nh_mono:-"10"}
+<   else # hydrostatic
+<     hord_mt=${hord_mt_hydro_mono:-"10"}
+<     hord_xx=${hord_xx_hydro_mono:-"10"}
+<   fi
+< 
+< else # non-monotonic options
+< 
+<   d_con=${d_con_nonmono:-"1."}
+<   do_vort_damp=".true."
+<   if [ ${TYPE} = "nh" ]; then # non-hydrostatic
+<     hord_mt=${hord_mt_nh_nonmono:-"5"}
+<     hord_xx=${hord_xx_nh_nonmono:-"5"}
+<   else # hydrostatic
+<     hord_mt=${hord_mt_hydro_nonmono:-"10"}
+<     hord_xx=${hord_xx_hydro_nonmono:-"10"}
+<   fi
+< 
+---
+> export k_split=1
+> export n_split=8
+> export n_sponge=30
+> export cal_pre=.false.
+> export random_clds=.false.
+> 
+> if [ ${MONO} = "mono" -o ${MONO} = "monotonic" ];  then
+>   # monotonic options
+>   export d_con="1."
+>   export do_vort_damp=".false."
+>   if [ ${TYPE} = "nh" ]; then
+>     # non-hydrostatic
+>     export hord_mt="10"
+>     export hord_xx="10"
+>   else
+>     # hydrostatic
+>     export hord_mt="10"
+>     export hord_xx="10"
+>   fi
+> else
+>   # non-monotonic options
+>   export d_con="1."
+>   export do_vort_damp=".true."
+>   if [ ${TYPE} = "nh" ]; then
+>     # non-hydrostatic
+>     export hord_mt="6"
+>     export hord_xx="6"
+>   else
+>     # hydrostatic
+>     export hord_mt="10"
+>     export hord_xx="10"
+557,561d319
+< 
+< if [ $(echo $MONO | cut -c-4) != "mono" -a $TYPE = "nh" ]; then
+<   vtdm4=${vtdm4_nh_nonmono:-"0.06"}
+< else
+<   vtdm4=${vtdm4:-"0.05"}
+564,571c322,339
+< if [ $warm_start = ".true." ]; then # warm start from restart file
+< 
+<   nggps_ic=".false."
+<   ncep_ic=".false."
+<   external_ic=".false."
+<   mountain=".true."
+<   if [ $read_increment = ".true." ]; then # add increment on the fly to the restarts
+<     res_latlon_dynamics="fv3_increment.nc"
+---
+> if [ ${MONO} = "non-mono" -a ${TYPE} = "nh" ]; then
+>   export vtdm4="0.02"
+> else
+>   export vtdm4="0.05"
+> fi
+> 
+> if [ $warm_start = ".false." ]; then # CHGRES'd GFS analyses
+>   export external_ic=".true."
+>   export mountain=".false."
+>   export read_increment=".false."
+>   export res_latlon_dynamics='""'
+> else # warm start from restart file
+>   export external_ic=".false."
+>   export mountain=".true."
+>   export make_nh=".false."
+>   export na_init=0                
+>   if [ $read_increment = ".true." ]; then # add increments on the fly to the restarts
+>     export res_latlon_dynamics="$increment_file"
+573c341
+<     res_latlon_dynamics='""'
+---
+>     export res_latlon_dynamics='""'
+575,584d342
+< 
+< else # CHGRES'd GFS analyses
+< 
+<   nggps_ic=${nggps_ic:-".true."}
+<   ncep_ic=${ncep_ic:-".false."}
+<   external_ic=".true."
+<   mountain=".false."
+<   read_increment=".false."
+<   res_latlon_dynamics='""'
+< 
+587,601d344
+< # Stochastic Physics Options
+< if [ ${SET_STP_SEED:-"YES"} = "YES" ]; then
+<   ISEED_SKEB=$((CDATE*1000 + MEMBER*10 + 1))
+<   ISEED_SHUM=$((CDATE*1000 + MEMBER*10 + 2))
+<   ISEED_SPPT=$((CDATE*1000 + MEMBER*10 + 3))
+< else
+<   ISEED=${ISEED:-0}
+< fi
+< DO_SKEB=${DO_SKEB:-"NO"}
+< DO_SPPT=${DO_SPPT:-"NO"}
+< DO_SHUM=${DO_SHUM:-"NO"}
+< JCAP_STP=${JCAP_STP:-$JCAP_CASE}
+< LONB_STP=${LONB_STP:-$LONB_CASE}
+< LATB_STP=${LATB_STP:-$LATB_CASE}
+< 
+603,609c346,352
+< SYEAR=$(echo  $CDATE | cut -c1-4)
+< SMONTH=$(echo $CDATE | cut -c5-6)
+< SDAY=$(echo   $CDATE | cut -c7-8)
+< SHOUR=$(echo  $CDATE | cut -c9-10)
+< curr_date="${SYEAR},${SMONTH},${SDAY},${SHOUR},0,0"
+< rsecs=$((restart_interval*3600))
+< restart_secs=${rsecs:-0}
+---
+> export SYEAR=`echo $CDATE | cut -c1-4`
+> export SMONTH=`echo $CDATE | cut -c5-6`
+> export SDAY=`echo $CDATE | cut -c7-8`
+> export SHOUR=`echo $CDATE | cut -c9-10`
+> export YYYYMMDD=`echo $CDATE | cut -c1-8`
+> export curr_date="${SYEAR},${SMONTH},${SDAY},${SHOUR},0,0"
+> export restart_secs=${restart_secs:-0}
+612,614c355,360
+< DIAG_TABLE=${DIAG_TABLE:-$PARM_FV3DIAG/diag_table}
+< DATA_TABLE=${DATA_TABLE:-$PARM_FV3DIAG/data_table}
+< FIELD_TABLE=${FIELD_TABLE:-$PARM_FV3DIAG/field_table}
+---
+> export DIAG_TABLE=${DIAG_TABLE:-$PARM_FV3DIAG/diag_table}
+> export DATA_TABLE=${DATA_TABLE:-$PARM_FV3DIAG/data_table}
+> export FIELD_TABLE=${FIELD_TABLE:-$PARM_FV3DIAG/field_table}
+> echo cplflx $cplflx
+> #export NHTUW=12
+> #export NHTUW=2
+622c368
+< 
+---
+> $NCP $AODLUT/* .
+623a370
+> echo FIELD_TABLE $FIELD_TABLE
+625,627c372,373
+< # for raqmschem
+< 
+< $NCP $AODLUT/* .
+---
+> cat field_table
+> #ls -l field_table
+628a375,377
+> #pwd >& $HOME/outpwdtable
+> #ls -l field_table >& $HOME/outlsfieldtable
+> echo cat nems.configure
+630d378
+< rm -f nems.configure
+665c413
+<   @$DELTIM
+---
+>   @450
+678c427,431
+< rm -f model_configure
+---
+> export quilting=.true.
+> #export quilting=.false.
+> export write_groups=1
+> echo quilting $quilting
+> echo cat model_configure
+681,682c434
+< print_esmf:              ${print_esmf:-.true.}
+< PE_MEMBER01:             $NTASKS_FV3
+---
+>   PE_MEMBER01:             $tasks
+695d446
+< cpl:                     $CPL
+697c448
+< atmos_nthreads:          $NTHREADS_FV3
+---
+>   atmos_nthreads:          $nthreads
+700,718c451,463
+< restart_interval:        $restart_interval
+< output_1st_tstep_rst:    .false.
+< 
+< quilting:                $QUILTING
+< write_groups:            ${WRITE_GROUP:-1}
+< write_tasks_per_group:   ${WRTTASK_PER_GROUP:-6}
+< num_files:               ${NUM_FILES:-2}
+< filename_base:           'atm' 'sfc'
+< output_grid:             $OUTPUT_GRID
+< output_file:             $OUTPUT_FILE
+< write_nemsioflip:        $WRITE_NEMSIOFLIP
+< write_fsyncflag:         $WRITE_FSYNCFLAG
+< imo:                     $LONB_IMO
+< jmo:                     $LATB_JMO
+< 
+< nfhout:                  $FHOUT
+< nfhmax_hf:               $FHMAX_HF
+< nfhout_hf:               $FHOUT_HF
+< nsout:                   $NSOUT
+---
+>   restart_interval:        ${restart_interval:-0}
+>   quilting:                ${quilting:-".false."}
+>   write_groups:            ${write_groups:-0}
+>   write_tasks_per_group:   6
+>   num_files:               2
+>   filename_base:          'dyn' 'phy'
+>   output_grid:             "cubed_sphere_grid"
+>   nfhout:                  6
+>   nfhmax_hf:               12
+>   nfhout_hf:                3
+>   nsout:                   -1
+>   cpl:                     .true.
+>   atm_coupling_interval_sec:  $DELTIM
+719a465
+> cat model_configure > /home/lenzen/outmodelconfig
+730c476
+< #  atmos_nthreads = $NTHREADS_FV3
+---
+> #  atmos_nthreads = $nthreads
+733,734c479
+< #  restart_secs = $restart_secs
+< #  $coupler_nml
+---
+> #  restart_secs = $restart_secs   ##DA
+736a482,483
+> 
+> echo cat input.nml >/home/lenzen/catinput.nml
+745d491
+<   $amip_interp_nml
+752,757c498
+<   fdiag = $FDIAG
+<   fhmax = $FHMAX
+<   fhout = $FHOUT
+<   fhmaxhf = $FHMAX_HF
+<   fhouthf = $FHOUT_HF
+<   $atmos_model_nml
+---
+>   fdiag = ${fdiag:-$FHOUT}
+761,762c502
+<   prepend_date = .false.
+<   $diag_manager_nml
+---
+>   prepend_date = .F.   
+769d508
+<   $fms_io_nml
+774c513
+<   domains_stack_size = ${domains_stack_size:-300000000}
+---
+>   domains_stack_size = ${domains_stack_size:-115200}
+776c515,518
+<   $fms_nml
+---
+> /
+> 
+> &fv_grid_nml
+>   grid_file = 'INPUT/grid_spec.nc'
+791c533
+<   n_sponge = ${n_sponge:-"10"}
+---
+>   n_sponge = ${n_sponge:-24}
+793,801c535,543
+<   nudge_dz = ${nudge_dz:-".false."}
+<   tau = ${tau:-10.}
+<   rf_cutoff = ${rf_cutoff:-"7.5e2"}
+<   d2_bg_k1 = ${d2_bg_k1:-"0.15"}
+<   d2_bg_k2 = ${d2_bg_k2:-"0.02"}
+<   kord_tm = ${kord_tm:-"-9"}
+<   kord_mt = ${kord_mt:-"9"}
+<   kord_wz = ${kord_wz:-"9"}
+<   kord_tr = ${kord_tr:-"9"}
+---
+>   rf_fast = .false.
+>   tau = 5.
+>   rf_cutoff = 7.5e2
+>   d2_bg_k1 = 0.15
+>   d2_bg_k2 = 0.02
+>   kord_tm = -9
+>   kord_mt = 9
+>   kord_wz = 9
+>   kord_tr = 9
+810c552
+<   nwat = ${nwat:-2}
+---
+>   nwat = 6
+813,814c555,556
+<   dnats = ${dnats:-0}
+<   fv_sg_adj = ${fv_sg_adj:-"450"}
+---
+>   dnats = 1
+>   fv_sg_adj = 450
+816,818c558,560
+<   nord = ${nord:-3}
+<   dddmp = ${dddmp:-0.2}
+<   d4_bg = ${d4_bg:-0.15}
+---
+>   nord = 2
+>   dddmp = 0.1
+>   d4_bg = 0.12
+820c562
+<   delt_max = ${delt_max:-"0.002"}
+---
+>   delt_max = 0.002
+824,826c566,568
+<   external_eta = ${external_eta:-.true.}
+<   gfs_phil = ${gfs_phil:-".false."}
+<   nggps_ic = $nggps_ic
+---
+>   external_eta = .T.
+>   gfs_phil = $gfs_phil
+>   nggps_ic = ${nggps_ic:-".true."}
+828c570
+<   ncep_ic = $ncep_ic
+---
+>   ncep_ic = ${ncep_ic:-".false."}
+833,835c575,578
+<   hord_dp = -$hord_xx
+<   hord_tr = ${hord_tr:-"8"}
+<   adjust_dry_mass = ${adjust_dry_mass:-".false."}
+---
+>   hord_dp = -6
+>   hord_tr = 8
+>   adjust_dry_mass = .false.
+>   do_sat_adj = .true.
+837d579
+<   do_sat_adj = ${do_sat_adj:-".false."}
+845,848c587,588
+<   agrid_vel_rst = ${agrid_vel_rst:-".true."}
+<   read_increment = $read_increment
+<   res_latlon_dynamics = $res_latlon_dynamics
+<   $fv_core_nml
+---
+>   read_increment = .false.
+>   res_latlon_dynamics = "fv3.increment.nc"
+849a590,591
+> ##  res_latlon_dynamics = $res_latlon_dynamics    ###DA
+> ##  read_increment = $read_increment              ###DA
+857d598
+<   $external_ic_nml
+859a601,602
+> ##  ntoz        = ${ntoz:-2}
+> ##  ntcw        = ${ntcw:-3}
+862,863c605
+<   h2o_phys     = ${h2o_phys:-".true."}
+<   ldiag3d      = ${ldiag3d:-".false."}
+---
+>   ldiag3d     = ${ldiag3d:-.false.}
+864a607
+>   nst_anl     = ${nst_anl:-".true."}
+868c611
+<   imp_physics  = ${imp_physics:-"99"}
+---
+>   imp_physics = 11
+870,892c613,635
+<   fhswr        = ${FHSWR:-"3600."}
+<   fhlwr        = ${FHLWR:-"3600."}
+<   ialb         = $IALB
+<   iems         = $IEMS
+<   iaer         = $IAER
+<   ico2         = $ICO2
+<   lgocart      = ${lgocart:-".true."}
+<   isubc_sw     = ${isubc_sw:-"2"}
+<   isubc_lw     = ${isubc_lw:-"2"}
+<   isol         = $ISOL
+<   lwhtr        = ${lwhtr:-".true."}
+<   swhtr        = ${swhtr:-".true."}
+<   cnvgwd       = ${cnvgwd:-".true."}
+<   shal_cnv     = ${shal_cnv:-".true."}
+<   cal_pre      = ${cal_pre:-".true."}
+<   redrag       = ${redrag:-".true."}
+<   dspheat      = ${dspheat:-".true."}
+<   hybedmf      = ${hybedmf:-".true."}
+<   random_clds  = ${random_clds:-".true."}
+<   trans_trac   = ${trans_trac:-".true."}
+<   cnvcld       = ${cnvcld:-".true."}
+<   imfshalcnv   = ${imfshalcnv:-"2"}
+<   imfdeepcnv   = ${imfdeepcnv:-"2"}
+---
+>   fhswr       = ${fhswr:-3600.}
+>   fhlwr       = ${fhlwr:-3600.}
+>   ialb        = ${ialb:-1}
+>   iems        = ${iems:-1}
+>   IAER        = ${iaer:-111}
+>   ico2        = ${ico2:-2}
+>   isubc_sw    = ${isubc_sw:-2}
+>   isubc_lw    = ${isubc_lw:-2}
+>   isol        = ${isol:-2}
+>   lwhtr       = ${lwhtr:-.true.}
+>   swhtr       = ${swhtr:-.true.}
+>   cnvgwd      = ${cnvgwd:-.true.}
+>   shal_cnv    = ${shal_cnv:-.true.}
+>   cal_pre     = ${cal_pre:-.true.}
+>   redrag      = ${redrag:-.true.}
+>   dspheat     = ${dspheat:-.true.}
+>   hybedmf     = ${hybedmf:-.true.}
+>   satmedmf    = .false.
+>   random_clds = ${random_clds:-.true.}
+>   trans_trac  = .true.
+>   cnvcld      = ${cnvcld:-.true.}
+>   imfshalcnv  = ${imfshalcnv:-2}
+>   imfdeepcnv  = ${imfdeepcnv:-2}
+894,896c637,639
+<   prslrd0      = ${prslrd0:-"0."}
+<   ivegsrc      = ${ivegsrc:-"1"}
+<   isot         = ${isot:-"1"}
+---
+>   prslrd0     = ${prslrd0:-0.}
+>   ivegsrc     = ${ivegsrc:-1}
+>   isot        = ${isot:-1}
+899c642,643
+<   cplflx       = .false.
+---
+>   lgocart     = ${lgocart:-".true."}
+>   cplflx      = ${cplflx:-.false.}
+901c645,648
+<   nst_anl      = $nst_anl
+---
+>   ras         = ${ras:-".false"}
+>   iau_delthrs    = 6 
+>   iaufhrs        = 30
+>   iau_inc_files  = ' '
+906c653
+<   fscav_aero   = "sulf:0.3","bc1:0.1","bc2:0.2","oc1:0.1","oc2:0.2",
+---
+>   fscav_aero   = "sulf:0.2", "bc1:0.0","bc2:0.4","oc1:0.0","oc2:0.4",
+962d708
+<   $interpolator_nml
+987,995c733,739
+<   LDEBUG = ${LDEBUG:-".false."}
+<   FSMCL(2) = ${FSMCL2:-99999}
+<   FSMCL(3) = ${FSMCL3:-99999}
+<   FSMCL(4) = ${FSMCL4:-99999}
+<   FTSFS = ${FTSFS:-90}
+<   FAISL = ${FAISL:-99999}
+<   FAISS = ${FAISS:-99999}
+<   FSNOL = ${FSNOL:-99999}
+<   FSNOS = ${FSNOS:-99999}
+---
+>   LDEBUG = .false.
+>   FSMCL(2) = 99999
+>   FSMCL(3) = 99999
+>   FSMCL(4) = 99999
+>   FTSFS = 90
+>   FAISS = 99999
+>   FSNOL = 99999
+997d740
+<   FSICS = 99999
+998a742
+>   FAISL = 99999
+1005c749,750
+<   $namsfc_nml
+---
+>   FSNOS = 99999
+>   FSICS = 99999
+1011d754
+<   cedsemi_inname  = "/ships19/aqda/lenzen/CEDS_2019/GEFS-RAQMS_emissions/emi_c192/"
+1018,1020c761
+<   plumerisefire_frq=30
+<   cedsairemis_frq=30
+<   cedsairemis_opt=1
+---
+>   plumerisefire_frq=60
+1024d763
+<   cedsairemis_opt=1
+1027c766
+<   aer_ra_feedback=2
+---
+>   aer_ra_feedback=0
+1032c771
+<   chem_in_opt=$CHEMIN
+---
+>   chem_in_opt=1
+1038,1039c777,778
+<   dust_alpha = 2.3
+<   dust_gamma = 1.0
+---
+>   dust_alpha=2.0
+>   dust_gamma=1.8
+1049,1051c788,789
+<   plumerisefire_frq=30
+<   cedsairemis_frq=30
+<   PLUMERISE_flag=$EMITYPE
+---
+>   plumerise_flag=2
+>   plumerisefire_frq=60
+1054d791
+<   seas_emis_scale=1.,1.,1.,1.,1.
+1056c793
+<   gfdlmp_onoff=$NTRACER
+---
+>   gfdlmp_onoff=1
+1059,1061c796,797
+<   emi_inname  = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}/$SMONTH"
+<   dust_inname = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}/fengsha/$SMONTH"
+<   cedsemi_inname  = "/ships19/aqda/lenzen/CEDS_2019/GEFS-RAQMS_emissions/emi_c192/"
+---
+>   emi_inname  = "/ships19/aqda/lenzen/GSDCHEM_input_data/emi_C192/$SMONTH/"
+>   dust_inname  = "/ships19/aqda/lenzen/GSDCHEM_input_data/emi_C192/fengsha/$SMONTH/"
+1064d799
+<   $chem_nml
+1065a801,807
+>  &MOM_input_nml
+>          output_directory = 'OUTPUT/',
+>          input_filename = 'n'
+>          restart_input_dir = 'INPUT/',
+>          restart_output_dir = 'RESTART/',
+>          parameter_filename = 'MOM_input',
+>                               'MOM_override' /
+1067,1069c809
+< &fv_grid_nml
+<   grid_file = 'INPUT/grid_spec.nc'
+<   $fv_grid_nml
+---
+>  &ocean_domains_nml
+1071,1077d810
+< EOF
+< 
+< # Add namelist for stochastic physics options
+< echo "" >> input.nml
+< if [ $MEMBER -gt 0 ]; then
+< 
+<     cat >> input.nml << EOF
+1079,1116c812,831
+<   ntrunc = $JCAP_STP
+<   lon_s = $LONB_STP
+<   lat_s = $LATB_STP
+< EOF
+< 
+<   if [ $DO_SKEB = "YES" ]; then
+<     cat >> input.nml << EOF
+<   skeb = $SKEB
+<   iseed_skeb = ${ISEED_SKEB:-$ISEED}
+<   skeb_tau = ${SKEB_TAU:-"-999."}
+<   skeb_lscale = ${SKEB_LSCALE:-"-999."}
+<   skebnorm = ${SKEBNORM:-"1"}
+< EOF
+<   fi
+< 
+<   if [ $DO_SHUM = "YES" ]; then
+<     cat >> input.nml << EOF
+<   shum = $SHUM
+<   iseed_shum = ${ISEED_SHUM:-$ISEED}
+<   shum_tau = ${SHUM_TAU:-"-999."}
+<   shum_lscale = ${SHUM_LSCALE:-"-999."}
+< EOF
+<   fi
+< 
+<   if [ $DO_SPPT = "YES" ]; then
+<     cat >> input.nml << EOF
+<   sppt = $SPPT
+<   iseed_sppt = ${ISEED_SPPT:-$ISEED}
+<   sppt_tau = ${SPPT_TAU:-"-999."}
+<   sppt_lscale = ${SPPT_LSCALE:-"-999."}
+<   sppt_logit = ${SPPT_LOGIT:-".true."}
+<   sppt_sfclimit = ${SPPT_SFCLIMIT:-".true."}
+<   use_zmtnblck = ${use_zmtnblck:-".true."}
+< EOF
+<   fi
+< 
+<   cat >> input.nml << EOF
+<   $nam_stochy_nml
+---
+>   lon_s=768,
+>   lat_s=384, 
+>   ntrunc=382,
+>   SKEBNORM=1,
+>   SKEB_NPASS=30,
+>   SKEB_VDOF=5,
+>   SKEB=-999,
+>   SKEB_TAU=2.16E4,
+>   SKEB_LSCALE=1000.E3,
+>   SHUM=-999,
+>   SHUM_TAU=21600,
+>   SHUM_LSCALE=500000,
+>   SPPT=-999,
+>   SPPT_TAU=21600,
+>   SPPT_LSCALE=500000,
+>   SPPT_LOGIT=.TRUE.,
+>   SPPT_SFCLIMIT=.TRUE.,
+>   ISEED_SHUM=1,
+>   ISEED_SKEB=2,
+>   ISEED_SPPT=3,
+1118,1119d832
+< EOF
+< 
+1121d833
+<     cat >> input.nml << EOF
+1123c835,845
+<   $nam_sfcperts_nml
+---
+>   NSFCPERT=6,
+>   PERTZ0=-999.,
+>   PERTSHC=-999.,
+>   PERTZT=-999.,
+>   PERTLAI=-999.,
+>   PERTVEGF=-999.,
+>   PERTALB=-999.,
+>   SFC_TAU=21600,
+>   SFC_LSCALE=500000,
+>   ISEED_SFC=0,
+>   SPPT_LAND=.FALSE.,
+1127,1136d848
+< else
+< 
+<   cat >> input.nml << EOF
+< &nam_stochy
+< /
+< &nam_sfcperts
+< /
+< EOF
+< 
+< fi
+1140,1174d851
+< # make symbolic links to write forecast files directly in memdir
+< cd $DATA
+< if [ $QUILTING = ".true." -a $OUTPUT_GRID = "gaussian_grid" ]; then
+<   fhr=$FHMIN
+<   while [ $fhr -le $FHMAX ]; do
+<     FH3=$(printf %03i $fhr)
+<     atmi=atmf${FH3}.$OUTPUT_FILE
+<     sfci=sfcf${FH3}.$OUTPUT_FILE
+<     logi=logf${FH3}
+<     atmo=$memdir/${CDUMP}.t${cyc}z.atmf${FH3}.$OUTPUT_FILE
+<     sfco=$memdir/${CDUMP}.t${cyc}z.sfcf${FH3}.$OUTPUT_FILE
+<     logo=$memdir/${CDUMP}.t${cyc}z.logf${FH3}.$OUTPUT_FILE
+<     eval $NLN $atmo $atmi
+<     eval $NLN $sfco $sfci
+<     eval $NLN $logo $logi
+<     FHINC=$FHOUT
+<     if [ $FHMAX_HF -gt 0 -a $FHOUT_HF -gt 0 -a $fhr -lt $FHMAX_HF ]; then
+<       FHINC=$FHOUT_HF
+<     fi
+<     fhr=$((fhr+FHINC))
+<   done
+< else
+<   for n in $(seq 1 $ntiles); do
+<     eval $NLN nggps2d.tile${n}.nc       $memdir/nggps2d.tile${n}.nc
+<     eval $NLN nggps3d.tile${n}.nc       $memdir/nggps3d.tile${n}.nc
+<     eval $NLN grid_spec.tile${n}.nc     $memdir/grid_spec.tile${n}.nc
+<     eval $NLN atmos_static.tile${n}.nc  $memdir/atmos_static.tile${n}.nc
+<     eval $NLN atmos_4xdaily.tile${n}.nc $memdir/atmos_4xdaily.tile${n}.nc
+<   done
+< fi
+< 
+< # Copy namelist file
+< $NCP input.nml $memdir
+< 
+< #------------------------------------------------------------------
+1176c853,854
+< 
+---
+> cd $DATA
+> #export I_MPI_DEBUG=6
+1178,1182c856,871
+< export OMP_NUM_THREADS=$NTHREADS_FV3
+< export MKL_NUM_THREADS=0
+< /bin/rm -r RUNDONE.$CDATE
+< #$APRUN_FV3 /bin/env KMP_AFFINITY=scatter KMP_NUM_THREADS=1 $DATA/$FCSTEXEC 1>&1 2>&2
+< $APRUN_FV3  $DATA/$FCSTEXEC >$BASE_OUT/OUTDIR/outraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.T$nth_f.$FHMAX 2> $BASE_OUT/OUTDIR/errraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.t$nth_f.$FHMAX
+---
+> #$FCST_LAUNCHER ./$FCSTEXEC 1>&1 2>&2
+> #ajl inside
+> echo ajl do exec >/home/lenzen/outdoexec
+> module list > /home/lenzen/module-list-before-fcst_launcher.txt # JS
+> 
+> #echo "$FCST_LAUNCHER ./$FCSTEXEC > $BASE_OUT/lenzen/outraqms.both.intel.submit.$PTYPE.$MODE.n$NTASKS.088.T$nth_f 2> $BASE_OUT/lenzen/errraqms.both.intel.submit.$PTYPE.$MODE.n$NTASKS.088.t$nth_f" # JS
+> 
+> #unset I_MPI_PMI_LIBRARY
+> env >$HOME/outenvrun
+> ulimit -a >$HOME/outulimit.submit2
+> echo LD_LIBRARY_PATH $LD_LIBRARY_PATH >& $HOME/outldlib
+> echo LIBRARY_PATH $LIBRARY_PATH >& $HOME/outlib
+> echo $LD_LIBRARY_PATH | grep netcdf >& $HOME/outnetcdf
+> #echo FCST_LAUNCHER $FCST_LAUNCHER >& $HOME/outlaunch
+> $FCST_LAUNCHER ./$FCSTEXEC > $BASE_OUT/OUTDIR/outraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.T$nth_f.$FHMAX 2> $BASE_OUT/OUTDIR/errraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.t$nth_f.$FHMAX
+> 
+1185,1191c874
+< if [ -s RUNDONE.$CDATE ] ; then
+<   echo RUNDONE so continue $CDATE
+< else
+<   echo RUNDONE not there see if error $ERR
+< 
+< $ERRSCRIPT || exit $err
+< fi
+---
+> $ERRSCRIPT || exit 2
+1195,1226c878,883
+<   # Copy model restart files
+<   cd $DATA/RESTART
+<   mkdir -p $memdir/RESTART
+< 
+<   # Only save restarts at single time in RESTART directory
+<   # Either at restart_interval or at end of the forecast
+<   if [ $restart_interval -eq 0 -o $restart_interval -eq $FHMAX ]; then
+< 
+<     # Add time-stamp to restart files at FHMAX
+<     RDATE=$($NDATE +$FHMAX $CDATE)
+<     rPDY=$(echo $RDATE | cut -c1-8)
+<     rcyc=$(echo $RDATE | cut -c9-10)
+<     for file in $(ls * | grep -v 0000); do
+<       $NMV $file ${rPDY}.${rcyc}0000.$file
+<       $NCP ${rPDY}.${rcyc}0000.$file $memdir/RESTART/${rPDY}.${rcyc}0000.$file #lzhang
+<     done
+< 
+<     RSTDIR_TMP=${RSTDIR:-$ROTDIR}/${CDUMP}.${PDY}/${cyc}/RERUN_RESTART #lzhang
+<     #if [ ! -d $RSTDIR_TMP ]; then mkdir -p $RSTDIR_TMP ; fi #lzhang
+<     $NLN $memdir/RESTART  $RSTDIR_TMP
+< 
+<   else
+< 
+<     # time-stamp exists at restart_interval time, just copy
+<     #lzhang, copy all the restart file
+<     for ns in $(seq 1 $FHMAX); do  
+<     RDATE=$($NDATE +$ns $CDATE)
+<     #RDATE=$($NDATE +$restart_interval $CDATE)
+<     rPDY=$(echo $RDATE | cut -c1-8)
+<     rcyc=$(echo $RDATE | cut -c9-10)
+<     for file in ${rPDY}.${rcyc}0000.* ; do
+<       $NCP $file $memdir/RESTART/$file
+---
+>   # Copy model output files
+>   cd $DATA
+>   for n in `seq 1 $ntiles`; do
+>     for file in $DATA/*.tile${n}.nc; do
+> #      $NCP $file $MEMDIR/.
+>       mv $file $MEMDIR/.
+1229a887,906
+>   # Copy model restart files
+>   cd $DATA/RESTART
+>   if [ $restart_secs -gt 0 ]; then
+>     restart_hrs=`echo "$restart_secs / 3600" | bc`
+>     RDATE=`$NDATE +$restart_hrs $CDATE`
+>     ryyyymmdd=`echo $RDATE | cut -c1-8`
+>     rhh=`echo       $RDATE | cut -c9-10`
+>     RMEMDIR=$ROTDIR/${PREINP}.$ryyyymmdd/$rhh/$MEMCHAR
+>     mkdir -p $RMEMDIR/RESTART
+>     for file in ${ryyyymmdd}.${rhh}0000.* ; do
+>       file2=$(echo $(basename $file) | sed -e "s/${ryyyymmdd}.${rhh}0000.//g")
+> #      $NCP $file $RMEMDIR/RESTART/$file2
+>       mv $file $RMEMDIR/RESTART/$file2
+>     done
+>   else
+>     mkdir -p $MEMDIR/RESTART
+>     for file in * ; do
+> #      $NCP $file $MEMDIR/RESTART/$file
+>       mv $file $MEMDIR/RESTART/$file
+>     done
+1236c912
+< if [ $mkdata = "YES" ]; then rm -rf $DATA; fi
+---
+> if [ ${KEEPDATA:-YES} = NO ]; then rm -rf $DATA; fi
+1240c916
+< if [ $VERBOSE = "YES" ] ; then
+---
+> if [ "$VERBOSE" = "YES" ] ; then
+1243c919
+< exit 0
+---
+> exit $err

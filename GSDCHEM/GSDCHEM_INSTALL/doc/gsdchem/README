@@ -1,0 +1,71 @@
+=====================================
+ ESRL/GSD GOCART component, v. 0.8.6
+=====================================
+
+How to build on Theia
+=====================
+
+This package is meant to be included in NEMS as a component coupled to FV3GFS.
+For the purpose of development, this software is currently linked to the coupled
+NEMS app FV3GFS-GSDCHEM.
+
+(a) To build within NEMS
+------------------------
+
+1. Type either:
+
+   NEMS/NEMSAppBuilder (legacy script)
+
+   Configuration options for this component can be added to the NEMS/NEMSAppBuilder
+   script inside function build_gsdchem(). 
+
+2. or, recently:
+
+   cd NEMS/
+   gmake -j8 app=coupledFV3_GSDCHEM build            (fully coupled system)
+   gmake -j8 app=coupledFV3_GSDCHEM build_GSDCHEM    (this component alone)
+
+   Configuration options can be found in NEMS/src/incmake/component_GSDCHEM.mk
+
+The full list of options can be retrieved
+by typing 
+
+  ./configure --help
+
+in GSDCHEM root directory.
+
+
+(b) To build as a static library
+--------------------------------
+
+This software can also be independently built as a static library. Please follow
+the steps below:
+
+1. cd GSDCHEM
+2. module load intel impi netcdf esmf
+3. ./configure
+4. gmake
+
+If successful, those steps will produce the src/chem/libgsdchem.a static library file.
+
+NOTES:
+a. The module esmf will set the ESMFMKFILE environment variable to
+   the location of ESMF Makefile fragment with build settings for your ESMF installation.
+
+   If ESMFMKFILE was not defined, you may provide the location of your ESMF Makefile
+   fragment to configure as:
+   ./configure --with-esmfmk=<path-to-esmf.mk>
+
+b. For Intel Fortran compilers, the configure option --enable-safe-fp is on by default
+   for both the Fortran and NUOPC versions.
+   This option enables safe-value floating-point optimization that will ensure that
+   single- and multiple-processor runs will produce identical results.
+   To disable this default option, please use:
+
+   ./configure --enable-safe-fp=no
+   or:
+   ./configure --disable-safe-fp
+
+c. Debug flags can be added by using:
+
+   ./configure --enable-debug

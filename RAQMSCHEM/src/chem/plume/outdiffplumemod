@@ -1,0 +1,563 @@
+1,7c1,12
+< module raqms_plume_mod
+< !  use raqmschem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
+< !  use raqmschem_const_mod,  only : g => grvity, cp, &
+< !                              r_d => rd, r_v => rv, p1000mb => p1000
+< !  use plume_data_mod,  only : nveg_agreg
+<   use raq_plume_zero_mod
+<   use raq_plume_scalar_mod
+---
+> module plume_rise_mod
+> 
+>   use chem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
+>   use chem_const_mod,  only : g => grvity, cp, &
+>                               r_d => rd, r_v => rv, p1000mb => p1000
+>   use chem_const_mod, only : mw_bc,mw_oc,avgro
+>   use chem_comm_mod,   only : chem_comm_abort
+>   use chem_tracers_mod
+> 
+>   use plume_data_mod,  only : nveg_agreg
+>   use plume_zero_mod
+>   use plume_scalar_mod
+14c19,20
+<   public :: raqms_plumerise_driver
+---
+>   public :: plumerise_driver
+> 
+16,43c22,75
+<   subroutine raqms_plumerise_driver(tk3d,rv3d,ws3d,u3d,v3d,p3d,ph3d,vgtyp, &
+<     num_plume_data,plume,ims,ime,jms,jme,nl )
+<     use chem_types_mod 
+<     use raqmschem_pmgrid_mod, only : iam,tile
+<     use raqmschem_const_mod, only : rd,rdgsdchem,grvityfms
+<     use raqmschem_const_mod, only : avgro,mw_co
+< !    use plume_data_mod, only : catb,flaming,msize,frp_mean
+<     use raq_plume_data_mod
+<     use raqmschemcomm_mod, only : bbco_d,emisco3d,ktopco,kbotco,ltb
+<     use raqmschemcomm_mod, only : colemisco,colemisco_chem,colemisoc
+<     use raqmschem_pmgrid_mod, only : iam,tile
+<     use raqmschemcomm_mod,only : plumerisefire_frq
+<     implicit none
+<     integer ims,ime,jms,jme,kms,kme,its,ite,jts,jte,kts,kte,nl
+<     integer i,j,k,ii
+<     integer, intent(in) :: num_plume_data
+<     real(CHEM_KIND_R8),intent(in),dimension(ims:ime,jms:jme) :: vgtyp
+<     integer,dimension(ims:ime,jms:jme) :: ivgtyp
+<     real(CHEM_KIND_R8), dimension(ims:ime,jms:jme,nl),intent(in) :: tk3d,ws3d,u3d,v3d,p3d
+<     real(CHEM_KIND_R8), dimension(ims:ime,jms:jme,nl+1),intent(in) :: ph3d
+<     real(CHEM_KIND_R4), dimension(ims:ime,jms:jme,nl),intent(in) :: rv3d
+<     real(CHEM_KIND_R4), dimension(ims:ime,jms:jme,nl)  :: rho,vvel
+<     real(CHEM_KIND_R4), dimension(nl) :: u_in,v_in,w_in,qv_in,pi_in,zmid,z_lev,rho_phyin,theta_in
+<     real(CHEM_KIND_R4), dimension(ims:ime,jms:jme,nl+1) :: z_at_w
+<     real(chem_KIND_R4) :: dz,zk,rcp
+<     real(CHEM_KIND_R4) :: plume_frp(num_frp_plume),eburnout(nl,1)
+<     real(CHEM_KIND_R4), dimension(ims:ime,jms:jme,num_plume_data) :: plume
+<     real(CHEM_KIND_R4), parameter :: frp2plume          = 1.e+06_CHEM_KIND_R4  !  FRP-to-plume conversion factor
+---
+> 
+>   subroutine plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in,          &
+>              ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
+>              firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr,            &
+>              chem_opt,burn_opt,t_phy,q_vap,                                      &
+>              rho_phy,vvel,u_phy,v_phy,p_phy,                                     &
+>              z_at_w,scale_fire_emiss,plume_frp,plumerise_flag,                   &
+>              ids,ide, jds,jde, kds,kde,                                          &
+>              ims,ime, jms,jme, kms,kme,                                          &
+>              its,ite, jts,jte, kts,kte                                         )
+> 
+>    IMPLICIT NONE
+> 
+>    INTEGER,      INTENT(IN   ) :: ktau,num_chem,num_ebu,               &
+>                                   num_ebu_in,plumerise_flag,           &
+>                                   ids,ide, jds,jde, kds,kde,           &
+>                                   ims,ime, jms,jme, kms,kme,           &
+>                                   its,ite, jts,jte, kts,kte
+>    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_ebu ),              &
+>          INTENT(INOUT ) ::                                   ebu
+>    REAL, DIMENSION( ims:ime, jms:jme, num_ebu_in ),                    &
+>          INTENT(INOUT ) ::                                   ebu_in
+>    REAL, DIMENSION( ims:ime, jms:jme, num_frp_plume ),                 &
+>          INTENT(INOUT ) ::                                   plume_frp
+>    REAL, DIMENSION( ims:ime, jms:jme ),                                &
+>          INTENT(IN ) ::                                                &
+>            mean_fct_agtf,mean_fct_agef,                                &
+>            mean_fct_agsv,mean_fct_aggr,firesize_agtf,firesize_agef,    &
+>            firesize_agsv,firesize_aggr
+> 
+> !
+> !
+> !
+>    REAL, DIMENSION( ims:ime , kms:kme , jms:jme ),                     &
+>          INTENT(IN   ) ::                                              &
+>                                                       t_phy,           &
+>                  z_at_w,vvel,u_phy,v_phy,rho_phy,p_phy,q_vap
+>    REAL, INTENT(IN   ) ::                             dtstep
+> 
+>    LOGICAL,      INTENT(IN   ) :: scale_fire_emiss
+>    character (len=*), intent(in) :: chem_opt,burn_opt
+> 
+> !
+> ! Local variables...
+> !
+>       INTEGER :: nv, i, j, k, ksub, nspecies
+> 
+> 
+> !     integer, parameter :: nspecies=num_ebu
+>       real, dimension (num_ebu) :: eburn_in 
+>       real, dimension (kte,num_ebu) :: eburn_out
+>       real, dimension (kte) :: u_in ,v_in ,w_in ,theta_in ,pi_in  &
+>                               ,rho_phyin ,qv_in ,zmid    &
+>                               ,z_lev
+45,60c77,79
+<     real(chem_kind_r4) :: colemiscoadd(ime-ims+1,jms:jme),colemiscodiff(ime-ims+1,jms:jme)
+<     integer,parameter :: plumerise_flag=2
+<     integer iat,jat,imax(2)
+<     common/ij/iat,jat
+<     rcp=rdgsdchem/cp
+< !    write(6,*)'rcp',rcp,'rd',rd,'cp',cp,'p100',p1000mb
+< !    write(6,*)'top raqms_plumerise',ims,ime,jms,jme,nl
+< !    call flush(6)
+<     rho(:,:,:)=p3d(:,:,:)/(RDgsdchem*tk3d(:,:,:)*(1.+.608*rv3d(:,:,:)))
+< !   added g 3/31/2022
+<     vvel(:,:,:)=-ws3d(:,:,:)/rho(:,:,:)/grvityfms
+<     if(.not.allocated(emisco3d))then
+<       allocate(emisco3d(ime-ims+1,jms:jme,nl))
+<     endif
+<     colemiscoadd=0.0
+<     if(.not.allocated(colemisco))then
+---
+>       real :: sum, ffirs, rcp,ratio,zk
+> !     real,save,dimension(its:ite,jts:jte) :: ffirs
+>       real,dimension(ims:ime,jms:jme) :: colemisbc,colemisoc
+62,73c81,88
+<       allocate(colemisco(ime-ims+1,jms:jme),colemisco_chem(ime-ims+1,jms:jme))
+<       allocate(colemisoc(ime-ims+1,jms:jme))
+<       colemisoc=0.0
+<       colemisco=0.0
+<       colemisco_chem=0.0
+<     else
+<       colemiscodiff=colemisco_chem-colemisco
+< !      write(300+iam,*)'colemisco_chem',maxval(colemisco_chem),minval(colemisco_chem)
+< !      write(300+iam,*)'diff colemisco',maxval(colemiscodiff),minval(colemiscodiff)
+< !      write(300+iam,*)'colemisoc',maxval(colemisoc),minval(colemisoc)
+<       imax= maxloc(colemisoc)
+< !      write(300+iam,*)'imax oc',imax
+---
+>       integer mype
+>       common/at/mype
+>       integer iat,jat
+>       common/ij/iat,jat
+>       ffirs=0.
+>       rcp=r_d/cp
+>       nspecies=num_ebu
+>       colemisbc=0.0
+75,76c90,95
+<       colemisco=0.0
+<       colemisco_chem=0.0
+---
+> 
+>       if( scale_fire_emiss ) then
+>         if( chem_opt /= 'MOZCART_KPP' .and. &
+>             chem_opt /= 'MOZART_KPP' .and. &
+>             chem_opt /= 'MOZART_MOSAIC_4BIN_VBS0_KPP' ) then
+>           call chem_comm_abort(msg="Fire emission scaling only supported for MOZART_KPP, MOZCART_KPP chem chem_opts")
+78,79d96
+<     if(.not.allocated(ktopco))then
+<       allocate(ktopco(ime-ims+1,jms:jme),kbotco(ime-ims+1,jms:jme))
+81,83d97
+<     emisco3d=0.0
+<     ktopco=0
+<     kbotco=0
+84a99,198
+>        if ( burn_opt == 'BIOMASSB' ) then
+>          do j=jts,jte
+>             do i=its,ite
+>             if ( chem_opt == 'GOCARTRACM'.or.chem_opt == 'RACMSOAVBS' ) then
+>                ebu(i,kts,j,p_ebu_no)=ebu_in(i,j,p_ebu_in_no)
+>                ebu(i,kts,j,p_ebu_no2)=ebu_in(i,j,p_ebu_in_no2)
+>                ebu(i,kts,j,p_ebu_co)=ebu_in(i,j,p_ebu_in_co)
+>                ebu(i,kts,j,p_ebu_co2)=ebu_in(i,j,p_ebu_in_co2)
+>                ebu(i,kts,j,p_ebu_eth)=ebu_in(i,j,p_ebu_in_eth)
+>                ebu(i,kts,j,p_ebu_hc3)=ebu_in(i,j,p_ebu_in_hc3)
+>                ebu(i,kts,j,p_ebu_hc5)=ebu_in(i,j,p_ebu_in_hc5)
+>                ebu(i,kts,j,p_ebu_hc8)=ebu_in(i,j,p_ebu_in_hc8)
+>               ! ebu(i,kts,j,p_ebu_ete)=ebu_in(i,j,p_ebu_in_ete)
+>                ebu(i,kts,j,p_ebu_olt)=ebu_in(i,j,p_ebu_in_olt)
+>                ebu(i,kts,j,p_ebu_oli)=ebu_in(i,j,p_ebu_in_oli)
+>               ! ebu(i,kts,j,p_ebu_dien)=ebu_in(i,j,p_ebu_in_dien)
+>                ebu(i,kts,j,p_ebu_iso)=ebu_in(i,j,p_ebu_in_iso)
+>               ! ebu(i,kts,j,p_ebu_api)=ebu_in(i,j,p_ebu_in_api)
+>               ! ebu(i,kts,j,p_ebu_lim)=ebu_in(i,j,p_ebu_in_lim)
+>                ebu(i,kts,j,p_ebu_tol)=ebu_in(i,j,p_ebu_in_tol)
+>                ebu(i,kts,j,p_ebu_xyl)=ebu_in(i,j,p_ebu_in_xyl)
+>                ebu(i,kts,j,p_ebu_csl)=ebu_in(i,j,p_ebu_in_csl)
+>                ebu(i,kts,j,p_ebu_hcho)=ebu_in(i,j,p_ebu_in_hcho)
+>                ebu(i,kts,j,p_ebu_ald)=ebu_in(i,j,p_ebu_in_ald)
+>                ebu(i,kts,j,p_ebu_ket)=ebu_in(i,j,p_ebu_in_ket)
+>               ! ebu(i,kts,j,p_ebu_macr)=ebu_in(i,j,p_ebu_in_macr)
+>               !ebu(i,kts,j,p_ebu_ora1)=ebu_in(i,j,p_ebu_in_ora1)
+>                ebu(i,kts,j,p_ebu_ora2)=ebu_in(i,j,p_ebu_in_ora2)
+>                endif
+>                ebu(i,kts,j,p_ebu_dms)=ebu_in(i,j,p_ebu_in_dms)
+> !               ebu(i,kts,j,p_ebu_sulf)=ebu_in(i,j,p_ebu_in_sulf)
+>                ebu(i,kts,j,p_ebu_bc)=ebu_in(i,j,p_ebu_in_bc)
+>                ebu(i,kts,j,p_ebu_oc)=ebu_in(i,j,p_ebu_in_oc)
+>                ebu(i,kts,j,p_ebu_so2)=ebu_in(i,j,p_ebu_in_so2)
+>                ebu(i,kts,j,p_ebu_pm25)=ebu_in(i,j,p_ebu_in_pm25)
+>                ebu(i,kts,j,p_ebu_pm10)=ebu_in(i,j,p_ebu_in_pm10)
+>             enddo
+>          enddo
+>        elseif ( burn_opt == 'BIOMASSB_MOZC' .or. &
+>                 burn_opt == 'BIOMASSB_MOZ' ) then
+>          do j=jts,jte
+>             do i=its,ite
+>                ebu(i,kts,j,p_ebu_no)=ebu_in(i,j,p_ebu_in_no)
+>                ebu(i,kts,j,p_ebu_co)=ebu_in(i,j,p_ebu_in_co)
+>                ebu(i,kts,j,p_ebu_bigalk) = ebu_in(i,j,p_ebu_in_bigalk)
+>                ebu(i,kts,j,p_ebu_bigene) = ebu_in(i,j,p_ebu_in_bigene)
+>                ebu(i,kts,j,p_ebu_c2h4) = ebu_in(i,j,p_ebu_in_c2h4)
+>                ebu(i,kts,j,p_ebu_c2h5oh) = ebu_in(i,j,p_ebu_in_c2h5oh)
+>                ebu(i,kts,j,p_ebu_c2h6) = ebu_in(i,j,p_ebu_in_c2h6)
+>                ebu(i,kts,j,p_ebu_c3h6) = ebu_in(i,j,p_ebu_in_c3h6)
+>                ebu(i,kts,j,p_ebu_c3h8) = ebu_in(i,j,p_ebu_in_c3h8)
+>                ebu(i,kts,j,p_ebu_ch2o) = ebu_in(i,j,p_ebu_in_ch2o)
+>                ebu(i,kts,j,p_ebu_ch3cho) = ebu_in(i,j,p_ebu_in_ch3cho)
+>                ebu(i,kts,j,p_ebu_ch3coch3) = ebu_in(i,j,p_ebu_in_ch3coch3)
+>                ebu(i,kts,j,p_ebu_ch3oh) = ebu_in(i,j,p_ebu_in_ch3oh)
+>                ebu(i,kts,j,p_ebu_mek) = ebu_in(i,j,p_ebu_in_mek)
+>                ebu(i,kts,j,p_ebu_so2) = ebu_in(i,j,p_ebu_in_so2)
+>                ebu(i,kts,j,p_ebu_toluene) = ebu_in(i,j,p_ebu_in_toluene)
+>                ebu(i,kts,j,p_ebu_nh3) = ebu_in(i,j,p_ebu_in_nh3)
+>                ebu(i,kts,j,p_ebu_no2)=ebu_in(i,j,p_ebu_in_no2)
+>                ebu(i,kts,j,p_ebu_open) = ebu_in(i,j,p_ebu_in_open)
+>                ebu(i,kts,j,p_ebu_c10h16) = ebu_in(i,j,p_ebu_in_c10h16)
+>                ebu(i,kts,j,p_ebu_mgly) = ebu_in(i,j,p_ebu_in_mgly)
+>                ebu(i,kts,j,p_ebu_ch3cooh) = ebu_in(i,j,p_ebu_in_ch3cooh)
+>                ebu(i,kts,j,p_ebu_cres) = ebu_in(i,j,p_ebu_in_cres)
+>                ebu(i,kts,j,p_ebu_glyald) = ebu_in(i,j,p_ebu_in_glyald)
+>                ebu(i,kts,j,p_ebu_gly)=ebu_in(i,j,p_ebu_in_gly)
+>                ebu(i,kts,j,p_ebu_acetol) = ebu_in(i,j,p_ebu_in_acetol)
+>                ebu(i,kts,j,p_ebu_isop) = ebu_in(i,j,p_ebu_in_isop)
+>                ebu(i,kts,j,p_ebu_macr) = ebu_in(i,j,p_ebu_in_macr)
+>                ebu(i,kts,j,p_ebu_mvk)=ebu_in(i,j,p_ebu_in_mvk)
+>             enddo
+>          enddo
+>          if( burn_opt == 'BIOMASSB_MOZC' ) then
+>            do j=jts,jte
+>              ebu(its:ite,kts,j,p_ebu_pm10) = ebu_in(its:ite,j,p_ebu_in_pm10)
+>              ebu(its:ite,kts,j,p_ebu_pm25) = ebu_in(its:ite,j,p_ebu_in_pm25)
+>              ebu(its:ite,kts,j,p_ebu_oc) = ebu_in(its:ite,j,p_ebu_in_oc)
+>              ebu(its:ite,kts,j,p_ebu_bc) = ebu_in(its:ite,j,p_ebu_in_bc)
+>            enddo
+>          endif
+>        elseif ( burn_opt == 'BIOMASSB_GHG' ) then
+>          do j=jts,jte
+>             do i=its,ite
+>                ebu(i,kts,j,p_ebu_co)  = ebu_in(i,j,p_ebu_in_co)
+>                ebu(i,kts,j,p_ebu_co2) = ebu_in(i,j,p_ebu_in_co2)
+>                ebu(i,kts,j,p_ebu_ch4) = ebu_in(i,j,p_ebu_in_ch4)
+>             enddo
+>           enddo
+>        endif
+> !
+>        do nv=1,num_ebu
+>           do j=jts,jte
+>             do k=kts+1,kte
+>                do i=its,ite
+>                  ebu(i,k,j,nv)=0.
+>                enddo
+>             enddo
+>           enddo
+>        enddo
+86,106c200,226
+<     do j=jms,jme
+<       do i=ims,ime
+<         ii=i-ims+1
+< !        if(i==145.and.j==73)then
+< !          write(500+iam,*)'p_phy',p3d(i,j,1),'t',tk3d(i,j,1)
+< !          write(500+iam,*)'ws3d',ws3d(i,j,1),'rho',rho(i,j,1),'vvel',vvel(i,j,1)
+< !        endif
+<         if(bbco_d(ii,j)==0.0)cycle
+<         u_in=u3d(i,j,:)
+<         v_in=v3d(i,j,:)
+<         w_in=vvel(i,j,:)
+<         qv_in=rv3d(i,j,:)
+<         pi_in=cp*(p3d(i,j,:)/p1000mb)**rcp
+<         z_at_w(i,j,1)=max(0.,ph3d(i,j,1)/g)
+<         do k=1,nl
+<           dz=abs(ph3d(i,j,k+1)-ph3d(i,j,k))/g
+<           z_at_w(i,j,k+1)=z_at_w(i,j,k)+dz
+< !        if(i==145.and.j==73)then
+< !           write(500+iam,*)'ph13d',k,ph3d(i,j,k:k+1),'g',g
+< !           write(500+iam,*)'dz',dz,k,'z_at_w',z_at_w(i,j,k:k+1)
+< !        endif
+---
+>        do j=jts,jte
+>           do i=its,ite
+>             select case (plumerise_flag)
+>               case (FIRE_OPT_MODIS)
+>                 sum=mean_fct_agtf(i,j)+mean_fct_agef(i,j)+mean_fct_agsv(i,j)    &
+>                         +mean_fct_aggr(i,j)
+>                 if(sum.lt.1.e-6)Cycle
+>     !           ffirs=ffirs+1
+>                 sum=firesize_agtf(i,j)+firesize_agef(i,j)+firesize_agsv(i,j)    &
+>                         +firesize_aggr(i,j)
+>                 if(sum.lt.1.e-6)Cycle
+>                 eburn_out=0.
+>                 mean_fct(1)=mean_fct_agtf(i,j)
+>                 mean_fct(2)=mean_fct_agef(i,j)
+>                 mean_fct(3)=mean_fct_agsv(i,j)
+>                 mean_fct(4)=mean_fct_aggr(i,j)
+>                 firesize(1)=firesize_agtf(i,j)
+>                 firesize(2)=firesize_agef(i,j)
+>                 firesize(3)=firesize_agsv(i,j)
+>                 firesize(4)=firesize_aggr(i,j)
+>               case (FIRE_OPT_GBBEPx)
+>                 if (plume_frp(i,j,p_frp_mean) < 1.e-06) cycle
+>               case default
+>                 ! -- no further option available
+>             end select
+>             do nv=1,num_ebu
+>             eburn_in(nv)=ebu(i,kts,j,nv)
+108,117c228,240
+<         do k=1,nl
+<           zk=.5*(z_at_w(i,j,k+1)+z_at_w(i,j,k))
+<           zmid(k)=zk-z_at_w(i,j,1)
+<           z_lev(k)=z_at_w(i,j,k)-z_at_w(i,j,1)
+< !          write(300+iam,*)k,'p3d',p3d(i,j,k),'z_lev',z_lev(k)
+< !          call flush(300+iam)
+<         end do
+<         rho_phyin=rho(i,j,:)
+<         theta_in=tk3d(i,j,:)/pi_in*cp
+<         ivgtyp(i,j)=nint(vgtyp(i,j))
+---
+>             if( maxval( eburn_in(:) ) == 0. ) cycle
+>             do k=kts,kte
+>               u_in(k)=u_phy(i,k,j)
+>               v_in(k)=v_phy(i,k,j)
+>               w_in(k)=vvel(i,k,j)
+>               qv_in(k)=q_vap(i,k,j)
+>               pi_in(k)=cp*(p_phy(i,k,j)/p1000mb)**rcp
+>               !zk=.5*(z_at_w(i,k+1,j)-z_at_w(i,k,j))
+>               zk=.5*(z_at_w(i,k+1,j)+z_at_w(i,k,j)) !lzhang
+>               zmid(k)=zk-z_at_w(i,kts,j)
+>               z_lev(k)=z_at_w(i,k,j)-z_at_w(i,kts,j)
+>               rho_phyin(k)=rho_phy(i,k,j)
+>               theta_in(k)=t_phy(i,k,j)/pi_in(k)*cp
+120,130c243,244
+< !         write(500+iam,*)'i',i,j,kind(rdgsdchem)
+< !              do k=1,nl
+< !              write(500+iam,*)k,'P',real(p3d(i,j,k),4),'cp',cp,'rcp',rcp
+< !              write(500+iam,*)k,'T',real(tk3d(i,j,k),4),'rd',rdgsdchem
+< !              write(500+iam,*)k,'u',u_in(k),v_in(k),'w',w_in(k),'qv',qv_in(k)
+< !              write(500+iam,*)k,'z_at_w',z_at_w(i,j,k),'rho',rho_phyin(k)
+< !              write(500+iam,*)k,'pi',pi_in(k),'z_lev',z_lev(k)
+< !              write(500+iam,*)k,'theta',theta_in(k)
+< !              write(500+iam,*)k,'zmid',zmid(k)
+< !              end do
+< !               write(500+iam,*)'ivg',ivgtyp(i,j)
+---
+> !              if(k==1)then
+> !              write(300+mype,*)'i',i,j
+132,139c246,252
+<         plume_frp(p_frp_flam_frac) = flaming(catb(ivgtyp(i,j)))
+<         plume_frp(p_frp_mean     ) = frp2plume * plume(i,j,1)
+<         plume_frp(p_frp_std      ) = 0.3_CHEM_KIND_R4   * frp2plume * plume(i,j,1)
+<         plume_frp(p_frp_mean_size) = msize(ivgtyp(i,j)) * frp2plume * plume(i,j,1)
+<         plume_frp(p_frp_std_size ) = 0.5_CHEM_KIND_R4 * plume_frp(p_frp_mean_size )
+< !        if(tile.eq.2.and.i.eq.83.and.j.eq.134)then
+< !          write(6,*)'plume1 ',plume(i,j,1),'ebrunout',eburnout(1,1),'ivg',ivgtyp(i,j)
+< !          write(6,*)'bbco_d',ii,j,bbco_d(ii,j)
+---
+> !              write(300+mype,*)k,'P',p_phy(i,k,j),'cp',cp,'rcp',rcp
+> !              write(300+mype,*)k,'T',t_phy(i,k,j),'rd',r_d
+> !              write(300+mype,*)k,'u',u_in(k),v_in(k),'w',w_in(k),'qv',qv_in(k)
+> !              write(300+mype,*)k,'z_at_w',z_at_w(i,k,j),'rho',rho_phyin(k)
+> !              write(300+mype,*)k,'pi',pi_in(k),'z_lev',z_lev(k)
+> !              write(300+mype,*)k,'theta',theta_in(k)
+> !              write(300+mype,*)k,'zmid',zmid(k)
+141c254,265
+<         if(plume(i,j,1)/=0.0)then
+---
+> !              write(6,*)k,'p',p_phy(i,k,j),'zatw',z_at_w(i,k,j)
+> !              call flush(6)
+>             enddo
+> !!$              pi_in(kte)=pi_in(kte-1)  !wig: These are no longer needed after changing definition
+> !!$              u_in(kte)=u_in(kte-1)    !     of kte in chem_driver (12-Oct-2007)
+> !!$              v_in(kte)=v_in(kte-1)
+> !!$              w_in(kte)=w_in(kte-1)
+> !!$              qv_in(kte)=qv_in(kte-1)
+> !!$              zmid(kte)=z(i,kte,j)-z_at_w(i,kts,j)
+> !!$              z_lev(kte)=z_at_w(i,kte,j)-z_at_w(i,kts,j)
+> !!$              rho_phyin(kte)=rho_phyin(kte-1)
+> !!$              theta_in(kte)=theta_in(kte-1)
+144,166c268,281
+< !          write(500+iam,*)'firesize',firesize,'mean_fct',mean_fct
+< !          write(500+iam,*)'plume_frp',plume_frp,plumerise_flag
+<           call plumerise(nl,firesize,mean_fct,1,bbco_d(ii,j),eburnout,u_in,v_in,w_in,theta_in,pi_in, &
+<           rho_phyin,qv_in,zmid,z_lev,plume_frp,plumerise_flag)
+<           if(eburnout(1,1)/=0.0)then
+<             emisco3d(ii,j,ltb(1))=eburnout(1,1)
+<             colemiscoadd(ii,j)=colemiscoadd(ii,j)+emisco3d(ii,j,ltb(1))
+< !            write(6,*)i,j,'bbco-d',bbco_d(ii,j),'eburnout(1,1)',eburnout(1,1),'diff',bbco_d(ii,j)-eburnout(1,1)
+<             do k=2,nl
+<               if(eburnout(k,1)/=0.0)then
+< !               ajl need to convert back to kg/m2 to pass to chem_driver like
+< !               gsdchem does 
+< !                emisco3d(ii,j,ltb(k))=eburnout(k,1)
+< !                if(k==2)then
+<                   !write(6,*)'error burn emis at k=2'
+< !                  call flush(6)
+< !                endif
+<                 emisco3d(ii,j,ltb(k))=eburnout(k,1)*(z_at_w(i,j,k+1)-z_at_w(i,j,k))
+<                 colemiscoadd(ii,j)=colemiscoadd(ii,j)+emisco3d(ii,j,ltb(k))
+< !                if(emisco3d(ii,j,ltb(k))<0.0)then
+< !                  write(6,*)'raq neg dz',(z_at_w(i,j,k+1)-z_at_w(i,j,k)),'eburnout',eburnout(k,1)
+< !                  write(6,*)i,j,'z_at_w',k+1,z_at_w(i,j,k+1),k,z_at_w(i,j,k)
+< !                endif
+---
+> !            write(300+mype,*)'firesize',firesize,'mean_fct',mean_fct
+> !            write(300+mype,*)'plume_frp',plume_frp(i,j,:),plumerise_flag
+> !           ajl Kg/m2 in Kg/m3 out
+>             call plumerise(kte,1,1,1,1,1,1,firesize,mean_fct  &
+>                     ,nspecies,eburn_in,eburn_out &
+>                     ,u_in ,v_in ,w_in ,theta_in ,pi_in  &
+>                     ,rho_phyin ,qv_in ,zmid    &
+>                     ,z_lev,plume_frp(i,j,:),plumerise_flag)
+> !            write(300+mype,*)'num_ebu',num_ebu
+>             do nv=1,num_ebu
+> !             convert back to Kg/m2 in a layer
+>               do k=kts+1,kte
+>                 ebu(i,k,j,nv)=eburn_out(k,nv)*(z_at_w(i,k+1,j)-z_at_w(i,k,j))
+>               enddo
+168,173c283,289
+< !                write(6,*)i,j,k,'emisco3d',emisco3d(ii,j,ltb(k)),'dz',z_at_w(i,k+1,j)-z_at_w(i,k,j)
+< !                write(500+iam,'("ratio",3i3,f10.6)')i,j,k,emisco3d(ii,j,ltb(k))/emisco3d(ii,j,ltb(1))
+<                 ktopco(ii,j)=ltb(k) ! make for raqms which has 1 at top for chem
+<                 if(kbotco(ii,j)==0)then
+<                   kbotco(ii,j)=ltb(k)
+<                 endif
+---
+>               if((nv==1.or.nv==2).and.ebu(i,kts,j,nv)/=0.0)then
+>                 do k=kts,kte
+>                   if(ebu(i,k,j,nv)/=0.0)then
+>                     if(nv==1)then
+>                       colemisbc(i,j)=colemisbc(i,j)+ebu(i,k,j,nv)
+>                     else
+>                       colemisoc(i,j)=colemisoc(i,j)+ebu(i,k,j,nv)
+175,176c291,293
+< !              if(tile.eq.2.and.i.eq.83.and.j.eq.134)then
+< !                write(6,*)'emisco3d',ii,j,ltb(k),eburnout(k,1),'ktopco',ktopco(ii,j)
+---
+> !                    write(300+mype,*)'ebu 1 ',i,j,'k',k,ebu(i,k,j,nv),'dz',z_at_w(i,k+1,j)-z_at_w(i,k,j)
+> !                    if(k/=kts)then
+>                     !write(300+mype,'("ratio",3i3,f10.6)')i,j,k,ebu(i,k,j,nv)/ebu(i,1,j,nv)
+178d294
+<             enddo
+179a296
+>                 end do
+181a299,315
+> 
+> has_total_emissions : &
+>             if( scale_fire_emiss ) then
+> is_mozcart : &
+>               if( (chem_opt == 'MOZCART_KPP' .and. &
+>                    burn_opt == 'BIOMASSB_MOZC') .or. &
+>                   (chem_opt == 'MOZART_KPP' .and. &
+>                    burn_opt == 'BIOMASSB_MOZ') .or. &
+>                   (chem_opt == 'MOZART_MOSAIC_4BIN_VBS0_KPP' .and. &
+>                    burn_opt == 'BIOMASSB_MOZC') ) then
+> !-------------------------------------------------------------------
+> ! we input total emissions instead of smoldering emissions:
+> ! ratio of smolderling to total
+> !-------------------------------------------------------------------
+>                 sum = 0.
+>                 do k = kts,kte
+>                   sum = sum + ebu(i,k,j,p_ebu_co)
+183,200c317,320
+< !   write(6,*)'z_at_w',kts,minval(z_at_w(:,kts,:))
+< !    write(6,*)'z_at_w kts+1',minval(z_at_w(:,kts+1,:)),maxval(z_at_w(:,kts+1,:))
+< !    write(6,*)'dz8w',minval(dz8w(:,kts,:)),maxval(dz8w(:,kts,:))
+< !   here convert Kg/m3/sec to molec/cm3/sec which chemdriver needs multiplied by
+< !   dz
+< !   here convert Kg/m2/sec to molec/cm3/sec which chemdriver needs
+< !   change per Brad 3/28/2022
+<     emisco3d=emisco3d*.1*avgro/mw_co ! make molec/ccm2 since per moles/km2/sec layer
+<     colemiscoadd=colemiscoadd*.1*avgro/mw_co
+<     colemisco=colemisco+colemiscoadd*60*plumerisefire_frq
+< !    colemisco=colemisco*.1*avgro/mw_co
+<     if(maxval(abs(colemisco))>1.e40)then
+<       write(300+iam,*)'inf colemsico'
+<         !ii=i-ims+1
+<       do j=jms,jme
+<       do ii=1,i-ims+1
+<         if(abs(colemisco(ii,j))>1.e40)then
+<           write(300+iam,*)'colemisco',ii,colemisco(ii,j)
+---
+>                 if( sum > 0. ) then             
+>                   ratio = ebu(i,kts,j,p_ebu_co)/sum
+>                 else
+>                   ratio = 0.
+201a322,352
+> 
+>                 do k = kts,kte
+>                   ebu(i,k,j,p_ebu_no) = ebu(i,k,j,p_ebu_no)*ratio
+>                   ebu(i,k,j,p_ebu_co) = ebu(i,k,j,p_ebu_co)*ratio
+>                   ebu(i,k,j,p_ebu_bigalk) = ebu(i,k,j,p_ebu_bigalk)*ratio
+>                   ebu(i,k,j,p_ebu_bigene) = ebu(i,k,j,p_ebu_bigene)*ratio
+>                   ebu(i,k,j,p_ebu_c2h4)   = ebu(i,k,j,p_ebu_c2h4)*ratio
+>                   ebu(i,k,j,p_ebu_c2h5oh) = ebu(i,k,j,p_ebu_c2h5oh)*ratio
+>                   ebu(i,k,j,p_ebu_c2h6) = ebu(i,k,j,p_ebu_c2h6)*ratio
+>                   ebu(i,k,j,p_ebu_c3h6) = ebu(i,k,j,p_ebu_c3h6)*ratio
+>                   ebu(i,k,j,p_ebu_c3h8) = ebu(i,k,j,p_ebu_c3h8)*ratio
+>                   ebu(i,k,j,p_ebu_ch2o) = ebu(i,k,j,p_ebu_ch2o)*ratio
+>                   ebu(i,k,j,p_ebu_ch3cho) = ebu(i,k,j,p_ebu_ch3cho)*ratio
+>                   ebu(i,k,j,p_ebu_ch3coch3) = ebu(i,k,j,p_ebu_ch3coch3)*ratio
+>                   ebu(i,k,j,p_ebu_ch3oh)    = ebu(i,k,j,p_ebu_ch3oh)*ratio
+>                   ebu(i,k,j,p_ebu_mek) = ebu(i,k,j,p_ebu_mek)*ratio
+>                   ebu(i,k,j,p_ebu_so2) = ebu(i,k,j,p_ebu_so2)*ratio
+>                   ebu(i,k,j,p_ebu_toluene) = ebu(i,k,j,p_ebu_toluene)*ratio
+>                   ebu(i,k,j,p_ebu_nh3) = ebu(i,k,j,p_ebu_nh3)*ratio
+>                   ebu(i,k,j,p_ebu_no2)  = ebu(i,k,j,p_ebu_no2)*ratio
+>                   ebu(i,k,j,p_ebu_open) = ebu(i,k,j,p_ebu_open)*ratio
+>                   ebu(i,k,j,p_ebu_c10h16) = ebu(i,k,j,p_ebu_c10h16)*ratio
+>                   ebu(i,k,j,p_ebu_mgly) = ebu(i,k,j,p_ebu_mgly)*ratio
+>                   ebu(i,k,j,p_ebu_ch3cooh) = ebu(i,k,j,p_ebu_ch3cooh)*ratio
+>                   ebu(i,k,j,p_ebu_cres) = ebu(i,k,j,p_ebu_cres)*ratio
+>                   ebu(i,k,j,p_ebu_glyald) = ebu(i,k,j,p_ebu_glyald)*ratio
+>                   ebu(i,k,j,p_ebu_gly) = ebu(i,k,j,p_ebu_gly)*ratio
+>                   ebu(i,k,j,p_ebu_acetol) = ebu(i,k,j,p_ebu_acetol)*ratio
+>                   ebu(i,k,j,p_ebu_isop) = ebu(i,k,j,p_ebu_isop)*ratio
+>                   ebu(i,k,j,p_ebu_macr) = ebu(i,k,j,p_ebu_macr)*ratio
+>                   ebu(i,k,j,p_ebu_mvk)  = ebu(i,k,j,p_ebu_mvk)*ratio
+202a354,360
+>                 if( chem_opt == 'MOZCART_KPP' .or. &
+>                     chem_opt == 'MOZART_MOSAIC_4BIN_VBS0_KPP' ) then
+>                   do k = kts,kte
+>                     ebu(i,k,j,p_ebu_pm10) = ebu(i,k,j,p_ebu_pm10)*ratio
+>                     ebu(i,k,j,p_ebu_pm25) = ebu(i,k,j,p_ebu_pm25)*ratio
+>                     ebu(i,k,j,p_ebu_oc)  = ebu(i,k,j,p_ebu_oc)*ratio
+>                     ebu(i,k,j,p_ebu_bc)  = ebu(i,k,j,p_ebu_bc)*ratio
+205,214c363,373
+< !    if(maxval(abs(colemisco))>0.0)then
+< !    write(300+iam,*)'colemisco hr',maxval(colemisco),minval(colemisco)
+< !    call flush(300+iam)
+< !  endif
+< !    write(6,*)'emisco3d',maxval(emisco3d),minval(emisco3d)
+< !    write(6,*)'avgro',avgro,'mw_co',mw_co
+<     call flush(6)
+<     return
+<   end subroutine raqms_plumerise_driver
+< end module raqms_plume_mod
+---
+>               end if is_mozcart
+>             end if has_total_emissions
+> 
+>           enddo
+>           enddo
+> !          write(6,*)'colemisbc',maxval(colemisbc),'oc',maxval(colemisoc)
+>           !write(300+mype,*)'gsdchem colemisbc',maxval(colemisbc),'oc',maxval(colemisoc),' *10**-9'
+> !          write(300+mype,*)'gsdchem colemisbc mol/cm2 ',maxval(colemisbc)*.1*1.e-9*avgro/mw_bc,'oc',maxval(colemisoc)*.1*1.e-9*avgro/mw_oc
+>   end subroutine plumerise_driver
+> 
+> end module plume_rise_mod

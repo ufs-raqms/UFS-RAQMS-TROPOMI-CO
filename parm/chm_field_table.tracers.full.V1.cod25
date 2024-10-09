@@ -1,0 +1,411 @@
+# added by FRE: sphum must be present in atmos
+# specific humidity for moist runs
+ "TRACER", "atmos_mod", "sphum"
+           "longname",     "specific humidity"
+           "units",        "kg/kg"
+       "profile_type", "fixed", "surface_value=3.e-6" /
+# prognostic cloud water mixing ratio
+ "TRACER", "atmos_mod", "liq_wat"
+           "longname",     "cloud water mixing ratio"
+           "units",        "kg/kg"
+       "profile_type", "fixed", "surface_value=1.e-6" /
+# prognostic ozone mixing ratio tracer
+ "TRACER", "atmos_mod", "o3mr"
+           "longname",     "ozone mixing ratio"
+           "units",        "kg/kg"
+       "profile_type", "fixed", "surface_value=7.5e-8" /
+# prognostic so2 mixing ratio tracer
+ "TRACER", "atmos_mod", "so2"
+           "longname",     "so2 mixing ratio"
+           "units",        "ppm"
+       "profile_type", "fixed", "surface_value=5.e-6" /
+# prognostic sulfate mixing ratio tracer
+ "TRACER", "atmos_mod", "sulf"
+           "longname",     "sulfate mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=3.e-6" /
+# prognostic DMS mixing ratio tracer
+ "TRACER", "atmos_mod", "DMS"
+           "longname",     "DMS mixing ratio"
+           "units",        "ppm"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic msa mixing ratio tracer
+ "TRACER", "atmos_mod", "msa"
+           "longname",     "msa mixing ratio"
+           "units",        "ppm"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic pp25 mixing ratio tracer
+ "TRACER", "atmos_mod", "pp25"
+           "longname",     "primary PM25 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e+0" /
+# prognostic bc1 mixing ratio tracer
+ "TRACER", "atmos_mod", "bc1"
+           "longname",     "hydrophobic black carbon mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic bc2 mixing ratio tracer
+ "TRACER", "atmos_mod", "bc2"
+           "longname",     "hydrophillic black carbon mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic oc1 mixing ratio tracer
+ "TRACER", "atmos_mod", "oc1"
+           "longname",     "hydrophobic organic carbon mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic oc2 mixing ratio tracer
+ "TRACER", "atmos_mod", "oc2"
+           "longname",     "hydrophillic organic carbon mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic dust1 mixing ratio tracer
+ "TRACER", "atmos_mod", "dust1"
+           "longname",     "fine dust1 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic dust2 mixing ratio tracer
+ "TRACER", "atmos_mod", "dust2"
+           "longname",     "fine dust2 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic dust3 mixing ratio tracer
+ "TRACER", "atmos_mod", "dust3"
+           "longname",     "coarse dust3 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic dust4 mixing ratio tracer
+ "TRACER", "atmos_mod", "dust4"
+           "longname",     "coarse dust4 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic dust5 mixing ratio tracer
+ "TRACER", "atmos_mod", "dust5"
+           "longname",     "coarse dust5 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic seas1 mixing ratio tracer
+ "TRACER", "atmos_mod", "seas1"
+           "longname",     "seasalt1 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic seas2 mixing ratio tracer
+ "TRACER", "atmos_mod", "seas2"
+           "longname",     "seasalt2 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic seas3 mixing ratio tracer
+ "TRACER", "atmos_mod", "seas3"
+           "longname",     "seasalt3 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic seas4 mixing ratio tracer
+ "TRACER", "atmos_mod", "seas4"
+           "longname",     "seasalt4 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic seas5 mixing ratio tracer
+ "TRACER", "atmos_mod", "seas5"
+           "longname",     "seasalt5 mixing ratio"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=1.e-7" /
+# prognostic pp10 mixing ratio tracer
+ "TRACER", "atmos_mod", "pp10"
+           "longname",     "primary PM10 mixing ratio"
+           "units",        "ug/kg"
+       "profile_type", "fixed", "surface_value=1.e+0" /
+# prognostic br2mixing ratio tracer
+ "TRACER", "atmos_mod", "br2"
+           "longname",     "br2 mixing ratio"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic brcl tracer
+ "TRACER", "atmos_mod", "brcl"
+           "longname",     "brcl"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic brno3 tracer
+ "TRACER", "atmos_mod", "brno3"
+           "longname",     "brno3"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic bry tracer
+ "TRACER", "atmos_mod", "bry"
+           "longname",     "bry"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ccl4 tracer
+ "TRACER", "atmos_mod", "ccl4"
+           "longname",     "ccl4"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic xmrp tracer
+ "TRACER", "atmos_mod", "xmrp"
+           "longname",     "xmrp"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic prdp tracer
+ "TRACER", "atmos_mod", "prdp"
+           "longname",     "prdp"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch2o tracer
+ "TRACER", "atmos_mod", "ch2o"
+           "longname",     "ch2o"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch3br tracer
+ "TRACER", "atmos_mod", "ch3br"
+           "longname",     "ch3br"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch3cl tracer
+ "TRACER", "atmos_mod", "ch3cl"
+           "longname",     "ch3cl"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch3ooh tracer
+ "TRACER", "atmos_mod", "ch3ooh"
+           "longname",     "ch3ooh"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch4 tracer
+ "TRACER", "atmos_mod", "ch4"
+           "longname",     "ch4"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic cl2 tracer
+ "TRACER", "atmos_mod", "cl2"
+           "longname",     "cl2"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic clno3 tracer
+ "TRACER", "atmos_mod", "clno3"
+           "longname",     "clno3"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic cly tracer
+ "TRACER", "atmos_mod", "cly"
+           "longname",     "cly"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic co tracer
+ "TRACER", "atmos_mod", "co"
+           "longname",     "carbon monoxide"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic f11 tracer
+ "TRACER", "atmos_mod", "f11"
+           "longname",     "f11"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic f1211 tracer
+ "TRACER", "atmos_mod", "f1211"
+           "longname",     "f1211"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic f12 tracer
+ "TRACER", "atmos_mod", "f12"
+           "longname",     "f12"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic f1301 tracer
+ "TRACER", "atmos_mod", "f1301"
+           "longname",     "f1301"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic h2o2 tracer
+ "TRACER", "atmos_mod", "h2o2"
+           "longname",     "h2o2"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic vrp tracer
+ "TRACER", "atmos_mod", "vrp"
+           "longname",     "vrp"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hbr tracer
+ "TRACER", "atmos_mod", "hbr"
+           "longname",     "hbr"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hcl tracer
+ "TRACER", "atmos_mod", "hcl"
+           "longname",     "hcl"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic rip tracer
+ "TRACER", "atmos_mod", "rip"
+           "longname",     "rip"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hno3t tracer
+ "TRACER", "atmos_mod", "hno3t"
+           "longname",     "hno3t"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hno4 tracer
+ "TRACER", "atmos_mod", "hno4"
+           "longname",     "hno4"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hobr tracer
+ "TRACER", "atmos_mod", "hobr"
+           "longname",     "hobr"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hocl tracer
+ "TRACER", "atmos_mod", "hocl"
+           "longname",     "hocl"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic mtcfm tracer
+ "TRACER", "atmos_mod", "mtcfm"
+           "longname",     "mtcfm"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic n2o5 tracer
+ "TRACER", "atmos_mod", "n2o5"
+           "longname",     "n2o5"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic n2o tracer
+ "TRACER", "atmos_mod", "n2o"
+           "longname",     "n2o"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic no2 tracer
+ "TRACER", "atmos_mod", "no2"
+           "longname",     "no2"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic no3 tracer
+ "TRACER", "atmos_mod", "no3"
+           "longname",     "no3"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic noy tracer
+ "TRACER", "atmos_mod", "noy"
+           "longname",     "noy"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic oclo tracer
+ "TRACER", "atmos_mod", "oclo"
+           "longname",     "oclo"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ox tracer
+ "TRACER", "atmos_mod", "ox"
+           "longname",     "ox"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic c2h6 tracer
+ "TRACER", "atmos_mod", "c2h6"
+           "longname",     "c2h6"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ald2 tracer
+ "TRACER", "atmos_mod", "ald2"
+           "longname",     "ald2"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ethooh tracer
+ "TRACER", "atmos_mod", "ethooh"
+           "longname",     "ethooh"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic pan tracer
+ "TRACER", "atmos_mod", "pan"
+           "longname",     "pan"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic par tracer
+ "TRACER", "atmos_mod", "par"
+           "longname",     "par"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic onit tracer
+ "TRACER", "atmos_mod", "onit"
+           "longname",     "onit"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic aone tracer
+ "TRACER", "atmos_mod", "aone"
+           "longname",     "aone"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic rooh tracer
+ "TRACER", "atmos_mod", "rooh"
+           "longname",     "rooh"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic mgly tracer
+ "TRACER", "atmos_mod", "mgly"
+           "longname",     "mgly"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic eth tracer
+ "TRACER", "atmos_mod", "eth"
+           "longname",     "eth"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic olet tracer
+ "TRACER", "atmos_mod", "olet"
+           "longname",     "olet"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic isop tracer
+ "TRACER", "atmos_mod", "isop"
+           "longname",     "isop"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic isoprd tracer
+ "TRACER", "atmos_mod", "isoprd"
+           "longname",     "isoprd"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic propar tracer
+ "TRACER", "atmos_mod", "propar"
+           "longname",     "propar"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch3oh tracer
+ "TRACER", "atmos_mod", "ch3oh"
+           "longname",     "ch3oh"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic mvk tracer
+ "TRACER", "atmos_mod", "mvk"
+           "longname",     "mvk"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic macr tracer
+ "TRACER", "atmos_mod", "macr"
+           "longname",     "macr"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic mpan tracer
+ "TRACER", "atmos_mod", "mpan"
+           "longname",     "mpan"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic hcn tracer
+ "TRACER", "atmos_mod", "hcn"
+           "longname",     "hcn"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic ch3cn tracer
+ "TRACER", "atmos_mod", "ch3cn"
+           "longname",     "ch3cn"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic coanth25 tracer
+ "TRACER", "atmos_mod", "coanth25"
+           "longname",     "coanth25"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /
+# prognostic cofire25 tracer
+ "TRACER", "atmos_mod", "bbcod25"
+           "longname",     "bbcod25"
+           "units",        "vmr"
+       "profile_type", "fixed", "surface_value=0.0" /

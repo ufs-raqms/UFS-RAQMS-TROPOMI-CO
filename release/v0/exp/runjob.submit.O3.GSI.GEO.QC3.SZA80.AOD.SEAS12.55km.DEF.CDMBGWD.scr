@@ -1,0 +1,367 @@
+#!/bin/bash -x
+#SBATCH --job-name=DEF930
+##SBATCH --time=4:30:00
+#SBATCH --time=05:10:00
+##SBATCH --time=0:08:00
+#SBATCH --exclusive
+##SBATCH --cpus-per-task=1
+##SBATCH --partition=raqms
+#SBATCH --partition=s4
+##SBATCH --priority=20
+##SBATCH --partition=ivy
+#####SBATCH --qos=debug
+####SBATCH --constraint=haswell
+##SBATCH --mem-per-cpu=2000
+#SBATCH --ntasks=390
+#SBATCH --account=star
+#SBATCH --output=/ships19/aqda/lenzen/fv3/myjob.C192.V9.1.390.GEOAOD.QC3.55km.DEF.CDMBGWD.GBBEPx.S4.450.2019093012
+#export NTASKS=$SLURM_NTASKS
+source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base
+source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst
+export CDATEENDRUN=2019100112
+export NTASKS=390
+export NTASKS_EXE=390
+export CASECTL=C192
+ echo NTASKS $NTASKS $SLURM_NTASKS
+export CASE=C192                 #resolution, C96, C384 or C768
+export print_freq=0
+export INTGNEW=YES
+export RAQMSO3MR=NO
+export CDATE=2019093012
+export CDATE0=$CDATE
+export CDATEEND=2019100112
+export WETDEPLSWRF=YES
+export WRFCHEMALPHA=YES
+#export SASTRACERPOS=YES
+#export SASSHALTRACERPOS=YES
+export SAMFCHEM=YES
+#export GSIVAR="sulf bc1 bc2 oc1 oc2 dust1 dust2 dust3 dust4 dust5 seas1 seas2 seas3 seas4 seas5"
+export GSIVAR="AOD"
+export GSIPROC=384
+export GSIPROCAOD=384
+#export GSIDATAPATH=/ships19/aqda/lenzen/VIIRS.NC/
+export GSIDATAPATH=/ships19/aqda/lenzen/GEOAOD/
+
+#export GSINAME=viirs.aod.CDATE.nc
+export GSINAME=geoaod.there
+#export NO2SCATTERWEIGHT=NO
+#export no2gross=4000.
+export TROPOMIQUALLIMIT=.7499
+export DHRGSI=1
+export WINDOW_MAX=0.5
+echo SLURM_JOB_NODELIST $SLURM_JOB_NODELIST
+
+#export DIAGCO=YES
+
+set -x
+export CDATEBEG=2019071512
+#export CDATEBEG=2019063012
+
+ulimit -s unlimited
+export PTYPE=intel
+export MODE=64bit           			       # dycore precision:   32bit, 64bit
+export HRSAVE=6
+export localhost=s4
+echo $HOSTNAME
+export FHMAX=6                                       #maximum forecast hours
+
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Running NEMS FV3GFS on Theia
+#------------------------------------------------------------------
+#notes:
+# this job card is for C96 case. If you are running
+# C384 or C768 cases, please make the following change:
+#
+#   for C384, change line 8 and line 33 to:
+#      #PBS -l nodes=96:ppn=12      
+#      export CASE=C384            
+#
+#   for C768, change line 8 and line 33 to:
+#      #PBS -l nodes=192:ppn=12
+#      export CASE=C768            
+#
+#------------------------------------------------------------------
+#export IAT=183
+#export JAT=172
+#export TILEAT=2
+#export KAT=1
+
+export machine=s4-submit              #WCOSS_C, theia, etc
+export PSLOT=O3VMR-PHYSICS
+export FV3GFSVER=FV3GFS.9.1.2019
+export EXPNAME=O3.GEOAOD.QC3.55km.GBBEPx.cldfrc.00.SEAS12.SZA80.SATZA60.DEF.CDMBGWD
+export AODFRACTION=YES
+# raqms original units not defined use ugpkg
+#export AEROSOL_UNITS=raqms
+# YES aerosols for statein for raqms otherwise use gsdchem aersols
+#export AEROSOL_IN_OLD=YES
+#export CDATE=2019083112           #initial condition dates  2016092900 2016011812 2016081200               
+
+#export BASE_DATA=/iliad/proxy/lenzen/FV3GFS_V1_RELEASE ;# data directory
+export BASE_DATA=/ships19/aqda/lenzen/FV3GFS_V1_RELEASE ;# data directory
+#export base_data_disk=/ships19/aqda/lenzen/FV3GFSNO2_TROPOMI/OBS/
+#export base_data_disk=/ships19/aqda/lenzen/VIIRS.NC/
+export FIX_DIR=$BASE_DATA/fix
+#export FIX_FV3=$BASE_DATA/fix/fix_fv3                 #model fixed fields
+export IC_DIRB=$BASE_DATA/ICs.TRACERS.p10.new                        #forecast initial conditions 
+export IC_DIRB=$BASE_DATA/ICs.TRACERS.p10                        #forecast initial conditions 
+export LEVS=65
+
+export nth_f=1                                         # number of threads 
+# temporary running directory
+#export BASE_OUT=/iliad/proxy/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+#export BASE_OUT=/ships19/models2/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+export BASE_OUT=/ships19/aqda/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+export IC_PATH=/data/users/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+mkdir -p $IC_PATH
+export SCRATCH_OUT=/scratch/users/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+#export SCRATCH_OUT=/ships19/aqda/$LOGNAME/tempscratch/$FV3GFSVER/$EXPNAME/$CASE/
+export GSI_SCRATCH=$SCRATCH_OUT/GSISCRATCH
+#export TMPDIR=/ships19/aqda/$LOGNAME/tmpdir.gsi.viirs.gocart-aodfraction.$CDATE
+#mkdir -p $TMPDIR
+mkdir -p $BASE_OUT
+mkdir -p $SCRATCH_OUT
+export PATHSCRATCH=$SCRATCH_OUT/GSISCRATCH/
+mkdir -p $PATHSCRATCH
+/bin/rm -f $PATHSCRATCH/input* cdate.inc*
+export BASE_PATH=$BASE_OUT
+export IC_DIR=$BASE_PATH/IC_DIR/                        #forecast initial conditions 
+export IC_SAVE=$IC_PAPTH/IC_DIR/
+mkdir -p $IC_SAVE
+mkdir -p $IC_DIR
+echo CDATE $CDATE CDATEBEG $CDATEBEG
+if (( CDATE == CDATEBEG )) 
+  then
+  mkdir -p $IC_DIR/${CASE}_${CDATEBEG}
+  rsync -ltvD $IC_DIRB/${CASE}_${CDATEBEG}/* $IC_DIR/${CASE}_${CDATEBEG}/
+fi
+#export BASE_OUT=/scratch/users/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+export AODLUT=/home/lenzen/Projects/INTEX/AOD_lut/
+
+#if [ -d $DATA ]; then rm -rf $DATA ; fi
+
+# directory to save output
+export ROTDIR=$SCRATCH_OUT/GFS_DIR/
+mkdir -p $ROTDIR
+mkdir -p $BASE_OUT/OUTDIR $SCRATCH_OUT/RUNDIR $BASE_OUT/TRACER 
+#mkdir -p $BASE_OUT/REGRID.0.5/$CDATE/ $BASE_OUT/OUTREGRID/$CDATE/
+#export BASE_OUT=$BASE_OUT/OUTDIR/
+#mkdir -p $BASE_OUT
+#lfs setstripe --stripe-count 4 $emi_outname
+export nstf_name="2,0,1,0,5"
+
+# NEMS FV3GFS forecast executable directory
+FV3DIR=${1:-`pwd`/../../..}
+export FV3DIR_RELEASE=${1:-`pwd`/..}
+export GSIDRIVE=$FV3DIR_RELEASE/ush/runremapgsi.C192.GEO.AOD.55km.bilinwt.sh
+export gsi_path=$BASE_OUT/GSIDIR/$CDATE/
+export gsi_scratch=$SCRATCH_OUT/GSISCRATCH/$CDATE/
+export GSI_DIR=/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/sorc/gsi.fd/
+# use one from 85 percent nox experment
+#export BERRROR_EXP=$GSI_DIR/fix/Big_Endian/gsi.trace.r4.FIREX-AQ.o3.no2.co.ch2o.ch4.bothpos.berror_stats.4xtime.o3phys.91day.361.fv3gfs
+export BERRROR_EXP=$GSI_DIR/fix/Big_Endian/gsi.trace.r4.FIREX-AQ.aerosols.ugpkg.berror_stats.4xtime.o3phys.91day.361.fv3gfs
+mkdir -p $gsi_scratch
+mkdir -p $gsi_path
+$GSIDRIVE >& $gsi_scratch/outrunremap.geo.aod.dogsiloop &
+export FCSTEXECDIR=$FV3DIR/NEMS/exe
+echo FCSTEXECDIR $FCSTEXECDIR
+echo  FV3DIR $FV3DIR
+
+export FHOUT=6                                        #forecast output frequency in hours
+export NFHMAX_HF=24
+#export atm_coupling_interval_sec=1800
+#---------------------------------------------------------
+#---------------------------------------------------------
+#  C96)  export DELTIM=1800; export layout_x=6; export layout_y=8;  export NODES=12; 
+case $CASE in
+  C96)  export DELTIM=900; export layout_x=4; export layout_y=4;  export NODES=$SLURM_JOB_NODES; 
+        export master_grid=1deg;   export REMAP_TASKS=20 ;;
+  C192) export DELTIM=450 ; export layout_x=$JXX; export layout_y=$JYY;  export NODES=$SLURM_JOB_NODES;
+        export master_grid=0p5deg; export REMAP_TASKS=96 ;;
+  C384) export DELTIM=450 ; export layout_x=12; export layout_y=16;  export NODES=96;
+        export master_grid=0p5deg; export REMAP_TASKS=96 ;;
+  C768) export DELTIM=225 ; export layout_x=16; export layout_y=24; export NODES=192;
+        export master_grid=0p25deg; export REMAP_TASKS=384 ;;
+  *)    echo "grid $CASE not supported, exit"
+        exit ;;
+esac
+export domains_stack_size=40000000
+#export domains_stack_size=80000000
+export quilting=.true.
+#export lgocart=.false.
+export PARM_FV3DIAG=$FV3DIR_RELEASE/parm/parm_fv3diag
+#export DIAG_TABLE=$FV3DIR_RELEASE/parm/chm_diag_table
+export SEND=YES
+export DIAG_TABLE=
+  export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.sh         
+  export GSIREMAPSH=$FV3DIR_RELEASE/exp/runremapgsi.C192.GEO.AOD.sh
+
+#---determine task configuration
+#export npe_node_f=32                                   # number of pes per node 
+#export task_per_node=$((npe_node_f/nth_f))
+#export tasks=$((NODES*task_per_node))                  # number of tasks 
+export tasks=$NTASKS
+export NTASKS_FV3=$NTASKS
+export NTHREADS_REMAP=$nth_f
+
+
+export TYPE=nh         				       # hydrostatic option: nh, hydro
+export HYPT=off           			       # hyperthreading:     on, off  
+export COMP="prod"        			       # compiling mode:     debug, repro, prod
+if [ ${HYPT} = on ]
+then
+   export hyperthread=".true."
+   export j_opt="-j 2"
+else
+   export hyperthread=".false."
+   export j_opt="-j 1"
+fi
+#export FCSTEXEC=fv3_gfs_${TYPE}.${COMP}.${MODE}.x
+export FCSTEXEC=NEMS.x
+
+cp $FV3DIR/NEMS/src/conf/module-setup.sh.inc module-setup.sh
+cp $FV3DIR/NEMS/src/conf/modules.nems modules.fv3
+source ./module-setup.sh >/dev/null 2>&1
+module use $( pwd -P )
+module load modules.fv3
+# ajl put in short cut for now will fix later
+module purge >/dev/null 2>&1
+source $FV3DIR/NEMS/src/conf/source.modules.nems >/dev/null 2>&1
+module list
+
+export mpiexec=`which mpirun`
+export mpiexec=`which srun`
+#export FCST_LAUNCHER="$mpiexec -prepend-rank -np $PBS_NP"
+export FCST_LAUNCHER="timeout 90m $mpiexec -s -l -n $NTASKS_EXE"
+export APRUN_FV3="timeout 120m $mpiexec -s -l -n $NTASKS_EXE"
+export restart_interval=0
+export CDUMP=gfs
+
+echo "Model started:  " `date`
+ulimit -a
+export MPI_TYPE_DEPTH=20
+export OMP_STACKSIZE=912M
+export OMP_NUM_THREADS=$nth_f
+export ESMF_RUNTIME_COMPLIANCECHECK=OFF:depth=4
+export FIELD_TABLE=$FV3DIR/parm/chm_field_table.tracers.full.gfdl
+cat $FIELD_TABLE
+#--------------------------------------------------------------------------
+# start of while loop with restart every 6 hours
+export CDATEBEG=$CDATE
+export new_date=/home/lenzen/UTILS/da_advance_time.exe
+CDATENEW=$($new_date $CDATE 6h)
+echo CDATENEW $CDATENEW
+#export BASE_OUT=/iliad/proxy/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+#mkdir -p $BASE_OUT
+export BASE_PATH=$BASE_OUT
+export INIT_PATH=$BASE_OUT/INIT_DIR
+mkdir -p $INIT_PATH
+echo ajl begin $CDATE $CDATEEND
+while (( CDATE < CDATEEND ))
+  do
+  export INIT_DIR=$INIT_PATH/$CDATE/
+  export DATATRACE=$BASE_OUT/TRACER/$CDATE/
+#  export BASE_OUTPUT=/ships19/models2/
+  export BASE_OUTPUT=/ships19/aqda/
+#  export BASE_OUTPUT=/iliad/proxy/
+  export DATA=${SCRATCH_OUT}/RUNDIR/${CDATE}     
+  mkdir -p $DATA
+  export RUNPATH=$DATA
+  export GSIDATAPAATH=$RUNPATH
+  export YYYYMMDD=`echo $CDATE | cut -c1-8`
+  export YYYY=`echo $CDATE | cut -c1-4`
+  export HH=`echo $CDATE | cut -c9-10`
+#  if (( YYYYMMDD <= 20190729 || YYYYMMDD >= 20190805 ))
+#    then
+#      if (( YYYY == 2019 ))
+#      then
+#        export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYYMMDD}/
+      #else
+#        export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYY}/${YYYYMMDD}/
+      #fi
+#    else
+#      export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/Reprocessed/${YYYYMMDD}/
+#  fi
+export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/FRPMEAN.AVE.NONZERO/${YYYY}/${YYYYMMDD}/
+# export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/GOES16.AHI.GBBEPx/${YYYY}/${YYYYMMDD}/
+  echo GBBEPxDIR $GBBEPxDIR
+  mkdir -p $BASE_OUT/REGRID.0.5/$CDATE/ $BASE_OUT/OUTREGRID/$CDATE/
+  export DATAREGRID=$BASE_OUT/REGRID.0.5/$CDATE/
+  export DATAOUTREGRID=$BASE_OUT/OUTREGRID/$CDATE/
+  export emi_outname=$BASE_OUT/TRACER/$CDATE/
+    export gsi_path=$BASE_OUT/GSIDIR/$CDATE/
+    /bin/rm -rf $gsi_path
+    export gsi_scratch=$SCRATCH_OUT/GSISCRATCH/$CDATE/
+    /bin/rm -rf $gsi_scratch
+    export GSI_SCRATCH=$gsi_scratch
+    mkdir -p $gsi_scratch
+    mkdir -p $gsi_path
+#  /bin/rm -rf $emi_outname
+  mkdir -p $emi_outname
+
+# --execute the forecast
+  $FORECASTSH >& $BASE_OUT/outfv3run.$CDATE
+  if [ $? != 0 ]; then
+    echo "forecast failed, exit"
+    CDATENEW=$($new_date $CDATE 6h)
+    if [ ! -s RUNDATE.$CDATENEW ] ; then
+      echo run error but no RUNDATE.$CDATENEW file
+      echo CDATE $CDATE
+     exit
+    fi
+  fi
+
+  echo "fcst job is done"
+
+#-------------------------------------------------------------------------
+#--convert 6-tile output to global arrary in netCDF format
+ymd=`echo $CDATE |cut -c 1-8`
+cyc=`echo $CDATE |cut -c 9-10`
+export DATA=$ROTDIR/gfs.$ymd/$cyc
+export REMAP05=$FV3DIR_RELEASE/ush/fv3gfs_remap.5degll.sh
+export INC=6
+sbatch --export=ALL -n 1 --share -t 10 $REMAP05 
+# increment CDATE 6 hrs
+CDATENEW=$($new_date $CDATE 6h)
+echo new CDATENEW $CDATENEW
+mkdir -p $IC_DIR/${CASE}_${CDATENEW}
+mkdir -p $IC_SAVE/${CASE}_${CDATENEW}
+# need to read fv3_trace for GFS_DIR for current date
+# need to get met data for CDATENEW and combine
+# need to store new data set in INIT_DATA directory and copy first time period into there
+#export INIT_DATA=$IC_DIR/${CDATE}_${CDATENEW}/
+export INIT_DATA=$IC_DIR/${CASE}_${CDATENEW}/
+export INIT_SAVE=$IC_SAVE/${CASE}_${CDATENEW}/
+export DATATRACE=$BASE_OUT/TRACER/$CDATE/
+export RESPATH=$ROTDIR/gfs.${YYYYMMDD}/${HH}/RESTART/
+mkdir -p $SCRATCH_OUT/OUTREMAP
+echo CDATE $CDATE CDATE0 $CDATE0 CDATENEW $CDATENEW
+export INC=1
+export CMAX=6
+export rc=
+for (( i=1 ; i <= $CMAX ; i += $INC)); do
+ export CTILE=$i
+ echo $CTILE addchemtomet.$CASE.x &
+/home/lenzen/UTILS/addchemtomet.$CASE.x $CDATENEW $CDATE0 >& $SCRATCH_OUT/OUTREMAP/outaddchem.$CDATE.$CTILE &
+export rc=`echo $rc $!`
+done
+echo done with addchemtomet $rc
+wait $rc
+chmod ugo-w $INIT_DATA
+rsync -rtlvD $INIT_DATA/* $INIT_SAVE/
+# try
+export CDATE0=$CDATE
+export CDATE=$CDATENEW
+echo ajl bottom on while loop $CDATE $CDATEEND
+
+done
+if (( CDATE >= CDATEENDRUN ))  
+then
+ exit 1
+fi
+export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.2019.GSI.GEO.QC3.SZA80.AOD.SEAS12.55km.GBBEPx.DEF.CDMBGWD.scr
+#mkdir -p $SCRATCH_OUT
+$NEXTDAYRUN >& $SCRATCH_OUT/outtrundaynext.$CDATE
+exit 0
+

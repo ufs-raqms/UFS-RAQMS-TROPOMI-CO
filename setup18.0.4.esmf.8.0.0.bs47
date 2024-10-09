@@ -1,0 +1,46 @@
+#!/bin/bash
+module purge
+module load license_intel
+module load intel/18.0.4
+#module load impi
+module load hdf/4.2.14
+module load hdf5/1.8.21 netcdf4/4.6.2
+module load udunits2 ncview
+export ESMF_VERSION_MAJOR=8
+export NETCDF4=$SSEC_NETCDF4_DIR
+export ESMF_DIR=/home/lenzen/ESMF.8.0.0RP1.BS47.S4/esmf/
+export ESMF_COMM=intelmpi
+export ESMF_COMPILER=intel
+export MPICH_FC=mpiifort
+export FC=mpiifort
+export JASPERINC=/usr/include/jasper/
+export LAPACK_PATH=" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+export SSEC_SZIP_LIB=/opt/szip/lib
+export SSEC_SZIP_INC=/opt/szip/include
+# export ESMF_BOPT=g
+unset ESMF_BOPT
+export ESMF_MPIRUN=mpirun.sbatch
+module use -a /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles
+export ESMFV=8.0.0
+#export ESMFV=8.0.g
+module load esmf/$ESMFV
+#module load esmf/8.0.0
+#module load esmf/8.0.g
+module use -a /home/lenzen/FV3libs/modulefiles
+module load nemsio/v1.0.0
+module load landsfcutil/v2.1.0
+module load sfcio/v1.0.0
+module load nemsiogfs/v2.0.1
+module load gfsio/v1.1.0
+module load ip/v3.0.0
+module load sigio/v2.0.1
+module load bacio/v2.0.1
+module load w3emc/v2.0.5
+module load w3nco/v2.0.6
+module load sp/v2.0.2
+env | grep ESMF >& outesmfenv
+export HOSTNAME=s4
+export NETCDF=$SSEC_NETCDF4_DIR
+export NETCDF_INCLUDE="-I$SSEC_NETCDF4_INC"
+export NETCDF_LDFLAGS_F="-L$SSEC_NETCDF4_LIB -lnetcdff -lnetcdf"
+export FULL_MACHINE_ID="s4-submit"

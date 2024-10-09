@@ -1,0 +1,276 @@
+module wetdep_mod
+contains
+  subroutine wetdep_advance(advancecount,dts,rc2d,rn2d,ph3d,phl3d,pr3d,prl3d,tk3d,& 
+    us3d,vs3d,ws3d,exch,dqdt,tr3d_inout4, &
+    num_chem,num_moist,ntra,its, ite, jts, jte, kts, kte, &
+    ims, ime, jms, jme, kms, kme, &
+    rc)
+    use mpi
+    use chem_types_mod
+    use chem_rc_mod
+    use raqmschemcomm_mod, only : rcav_save,rnav_save,pblht
+    use raqmschemcomm_mod, only : chem_conv_tr,wetdep_ls_opt
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use wetdep_prep_mod, only : wetdep_prep
+!    use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, p1000, rd, epsilc
+    use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, p1000, rd
+    use raq_dep_ctrans_grell_mod, only : raq_grelldrvct
+    use raqmschem_species_mod, only : nsol,nchemfull,chemname,ichemfullpt,p_qc,chemfull,p_qi
+    use raqmschem_species_mod, only : p_brcl,p_brno3,cheminput,p_bry,cheminputlist,p_dust3,p_rooh
+    use raq_dep_wet_ls_mod
+    use wetdep_alpha_mod, only : initwetdep
+    use wetdep_fam_mod, only : initsubpointers
+    use raqmschem_pmgrid_mod,only : iam,ibeg,tile,iamprn,iprn,jprn,iprnin,jprnin,kprnin
+    use raqmschem_pmgrid_mod,only : jbeg,nstepat,nhtuw
+    use vertmx_driver_mod, only : vertmx_driver
+    use chem_config_mod, only : CTRA_OPT_NONE,CTRA_OPT_GRELL,WDLS_OPT_NONE,WDLS_OPT_GSD,WDLS_OPT_NGAC
+    use raqmschem_config_mod, only : WDLS_OPT_NGAC_BOTH
+    implicit none
+    integer, intent(in) :: advancecount,its,ite,jts,jte,kts,kte
+    integer, intent(in) :: ims,ime,jms,jme,kms,kme,num_moist,num_chem,ntra
+    integer, intent(out), optional :: rc
+    real(CHEM_KIND_R8), intent(in) :: dts
+    real(CHEM_KIND_R8), dimension(:,:), intent(in) :: rn2d,rc2d
+    real(CHEM_KIND_R8), dimension(:,:,:), intent(in) :: ph3d,phl3d,pr3d,prl3d,tk3d 
+    real(CHEM_KIND_R8), dimension(:,:,:), intent(in) :: us3d,vs3d,ws3d,exch,dqdt
+    real(CHEM_KIND_R4), dimension(:,:,:,:), intent(inout) :: tr3d_inout4
+!   tr3d_in4 will be inout so wetdep can update tracers at end to pass to chemistry
+!   these need to be in a module so are saved
+!   these will be for this time increment
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rcav,precc,precl
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rnav
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: dz8w
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: p8w ! only use level 1
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: p_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: rho_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: rri
+!    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme+1, jms:jme) :: t8w ! not !    used at present
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: t_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: u_phy,raincv_v
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: v_phy
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: vvel,kt_turb,dqdti
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: z_at_w !  use up to kte+1 in gocart_prep
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: zmid
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_moist) :: moist
+    real(CHEM_KIND_R4) :: dt
+    integer :: ids, ide, jds, jde, kds, kde
+    integer :: jp,j,ip,i,k,m,locarc
+!   temporary variables
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: pbl 
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: raincv_b
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: relhum
+!    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nsol) :: chem
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem) :: tr_fall !  convective wetdep
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem) :: var_rmv !  large scale wetdep
+    real(CHEM_KIND_R4), dimension(ime-ims+1, jme-jms+1, kms:kme,1:num_chem) :: diffgrell,diffls !  large scale wetdep
+    real(CHEM_KIND_R4), dimension(kms:kme) :: brclold,brno3old
+    real(CHEM_KIND_R4) :: amaxdiffgrell
+    real(CHEM_KIND_R8) :: wallwet,wallwetcum,rtime1
+    logical first,doprecc
+    save first,wallwetcum
+    data first/.true./
+    integer dims(3),dims2(2),localrc
+    character *4 cstep,filename*256
+!   note kte is actual nl kme is ni one more
+!    write(6,*)'wetdep adv kte',kte,'kme',kme
+!    call flush(6)
+    rtime1=mpi_wtime()
+    dims(1)=ite-its+1
+    dims(2)=jte-jts+1
+    dims(3)=kte-kts+1
+    dims2=dims(1:2) 
+!    write(6,*)'top wetdep',advancecount
+!    call flush(6)
+!    write(200+iam,*)'top wetdep',advancecount
+!    call flush(200+iam)
+!    write(6,*)'dims',dims
+!    call flush(6)
+    write(cstep,'(i4.4)')nstepat
+!    if(iam.eq.0)then
+!       write(6,*)'kme',kme,'kte',kte
+!       call flush(6)
+!    endif
+
+    if(first)then
+      wallwetcum=0.0
+      call initsubpointers
+      if(iam.eq.0)then
+      write(6,*)'wetdep_ls_opt',wetdep_ls_opt,'chem_conv_tr',chem_conv_tr
+      endif
+    endif
+    if (present(rc)) rc = 0
+
+    ! -- set domain
+    ids = ims
+    ide = ime
+    jds = jms
+    jde = jme
+    kds = kms
+    kde = kme
+    ! -- initialize local arrays
+    raincv_b   = 0._CHEM_KIND_R4
+!    precc=0.0_CHEM_KIND_R4
+    doprecc=.false.
+!    precl=0.0
+    dt = real(dts, kind=CHEM_KIND_R4)
+!    write(6,*)'advnacecount',advancecount
+!    if(advancecount <= 0 )then
+        jp=0
+        do j=jts, jte
+        jp = jp + 1
+          ip = 0
+         do i= its, ite
+            ip = ip + 1
+      rcav(i,j) = max(rc2d(ip,jp)*1000.,0._CHEM_KIND_R4)
+      rnav(i,j) = max((rn2d(ip,jp)-rc2d(ip,jp))*1000.,0._CHEM_KIND_R4)
+!      if(tile.eq.3.and.i.eq.69.and.j.eq.35)then
+!        write(6,*)'rcav',i,j,rcav(i,j),'rnav',rnav(i,j),'lprate',lprate(i,j)
+!        call flush(6)
+!      endif
+!      if(tile.eq.3.and.i.eq.78.and.j.eq.92)then
+!        write(6,*)'rcav',i,j,rcav(i,j),'rnav',rnav(i,j),'lprate',lprate(i,j)
+        !call flush(6)
+!       endif
+         enddo
+        enddo
+!    else
+!        jp=0
+!        do j=jts, jte
+!        jp = jp + 1
+!          ip = 0
+!         do i= its, ite
+!            ip = ip + 1
+!      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav_save(i,j))
+      !rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav_save(i,j))
+!         enddo
+!        enddo
+!    end if
+!    if(iam.eq.iamprn)then
+!      write(6,*)'rcav ',rcav(iprnin,jprnin)
+!      call flush(6)
+!    endif
+!        jp=0
+!        do j=jts, jte
+!        jp = jp + 1
+!          ip = 0
+!         do i= its, ite
+!            ip = ip + 1
+!      rcav_save(i,j) = rc2d(ip,jp)*1000.
+!      rnav_save(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+!         enddo
+!        enddo
+     ncplprate=ncplprate+1 
+     do j=jts,jte
+       do i=its,ite
+         cprate(i,j)=cprate(i,j)+rcav(i,j)
+         lprate(i,j)=lprate(i,j)+rnav(i,j)
+       end do
+     end do
+!     if(tile.eq.3)then
+!        write(6,*)'rnav',lbound(rnav),'ub',ubound(rnav)
+!        write(6,*)'lprate',lbound(lprate),'ub',ubound(lprate)
+        !write(6,*)'its',its,ite,'jts',jts,jte
+!        do j=jts, jte
+!         do i= its, ite
+!           if(i.eq.69.and.j.eq.35)then
+!              write(6,*)'lpraet add',i,j,lprate(i,j)
+!          endif
+!           if(i.eq.78.and.j.eq.92)then
+!              write(6,*)'lpraet add',i,j,lprate(i,j)
+!          endif
+!        end do
+!      end do
+!     endif
+!     write(200+iam,*)'rnav',maxval(rnav),minval(rnav)
+!     write(200+iam,*)'rcav',maxval(rcav),minval(rcav)
+!     write(200+iam,*)'lprate',maxval(lprate),minval(lprate)
+!    write(6,*)'rc2d',maxval(rc2d),maxval(rn2d)
+!    write(6,*)'rcav',maxval(rcav),' rnav ',maxval(rnav)
+!   now call wetdep_prep
+!    write(6,*)'ntra',ntra
+!    call flush(6)
+!   if(iam.eq.iamprn)then
+!     do k=1,63
+!       write(250+iam,*)'pr3d',k,pr3d(iprn,jprn,k),prl3d(iprn,jprn,k),'tk3d',tk3d(iprn,jprn,k)
+!       call flush(250+iam)
+!     end do
+!     write(250+iam,*)'lbound',lbound(pr3d),'ubound',ubound(pr3d)
+!     call flush(250+iam)
+!     write(250+iam,*)'ims',ims,ime,jms,jme,'ibeg',ibeg,'jbeg',jbeg
+!       
+!   endif
+!    write(6,*)'wetdep prep'
+    !call flush(6)
+    call wetdep_prep(tr3d_inout4,tk3d,pr3d,prl3d,ph3d,phl3d, &
+      us3d,vs3d,ws3d, exch,dqdt,&
+      pblht, &
+      rcav,raincv_v, &
+!      t_phy,moist,u_phy,v_phy,p_phy,chem, &
+      t_phy,moist,u_phy,v_phy,p_phy, &
+      grvity,rd,p1000,cp, &
+!      t8w,p8w,pbl,z_at_w,zmid,dz8w,vvel, &
+      p8w,pbl,z_at_w,zmid,dz8w,vvel,kt_turb, dqdti,&
+      rho_phy, nsol, num_moist,ntra, &
+      ids,ide, jds,jde, kds,kde, &
+      ims,ime, jms,jme, kms,kme, &
+      its,ite, jts,jte, kts,kte,rc=rc) 
+    call initwetdep(its,ite,jts,jte,kts,kte,kms,kme,t_phy,p_phy)
+    call raq_grelldrvct(dt,advancecount, &
+     rho_phy,rcav,tr3d_inout4,tr_fall, & ! should be the same
+!     rho_phy,raincv_v,tr3d_inout4,tr_fall, &
+!     u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w, &
+     u_phy,v_phy,t_phy,moist,p_phy,p8w, &
+     pbl,xlv,cp,grvity,rv,z_at_w, &
+     num_chem, num_moist,nchemfull, &
+     ids,ide, jds,jde, kds,kde, &
+     ims,ime, jms,jme, kms,kme, &
+     its,ite, jts,jte, kts,kte)
+    select case (wetdep_ls_opt)
+      case (WDLS_OPT_GSD,0)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do GSDCHEM wetdep_ls'
+          call flush(6)
+        endif
+        call wetdep_ls(dt,tr3d_inout4,rnav,moist,t_phy,rho_phy,var_rmv,num_moist, &
+           num_chem,p_qc,p_qi,dz8w,vvel,        &   
+           ids,ide, jds,jde, kds,kde,                               &   
+           ims,ime, jms,jme, kms,kme,                               &   
+           its,ite, jts,jte, kts,kte)
+      case(WDLS_OPT_NGAC_BOTH)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do NGAC wetdep_ls_and_precc'
+          call flush(6)
+        endif
+          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
+            num_chem,var_rmv,tr3d_inout4,p8w,t_phy,  &
+            rho_phy,dqdti,rnav,          &     ! ajl
+           ims,ime, jms,jme, kms,kme, localrc,precc=rcav)
+!        else
+      case(WDLS_OPT_NGAC)
+        if(iam.eq.0.and.first)then
+          write(6,*)'RAQMS do NGAC wetdep_ls_only'
+          call flush(6)
+        endif
+          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
+            num_chem,var_rmv,tr3d_inout4,p8w,t_phy,  &
+            rho_phy,dqdti,rnav,          &     ! ajl
+           ims,ime, jms,jme, kms,kme, localrc)
+!        endif
+      case default
+    end select
+    wallwet=mpi_wtime()-rtime1
+    wallwetcum=wallwetcum+wallwet
+    if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+      write(6,*)'wallwet ',wallwet,' cum ',wallwetcum
+      call flush(6)
+    endif
+!   add vert
+    call vertmx_driver(dt,tr3d_inout4,num_chem,kt_turb,rho_phy, &
+    z_at_w,zmid,ims,ime,jms,jme,kms,kme,kts,kte)
+    first=.false.
+    return
+
+
+  end subroutine wetdep_advance
+end module wetdep_mod
+

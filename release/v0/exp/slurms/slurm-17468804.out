@@ -1,0 +1,64 @@
++ '[' -z '' ']'
++ case "$-" in
++ __lmod_vx=x
++ '[' -n x ']'
++ set +x
+Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for this output (/usr/share/lmod/lmod/init/bash)
+Shell debugging restarted
++ unset __lmod_vx
++ export REMAPSHTR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
++ REMAPSHTR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
++ export new_date=/home/lenzen/UTILS/da_advance_time.exe
++ new_date=/home/lenzen/UTILS/da_advance_time.exe
++ export INC=24
++ INC=24
++ echo INC FHMAX 120
+INC FHMAX 120
++ echo SCRATCH_OUT /scratch/users/lenzen/FV3GFS.9.1.2019/O3.AOD.FCST.CHEMGSI.TESTAOD/C192/
+SCRATCH_OUT /scratch/users/lenzen/FV3GFS.9.1.2019/O3.AOD.FCST.CHEMGSI.TESTAOD/C192/
++ sleep 5
++ echo CDATE 2019091812
+CDATE 2019091812
++ (( i=24  ))
++ (( i <= 120  ))
+++ /home/lenzen/UTILS/da_advance_time.exe 2019091812 24h
++ export CDATEF=2019091912
++ CDATEF=2019091912
++ echo CDATEF 2019091912
+CDATEF 2019091912
++ (( i += 24 ))
++ (( i <= 120  ))
++ /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019091812 48h
++ export CDATEF=2019092012
++ CDATEF=2019092012
++ echo CDATEF 2019092012
+CDATEF 2019092012
++ (( i += 24 ))
++ (( i <= 120  ))
++ /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019091812 72h
++ export CDATEF=2019092112
++ CDATEF=2019092112
++ echo CDATEF 2019092112
+CDATEF 2019092112
++ (( i += 24 ))
++ (( i <= 120  ))
++ /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019091812 96h
++ export CDATEF=2019092212
++ CDATEF=2019092212
++ echo CDATEF 2019092212
+CDATEF 2019092212
++ (( i += 24 ))
++ (( i <= 120  ))
++ /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh
+++ /home/lenzen/UTILS/da_advance_time.exe 2019091812 120h
++ export CDATEF=2019092312
++ CDATEF=2019092312
++ echo CDATEF 2019092312
+CDATEF 2019092312
++ (( i += 24 ))
++ (( i <= 120  ))
++ wait
++ /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp/../ush/fv3gfs.5degll.only.sh

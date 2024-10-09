@@ -1,0 +1,91 @@
+1c1
+< #!/bin/ksh -x
+---
+> #!/bin/ksh
+32d31
+< echo top IAER $IAER
+39d37
+< # ajl added lgocart
+154,196d151
+< mkdir -p $DATA/GBBEPx
+< 
+< 
+< rsync -ltvD $GBBEPxDIR/*C192* $DATA/GBBEPx
+< mkdir -p $DATA/GBBEPx/Inputfire/
+< rsync -ltvD /ships19/aqda/lenzen/RAQMSEMIS/C192/Inputfire/* $DATA/GBBEPx/Inputfire/
+< cd $DATA/GBBEPx
+< for i in {1..6}
+<   do
+<     export ctile=tile$i
+<     mkdir $ctile
+<     if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+<       $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_bc.dat
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_bc.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+<       $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_oc.dat
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_oc.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+<       $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_so2.dat
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_so2.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+<       $NLN $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_pm_25.dat
+<     else
+<       $NLN $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_pm_25.nc
+<     fi
+<     if [ -f $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+<       $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/plumefrp.dat
+<     else
+<       $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/plumefrp.nc
+<     fi
+<     $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc plumefrp.$ctile.nc
+<     $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/plumefrp.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.co.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_co.nc
+<     $NLN $DATA/GBBEPx/GBBEPx.co.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_co.$ctile.nc
+<     
+<   done
+< cd $DATA || exit 8
+242c197
+< assim_freq=0
+---
+> 
+339,340d293
+<   echo "COLD START"
+< # ajl need to change to our path on s4
+342,344d294
+<  if [ -d $IC_DIR/${CASE}_$CDATE ]; then
+<   $NCP $IC_DIR/${CASE}_$CDATE/* $DATA/INPUT/.
+<  else # ajl
+352,353d301
+<   fi # ajl
+<   CHEMIN=1 # ajl for now since we put it all in with met
+377,378c325
+< echo IAER $IAER
+< export IAER=111
+---
+> 
+620,622d566
+< # for raqmschem
+< 
+< $NCP $AODLUT/* .
+871d814
+<   lgocart      = ${lgocart:-".true."}
+1012c955
+<   plumerisefire_frq=30
+---
+>   plumerisefire_frq=60
+1049,1050c992,993
+<   emi_inname  = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}/$SMONTH"
+<   dust_inname = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}/fengsha/$SMONTH"
+---
+>   emi_inname  = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}"NAN"/$SMONTH"
+>   dust_inname = "/ships19/aqda/lenzen/CEDS_2019/GEFS-Aerosol_emissions/emi_${CASE}"NAN"/fengsha/$SMONTH"
+1170c1113
+< $APRUN_FV3  $DATA/$FCSTEXEC >$BASE_OUT/OUTDIR/outraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.T$nth_f.$FHMAX 2> $BASE_OUT/OUTDIR/errraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.t$nth_f.$FHMAX
+---
+> $APRUN_FV3  $DATA/$FCSTEXEC $BASE_OUT/OUTDIR/outraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.T$nth_f.$FHMAX 2> $BASE_OUT/OUTDIR/errraqms.$CASE.$CDATE.transtrac.n$NTASKS.088.t$nth_f.$FHMAX

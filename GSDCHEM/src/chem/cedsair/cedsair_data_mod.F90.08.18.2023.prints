@@ -1,0 +1,175 @@
+module cedsair_data_mod
+use chem_types_mod
+use chem_const_mod, only : mw_so2_aer,airmw
+implicit none
+integer(chem_kind_i4),allocatable,dimension(:,:) :: ktopcedsair,kbotcedsair
+integer(chem_kind_i4),parameter :: p_cedsair_bc=1,p_cedsair_oc=2,p_cedsair_so2=3
+integer(chem_kind_i4),parameter :: nl_cedsair=25
+real(chem_kind_r4),allocatable,dimension(:,:,:,:) :: intcedsair
+real(chem_kind_r4),allocatable,dimension(:) :: intaltair
+integer(chem_kind_i4),parameter :: num_cedsair=3
+character*8 cem_cedsair(num_cedsair)
+data cem_cedsair/'BC','OC','SO2'/
+contains
+  subroutine cedsair_init_data(cedsemi_inname,is,ie,js,je,ks,ke,tile,localpe,imon)
+  implicit none
+  logical :: first=.true.
+  logical exist
+  character *(*) cedsemi_inname
+  character*8 file*100,cmonth2(2)*2,ctile*1
+  real*4 cedsair_in(192,192,nl_cedsair),altair(nl_cedsair)
+  integer(chem_kind_i4) :: kktopcedsair(is:ie,js:je,3),kkbotcedsair(is:ie,js:je,3)
+  integer is,ie,js,je,ks,ke,i,j,k,n,imon,nlevin
+  integer(chem_kind_i4) :: tile,localpe
+  real*4 :: mw_bc=12.01
+  real*4 :: mw_oc=16.80
+  real*4 :: mw_air=28.97
+  if(.not.first)return
+  write(cmonth2(1),'(i2.2)')imon
+!  if(tile==5)then
+!  if(is==1)then
+!  write(6,*)'gsdchem cedair tile',tile,'localpe',localpe,'imon',imon,'is',is,ie,js,je
+!  flush(6)
+!  endif
+  first=.false.
+  allocate(ktopcedsair(is:ie,js:je),kbotcedsair(is:ie,js:je))
+  allocate(intcedsair(is:ie,js:je,0:nl_cedsair,3))
+  allocate(intaltair(0:nl_cedsair))
+  kktopcedsair=0
+  kkbotcedsair=0
+  intaltair(0)=0.0
+  intcedsair=0.0
+  write(ctile,'(i1.1)')tile
+  do n=1,3
+!    if(n<=2)then
+      file='tile'//ctile//'/emi_'//trim(cem_cedsair(n))//'-AIR_ugperm2persec.dat'
+!    else
+!      file='tile'//ctile//'/emi_'//trim(cem_cedsair(n))//'-AIR_molpercm2persec.dat'
+!    endif
+    inquire(file=trim(cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file),exist=exist)
+    if(.not.exist)then
+      write(6,*)'file not exist',trim(cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file)
+      flush(6)
+      caLL KILLIT('FILE')
+    endif
+    open(10,file=trim(cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+    convert='big_endian',form='unformatted')
+!    if(is==1)then
+!  if(tile==5)then
+!      write(6,*)'opened',trim(cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file)
+!      flush(6)
+    !endif
+    read(10)nlevin
+!    if(is==1)then
+!  if(tile==5)then
+!    if(tile==1.and.localpe==0)then
+!      write(6,*)'nlevin',nlevin
+!      flush(6)
+!    endif
+!    close(10)
+    read(10)altair
+!   make meters for gsdchem code
+    altair=altair*1.e3
+!    if(is==1)then
+!  if(tile==5)then
+!    if(tile==1.and.localpe==0)then
+!      write(6,*)'read altair',altair
+!      flush(6)
+!    endif
+    if(n==1)then
+      intaltair(1)=2.*altair(1)
+      do k=2,nl_cedsair
+        intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+      end do
+    endif
+    read(10)cedsair_in
+!    if(tile==5)then
+!    if(is==1)then
+!      write(6,*)'read in cedsair ',n,trim(cem_cedsair(n)),maxval(cedsair_in),minval(cedsair_in)
+!      flush(6)
+!    endif
+    if(cem_cedsair(n)=='BC')then
+      cedsair_in=cedsair_in ! since ug/kg not ppv
+    elseif(cem_cedsair(n)=='OC')then
+      cedsair_in=cedsair_in  ! since ug/kg not ppv
+    elseif(cem_cedsair(n)=='SO2')then
+      cedsair_in=cedsair_in*mw_so2_aer/airmw*.001 ! make umoleso2/m2 /airmw since want ppmv
+    endif
+!    if(is==1)then
+!    if(tile==5)then
+!      write(6,*)'cedsair in ref',trim(cem_cedsair(n)),maxval(cedsair_in)
+!    endif
+    do j=js,je
+      do i=is,ie
+        if(maxval(cedsair_in(i,j,:))/=0.0)then
+        do k=1,nl_cedsair
+          if(i==5.and.j==97.and.tile==5.and.n==3)then
+            write(6,*)'k',k,'cedsair_in',cedsair_in(i,j,k)
+          endif
+          intcedsair(i,j,k,n)=intcedsair(i,j,k-1,n)+cedsair_in(i,j,k)
+          if(cedsair_in(i,j,k)/=0.0)then
+!            if(tile==5.and.i==29.and.j==26.and.n==1)then
+!              write(6,*)'cedsairin',k,cedsair_in(i,j,k)
+!            endif
+            if(kkbotcedsair(i,j,n)==0)then
+              kkbotcedsair(i,j,n)=k
+!              if(tile==5)then
+!                write(6,*)'set kkbotcedsair',i,j,'kkbot=',k,n
+!              endif
+            endif
+!            if(cedsair_in(i,j,k)/=-0.0)then
+              kktopcedsair(i,j,n)=k
+!              if(tile==5)then
+!                write(6,*)'set kktopcedsair',i,j,'kktop',k,n
+!              endif
+!            endif
+          endif
+        end do
+!        if(tile==5.and.kkbotcedsair(i,j,n)/=0)then
+!            if(tile==5.and.i==29.and.j==26.and.n==1)then
+!          if(i==5.and.j==150.and.tile==5.and.n==3)then
+!          do k=kkbotcedsair(i,j,n),kktopcedsair(i,j,n)
+            !write(6,*)k,'intcedsair',intcedsair(i,j,k,n)
+!           end do
+       !endif
+        endif
+      end do
+    end do
+!    if(tile==5)then
+!    if(is==1)then
+!      do k=1,nl_cedsair
+!        write(6,*)trim(cem_cedsair(n)),' intcedsair ',k,maxval(intcedsair(:,:,k,1)),minval(intcedsair(:,:,k,1))
+!        flush(6)
+!      end do
+!    endif
+!  if(tile==5.and.localpe==0)then
+!    if(is==1)then
+!    if(tile==5)then
+!      write(6,*)'kktopcedsair',maxval(kktopcedsair),minval(kktopcedsair)
+!      write(6,*)'kkbotcedsair',maxval(kkbotcedsair),minval(kkbotcedsair)
+!      flush(6)
+!    endif
+    close(10)
+    
+  end do
+  do j=js,je
+    do i=is,ie
+        ktopcedsair(i,j)=maxval(kktopcedsair(i,j,:))
+        kbotcedsair(i,j)=minval(kkbotcedsair(i,j,:))
+    end do
+  enddo
+!  if(is==1)then
+!    if(tile==5)then
+          if(i==5.and.j==150.and.tile==5.and.n==3)then
+  write(6,*)'max ktopcedsair',maxval(ktopcedsair)
+  write(6,*)'min kbotcedsair',minval(ktopcedsair)
+  endif
+!    if(is==1)then
+!    if(tile==5)then
+!          write(6,*)'bottom cedsair data'
+!      flush(6)
+!    endif
+!  write(6,*)'cedsemi_inname',cedsemi_inname
+!  flush(6)
+  end subroutine cedsair_init_data
+end module cedsair_data_mod

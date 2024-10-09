@@ -1,0 +1,230 @@
+17c17
+< #SBATCH --output=/ships19/models2/lenzen/fv3/myjob.C192.V9.1.JTASKS.CONTROL.GBBEPX.hourly.DTSEC.CDATEIN
+---
+> #SBATCH --output=/ships19/aqda/lenzen/fv3/myjob.C192.V9.1.JTASKS.GEOAOD.QC3.55km.GBBEPx.cdmbgwd.2.2.5.DTSEC.CDATEIN
+19,20c19,20
+< source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base.emc.dyn.fv3.esrl
+< source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst.fv3.esrl
+---
+> source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base
+> source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst
+22d21
+< #export CDATEENDRUN=2019100412
+24a24
+> export CASECTL=C192
+27d26
+< export CASECTL=C192
+39,41c38
+< #export cdmbgwd="0.23,1.5,1.0,1.0" # our version only has two
+< #export cdmbgwd="0.23,1.5" # 16b with more levels
+< # found for old global workflow with 64 levels and found on gsdchem parm/config.fv3
+---
+> # set it to same as global workflow 16b
+43,45c40,41
+< export DOGSI=off
+< if [ ${DOGSI} = on ] ; then
+<   export GSIVAR="sulf bc1 bc2 oc1 oc2 dust1 dust2 dust3 dust4 dust5 seas1 seas2 seas3 seas4"
+---
+> #export GSIVAR="sulf bc1 bc2 oc1 oc2 dust1 dust2 dust3 dust4 dust5 seas1 seas2 seas3 seas4 seas5"
+> export GSIVAR="AOD"
+47,48c43,50
+<   export GSIDATAPATH=/ships19/aqda/lenzen/VIIRS.NC/
+<   export GSINAME=viirs.aod.CDATE.nc
+---
+> export GSIPROCAOD=NGSIPROC
+> #export GSIDATAPATH=/ships19/aqda/lenzen/VIIRS.NC/
+> export GSIDATAPATH=/ships19/aqda/lenzen/GEOAOD/
+> 
+> #export GSINAME=viirs.aod.CDATE.nc
+> export GSINAME=geoaod.there
+> #export NO2SCATTERWEIGHT=NO
+> #export no2gross=4000.
+50,51c52,53
+<   export DHRGSI=3
+< fi
+---
+> export DHRGSI=1
+> export WINDOW_MAX=0.5
+57d58
+< #export CDATEBEG=2019070112
+65d65
+< #export HRSAVE=1
+92,95c92
+< 
+< export machine=s4-cardinal              #WCOSS_C, theia, etc
+< #export machine=s4-submit              #WCOSS_C, theia, etc
+< #export PSLOT=fv3gfs.$PTYPE.$MODE.$NTASKS.onelayer.nth1.$CASE.088.raqmso3vmr.$FHMAX               #user-defined experiment name.
+---
+> export machine=s4-submit              #WCOSS_C, theia, etc
+98c95
+< export EXPNAME=O3.CONTROL.GBBEPx.goes16.17.ahi.Hourly
+---
+> export EXPNAME=O3.GEOAOD.QC3.55km.GBBEPx.cldfrc.00.SZA80.SATZA60.CDMBGWD.2.2.5
+105a103
+> #export BASE_DATA=/iliad/proxy/lenzen/FV3GFS_V1_RELEASE ;# data directory
+107,108c105,106
+< export base_data_disk=/ships19/aqda/lenzen/VIIRS.NC/
+< #export NWPROD=$BASE_DATA
+---
+> #export base_data_disk=/ships19/aqda/lenzen/FV3GFSNO2_TROPOMI/OBS/
+> #export base_data_disk=/ships19/aqda/lenzen/VIIRS.NC/
+111c109
+< #export IC_DIRB=$BASE_DATA/ICs.TRACERS.p10.new                        #forecast initial conditions 
+---
+> export IC_DIRB=$BASE_DATA/ICs.TRACERS.p10.new                        #forecast initial conditions 
+118d115
+< #export BASE_OUT=/ships19/aqda/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+121,122c118,121
+< export TMPDIR=/ships19/aqda/$LOGNAME/tmpdir.gsi.viirs.gocart-aodfraction.$CDATE
+< mkdir -p $TMPDIR
+---
+> #export SCRATCH_OUT=/ships19/aqda/$LOGNAME/tempscratch/$FV3GFSVER/$EXPNAME/$CASE/
+> export GSI_SCRATCH=$SCRATCH_OUT/GSISCRATCH
+> #export TMPDIR=/ships19/aqda/$LOGNAME/tmpdir.gsi.viirs.gocart-aodfraction.$CDATE
+> #mkdir -p $TMPDIR
+125d123
+< if [ ${DOGSI} = on ] ; then
+126a125
+> mkdir -p $PATHSCRATCH
+128,131d126
+< else
+< export scratch_out=$SCRATCH_OUT/OUTSCRATCH/
+< mkdir -p $scratch_out
+< fi
+149c144
+< mkdir -p $BASE_OUT/OUTDIR $BASE_OUT/RUNDIR $BASE_OUT/TRACER 
+---
+> mkdir -p $BASE_OUT/OUTDIR $SCRATCH_OUT/RUNDIR $BASE_OUT/TRACER 
+154,156c149
+< #export nstf_name="2,0,1,0,5"
+< #export nstf_name="2,1,0,0,0"
+< export nstf_name="2,0,0,0,0"
+---
+> export nstf_name="2,0,1,0,5"
+161,162c154
+< if [ ${DOGSI} = on ] ; then
+<   export GSIDRIVE=$FV3DIR_RELEASE/ush/runremapgsi.C192.VIIRS.AOD.sh
+---
+> export GSIDRIVE=$FV3DIR_RELEASE/ush/runremapgsi.C192.GEO.AOD.55km.bilinwt.sh
+165c157
+<   export GSI_DIR=/home/lenzen/GSI/GSI.PRODGSI.16b.GOCART.CRTM/sorc/gsi.fd/
+---
+> export GSI_DIR=/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/sorc/gsi.fd/
+171,172c163
+<   $GSIDRIVE >& $gsi_scratch/outrunremap.viirs.aod.dogsiloop &
+< fi
+---
+> $GSIDRIVE >& $gsi_scratch/outrunremap.geo.aod.dogsiloop &
+202d192
+< # ajl leave logic after to this script
+204d193
+< echo BEFORE IAER $IAER
+206,211c195
+< #  export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.NAN.sh
+< #exglobal_fcst_nemsfv3gfs.GSI.NO2.$CASE.DTSECX.gen.sh         
+< if [ ${DOGSI} = on ] ; then
+<     export GSIREMAPSH=$FV3DIR_RELEASE/exp/runremapgsi.C192.VIIRS.AOD.sh
+< fi
+< #exit 0
+---
+>   export GSIREMAPSH=$FV3DIR_RELEASE/exp/runremapgsi.C192.GEO.AOD.sh
+249,251c233,236
+< export FCST_LAUNCHER="$mpiexec -s -l -n $NTASKS_EXE"
+< export APRUN_FV3="timeout 50m $mpiexec -s -l -n $NTASKS_EXE"
+< echo APRUN_FV3 $APRUN_FV3
+---
+> export FCST_LAUNCHER="timeout 90m $mpiexec -s -l -n $NTASKS_EXE"
+> export APRUN_FV3="timeout 120m $mpiexec -s -l -n $NTASKS_EXE"
+> export restart_interval=0
+> export CDUMP=gfs
+259,260d243
+< #export FIELD_TABLE=$FV3DIR/parm/chm_field_table
+< #export FIELD_TABLE=$FV3DIR/parm/chm_field_table.tracers.full.V1.cod25
+262,263d244
+< export restart_interval=0
+< export CDUMP=gfs
+281c262
+<   export BASE_OUTPUT=/ships19/aqda/
+---
+>   export BASE_OUTPUT=/ships19/models2/
+283a265,267
+>   mkdir -p $DATA
+>   export RUNPATH=$DATA
+>   export GSIDATAPAATH=$RUNPATH
+286d269
+<   export YYYYMM=`echo $CDATE | cut -c1-6`
+299,314c282,283
+<  if (( YYYYMMDD <= 20190714 ))
+<   then
+<     if (( YYYY == 2019 ))
+<     then
+<       export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYYMMDD}/
+<     else
+<       export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/${YYYY}/${YYYYMMDD}/
+<     fi  
+<   else
+<     if (( YYYYMMDD <=  20190931 ))
+<     then
+<       export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/GOES16.17.AHI.code10.Hourly.final.GBBEPx/${YYYY}/${YYYYMMDD}/
+<     else
+<       export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/GOES16.17.AHI.code10.Hourly.final.GBBEPx/${YYYY}/${YYYYMM}//${YYYYMMDD}/
+<     fi
+<   fi 
+---
+> export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/FRPMEAN.AVE.NONZERO/${YYYY}/${YYYYMMDD}/
+> # export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/GOES16.AHI.GBBEPx/${YYYY}/${YYYYMMDD}/
+320d288
+< if [ ${DOGSI} = on ] ; then
+321a290
+>     /bin/rm -rf $gsi_path
+322a292,293
+>     /bin/rm -rf $gsi_scratch
+>     export GSI_SCRATCH=$gsi_scratch
+325d295
+< fi
+331,333c301,309
+<   export ERRROR=$?
+<   echo ERRROR $ERRROR
+<   if [ $ERRROR != 0 ]; then echo "forecast failed, exit"; exit; fi
+---
+>   if [ $? != 0 ]; then
+>     echo "forecast failed, exit"
+>     CDATENEW=$($new_date $CDATE 6h)
+>     if [ ! -s RUNDATE.$CDATENEW ] ; then
+>       echo run error but no RUNDATE.$CDATENEW file
+>       echo CDATE $CDATE
+>      exit
+>     fi
+>   fi
+342,354d317
+< export IPD4=YES
+< #export REMAPSH=$FV3DIR_RELEASE/ush/fv3gfs_remap.sh            #remap 6-tile output to global array in netcdf
+< export REMAPEXE=$FV3DIR_RELEASE/exec/fregrid_parallel
+< export FIXDYNEXE=$FV3DIR_RELEASE/exec/fixdyn
+< #export REMAP_LAUNCHER="mpirun -prepend-rank -np $REMAP_TASKS"
+< export REMAP_LAUNCHER="srun -prepend-rank -n $REMAP_TASKS"
+< 
+< cp $FV3DIR_RELEASE/modulefiles/fv3gfs/fre-nctools.${machine} module.fre-nctools
+< module load module.fre-nctools
+< module list
+< 
+< #$REMAPSH
+< #export REMAP05=$FV3DIR_RELEASE/ush/fv3gfs_remap.tracer.dynam.CONTROL.sh
+369c332
+< mkdir -p ${BASE_OUT}/OUTREMAP
+---
+> mkdir -p $SCRATCH_OUT/OUTREMAP
+377c340
+< /home/lenzen/UTILS/addchemtomet.$CASE.x $CDATENEW $CDATE0 >& ${BASE_OUT}/OUTREMAP/outaddchem.$CDATE.$CTILE &
+---
+> /home/lenzen/UTILS/addchemtomet.$CASE.x $CDATENEW $CDATE0 >& $SCRATCH_OUT/OUTREMAP/outaddchem.$CDATE.$CTILE &
+392,396c355,357
+< export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.2019.CONTROL.goes16.17.ahi.hourly.scr
+< #if [ ${DOGSI} = on ] ; then
+< #mkdir -p /scratch/users/${LOGNAME}/GSISCRATCH.gocart.aod.fraction
+< #fi
+< $NEXTDAYRUN >& ${scratch_out}/outrundaynext.$CDATE
+---
+> export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.2019.GSI.GEO.QC3.SZA80.SATZ60.AOD.55km.GBBEPx.cbmbgwd.2.2.5.scr
+> #mkdir -p $SCRATCH_OUT
+> #$NEXTDAYRUN >& $SCRATCH_OUT/outtrundaynext.$CDATE

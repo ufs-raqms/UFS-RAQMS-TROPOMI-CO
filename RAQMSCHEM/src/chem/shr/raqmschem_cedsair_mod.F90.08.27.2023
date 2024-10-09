@@ -1,0 +1,238 @@
+#include <choosevan.h>
+#include <choosechem.h>
+#include <options.h>
+module raqmschem_cedsair_mod
+  use chem_types_mod, only : chem_kind_r4,chem_kind_r8
+  use raqmschemcomm_mod, only : pgrd,tgrd,qgrd,zeupgrd,zsurf,numcedsair,ccedsair
+  use raqmschemcomm_mod, only : ktopcedsair,kbotcedsair,intaltair,intcedsair
+  real(chem_kind_r4),allocatable,dimension(:,:,:,:) :: cedsairemis
+contains
+  subroutine docedsairm(j,dt)
+  use raqmschem_pmgrid_mod,only : iam,masterproc,nlev,nc,begj,endj,tile
+  implicit none
+  integer i,j,k,m,kbot,ktop,klo,kup,kk,kkb
+  real(chem_kind_r4) :: zgeoh(nlev),zztop,zzbot,zup,zlo,dens,dt
+  real(chem_kind_r8) :: aflo,afup,intvallo,intvalup,sac
+  logical zloset,zupset
+!  write(6,*)'j',j,'dt',dt,'top docedsairm','begj',begj,endj
+!  flush(6)
+  if(.not.allocated(cedsairemis))then
+     allocate (cedsairemis(nc,nlev,begj:endj,numcedsair))
+  endif
+  cedsairemis(:,:,j,:)=0.0
+  do i=1,nc
+    ktop=maxval(ktopcedsair(i,j,:))
+    if(ktop<1)cycle
+    kbot=max(minval(kbotcedsair(i,j,:))-1,0)
+    zztop=intaltair(ktop)
+    zzbot=intaltair(kbot)
+    zgeoh(1)=zsurf(i,j)*.001
+!    write(6,*)'zgeoh1',zgeoh(1)
+    do k=2,nlev
+      zgeoh(k)=zeupgrd(i,j,k-1)*.001 ! make km
+!      write(6,*)'zgeoh',k,zgeoh(k)
+    end do
+!    write(6,*)i,j,'kbot',kbot,ktop,'zztop',zztop,zzbot
+!    flush(6)
+    zloset=.false.
+    klo=-1
+    aflo=0.0
+    zlo=zgeoh(k)-zgeoh(1)
+    if(zlo>=zztop)cycle ! skip this i,j no emissions
+    if(kbot==0)then
+      intvallo=0.0
+      kkb=1
+      zloset=,true.
+    else
+      do k=1,nlev
+        zlo=zgeoh(k)-zgeoh(1)
+      end do
+      
+DOK:  do k=1,nlev
+      dens=7.2431122e+18*pgrd(i,j,k)/(tgrd(i,j,k)*(1.+.608*qgrd(i,j,k)))
+      zupset=.false.
+      kup=-1
+      afup=0.0
+      zlo=zgeoh(k)-zgeoh(1)
+!      write(6,*)i,j,'zlo',zlo
+!      flush(6)
+      if(zlo>=zztop)exit DOK
+      zup=zgeoh(k+1)-zgeoh(1)
+!      write(6,*)i,j,'zup',zup
+!      flush(6)
+      if(zup<=zzbot)cycle
+!        if(i==1.and.j==97.and.tile==3)then
+!          write(6,*)'zup',zup,'zlo',zlo,'zzbot',zzbot,'kbot',kbot,'ktop',ktop
+!        endif
+      if(zlo<=zzbot)then
+        zloset=.true.
+        aflo=0.0
+        klo=kbot
+      endif
+      if(zup>=zztop-.000001)then
+        zupset=.true.
+        afup=1.
+        kup=ktop
+      endif
+      if(.not.zloset.or..not.zupset)then
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+!        write(6,*)'k',k,'kbot',kbot,'ktop',ktop,'zupset',zupset
+      !endif
+      do kk=kbot,ktop
+        if(.not.zloset)then
+!          if(zlo<intaltair(kk).and.zlo>=intaltair(kk-1))then
+          if(zlo<intaltair(kk+1).and.zlo>=intaltair(kk))then
+!            klo=kk-1
+            klo=kk
+!            aflo=(zlo-intaltair(kk-1))/(intaltair(kk)-intaltair(kk-1))
+            aflo=(zlo-intaltair(kk))/(intaltair(kk+1)-intaltair(kk))
+            zloset=.true.
+            kbot=kk
+            if(kk==ktop)then
+                write(6,*)'hit ktop',ktop,'i',i,j,k
+            endif
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+!           write(6,*)'new kbot',k,'kbot',kbot
+!       endif
+          endif
+        endif
+        if(.not.zupset)then
+!          if(zup<intaltair(kk).and.zup>=intaltair(kk-1))then
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+         !write(6,*)'zup',zup,'intaltair',kk,intaltair(kk:kk+1)
+!        endif
+          if(zup<intaltair(kk+1).and.zup>=intaltair(kk))then
+!            kup=kk-1
+            kup=kk
+!            afup=(zup-intaltair(kk-1))/(intaltair(kk)-intaltair(kk-1))
+            afup=(zup-intaltair(kk))/(intaltair(kk+1)-intaltair(kk))
+            zupset=.true.
+            if(kk==ktop)then
+                write(6,*)'hit ktop zupset',ktop,'i',i,j,k
+            endif
+          endif
+        endif
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+!          write(6,*)k,'zupset',zupset,zloset,'kup',kup,'afup',afup
+       !endif
+        if(zupset.and.zloset)then
+           exit
+         endif
+      end do ! kk
+      endif
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+!        write(6,*)'k',k,'zupset2',zupset,zloset
+!      endif
+      if(.not.zupset.and.zloset)then
+        kup=klo+1
+        zupset=.true.
+        afup=0.0
+!      if(i==3.and.j==86.and.tile==1)then
+!        if(i==1.and.j==97.and.tile==3)then
+!          write(6,*)'up not set',k
+      !endif
+      endif
+      if(.not.zupset.or..not.zloset.or.klo<0.or.kup<0)then
+         write(6,*)'error ',i,j,k,'tile',tile
+         write(6,*)'klo',klo,kup,zupset,zloset
+         write(6,*)'zlo',zlo,'zup',zup
+         flush(6)
+         write(6,*)'kbot',kbot,ktop
+         write(6,*)'zztop',zztop,zzbot
+         flush(6)
+!         do kk=kbot-1,ktop
+         do kk=kbot,ktop
+           write(6,*)i,j,k,'intaltair',kk,intaltair(kk)
+           flush(6)
+         end do
+         call killit('error')
+      endif
+      do m=1,numcedsair
+        intvallo=intcedsair(i,j,klo+1,m)*aflo+intcedsair(i,j,klo,m)*(1.-aflo)
+        intvalup=intcedsair(i,j,kup+1,m)*afup+intcedsair(i,j,kup,m)*(1.-afup)
+!       here zup, zlo are in meters
+        sac=(intvalup-intvallo)/(zup-zlo)*1.e-5 ! km to cm
+#if 0
+        if(i==3.and.j==86.and.tile==1.and.m==1)then
+          write(6,*)'sac co',k,sac,'zup',zup,'zlo',zlo,'klo',klo,'kup',kup
+          write(6,*)'aflo',aflo,afup
+          write(6,*)'zzbot',zzbot,zztop
+          write(6,*)'intavllo',intvallo,intvalup
+          flush(6)
+        endif
+#endif
+!        write(6,*)i,j,k,'m',m,sac
+!        flush(6)
+!#if 0
+        if(i==143.and.j==192.and.tile==1.and.m==3.and.sac/=0.0)then
+             write(6,*)i,j,k,m,'sac',sac,'delta so2 ppmv'
+             write(6,*)'cedsm intvallo',intvallo,intvalup,'klo',klo,kup,'aflo',aflo,afup
+             write(6,*)'zztop',zztop,zzbot,'dt',dt
+             write(6,*)'ktopcedsair',ktopcedsair(i,j,m),'kbot',kbotcedsair(i,j,m)
+             write(6,*)'klo',klo,kup,'zupset',zupset,zupset,zloset
+             write(6,*)'intaltairklo',klo,intaltair(klo:klo+1)
+             write(6,*)'intaltairkup',kup,intaltair(kup:kup+1)
+             write(6,*)m,'intcedsairklo',klo,intcedsair(i,j,klo:klo+1,m)
+             write(6,*)m,'intcedsairkup',kup,intcedsair(i,j,kup:kup+1,m)
+             write(6,*)m,'zup',zup,'zlo',zlo,'dz',zup-zlo,'dens',dens
+             write(6,*)'slope',(intvalup-intvallo)/(zup-zlo)
+             flush(6)
+        endif
+!#endif
+          if(sac<-1.e-9)then
+             write(6,*)i,j,k,m,'sacneg',sac,'intvallo',intvallo,intvalup,'klo',klo,kup,'aflo',aflo,afup
+             write(6,*)'zztop',zztop,zzbot
+             write(6,*)'klo',klo,kup,'zupset',zupset,zupset,zloset
+             write(6,*)'intaltairklo',klo,intaltair(klo:klo+1)
+             write(6,*)'intaltairkup',kup,intaltair(kup:kup+1)
+             write(6,*)m,'intcedsairklo',klo,intcedsair(i,j,klo:klo+1,m)
+             write(6,*)m,'intcedsairkup',kup,intcedsair(i,j,kup:kup+1,m)
+             write(6,*)m,'zup',zup,zlo
+             write(6,*)'slope',(intvalup-intvallo)/(zup-zlo)
+             flush(6)
+         call killit('error')
+        endif
+        sac=max(0.0,sac)
+        cedsairemis(i,k,j,m)=sac ! ajl
+      end do ! m
+      aflo=afup
+      klo=kup
+      if(kup<0)then
+         write(6,*)'kup error ',kup,i,j,k
+         call killit('kup')
+      endif
+    end do DOK ! k
+  end do !i
+  return
+  end subroutine docedsairm
+  subroutine addcedsairemis(i,j,k,sacco,sacnox,sacn2o)
+  use raqmschemlocaltype_mod
+  implicit none
+!  type(chemlocaltype),target :: chemlocal
+  real sacco,sacnox,sacn2o
+  integer i,j,k,m
+!#include <chemlocaldefinepointer.h>
+! #include <chemlocaldefinepointer2.h>
+!#include <chemlocalsetpointer.h>
+! #include <chemlocalsetpointer2.h>
+  do m=1,numcedsair
+    select case (ccedsair(m))
+    case ('CO')
+      sacco=cedsairemis(i,k,j,m)
+!      cogrd(i,k)=cogrd(i,k)+cedsairemis(i,k,j,m)
+    case ('NOx')
+!      xno2grd(i,k)=xno2grd(i,k)+cedsairemis(i,k,j,m)
+      sacnox=cedsairemis(i,k,j,m)
+    case ('N2O')
+!      xn2ogrd(i,k)=xn2ogrd(i,k)+cedsairemis(i,k,j,m)
+       sacn2o=cedsairemis(i,k,j,m)
+    end select
+  end do
+  return
+  end subroutine addcedsairemis
+end module raqmschem_cedsair_mod

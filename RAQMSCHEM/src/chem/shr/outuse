@@ -1,0 +1,149 @@
+calcdxdy.F90:use chem_types_mod
+calcdxdy.F90: use raqmschem_comm_mod, only : chem_reducetile_pushwithhalo
+calcdxdy.F90:   use chem_types_mod, only : CHEM_KIND_R8,CHEM_KIND_R4
+calcdxdy.F90.orig:use chem_types_mod
+calcdxdy.F90.orig:   use chem_types_mod, only : CHEM_KIND_R8,CHEM_KIND_R4
+calcdxdy.F90.version1:use chem_types_mod
+calcdxdy.F90.version1:   use chem_types_mod, only : CHEM_KIND_R8,CHEM_KIND_R4
+calcvort-dgrid_mod.F90:use raqmschem_data_mod
+calcvort-dgrid_mod.F90:use chem_types_mod
+calcvort-dgrid_mod.F90:use raqmschem_state_mod
+calcvort-dgrid_mod.F90:use raqmschem_config_mod
+calcvort-dgrid_mod.F90:use raqmschem_model_mod
+calcvort-dgrid_mod.F90:use chem_const_mod, only : omegx2,degrad,g=>grvity
+calcvort-dgrid_mod.F90:use raqmschem_const_mod, only : kappa,p00
+calcvort-dgrid_mod.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort-dgrid_mod.F90:  use raqmschem_comm_mod, only : chem_reducetile_pushwithhalo
+calcvort-dgrid_mod.F90.version1.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort-dgrid_mod.F90.version1.F90:  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+calcvort-dgrid_mod.F90.version3:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort-dgrid_mod.F90.version3:  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+calcvort-dgrid_mod.F90.version4:use chem_data_mod
+calcvort-dgrid_mod.F90.version4:use chem_types_mod
+calcvort-dgrid_mod.F90.version4:use chem_state_mod
+calcvort-dgrid_mod.F90.version4:use raqmschem_config_mod
+calcvort-dgrid_mod.F90.version4:use chem_model_mod
+calcvort-dgrid_mod.F90.version4:use chem_const_mod, only : omegx2,degrad
+calcvort-dgrid_mod.F90.version4:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort-dgrid_mod.F90.version4:  use raqmschem_comm_mod, only : chem_reducetile_pushwithhalo
+calcvort-dgrid_mod.version2.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort-dgrid_mod.version2.F90:  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+calcvort_mod.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort_mod.F90:  use raqmschem_comm_mod, only : chem_reducetile_pushwithhalo
+calcvort_mod.F90.prints:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort_mod.F90.prints:  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+calcvort_mod.F90.version1.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+calcvort_mod.F90.version1.F90:  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+caldyi.F:      use raqmschem_pmgrid_mod, only : iam,masterproc
+caldyi.F:      use raqmschem_pmgrid_mod, only : masterproc
+caldyi.F:      use raqmschem_comm_mod
+caldyi.F:      use raqmschem_comm_mod
+raqmschem_comm_mod.F90:  use mpi 
+raqmschem_comm_mod.F90:  use chem_types_mod
+raqmschem_comm_mod.F90:  use chem_rc_mod
+raqmschem_comm_mod.F90:!  use chem_comm_mod, only : chem_comm_get,CHEM_COMM_SUM
+raqmschem_comm_mod.F90:  use chem_comm_mod, only : chem_comm_rootpe
+raqmschem_comm_mod.F90:  use raqmschem_model_mod, only : chem_model_get => raqmschem_model_get,chem_model_domain_get
+raqmschem_comm_mod.F90:    use raqmschem_model_mod, only : raqmschem_model_get
+raqmschem_comm_mod.F90:    use chem_types_mod,only :CHEM_KIND_R4
+raqmschem_comm_mod.F90:    use chem_comm_mod
+raqmschem_comm_mod.F90:    use chem_types_mod,only :CHEM_KIND_R4
+raqmschem_comm_mod.F90:    use chem_comm_mod
+raqmschem_comm_mod.F90:    use chem_types_mod,only :CHEM_KIND_R4
+raqmschem_comm_mod.F90:    use chem_comm_mod
+raqmschemcomm_mod.F90:  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+raqmschemcomm_mod.F90:    use raqmschem_pmgrid_mod, only : nc,nr=>plat,nl=>plev,begj,endj,iam,ibeg,iend
+raqmschemcomm_mod.F90:    use raqmschem_pmgrid_mod, only : nmonHTAP
+raqmschemcomm_mod.F90:!    use raqmschem_species_mod, only : nsol
+raqmschemcomm_mod.F90:!    use pmgrid, only : nc,nr=>plat,nl=>plev,begj,endj
+raqmschemcomm_mod.F90:    use raqmschem_pmgrid_mod, only : nc,nr=>plat,nl=>plev,begj,endj
+raqmschem_config_mod.F90:  use chem_rc_mod
+raqmschem_config_mod.F90:  use chem_types_mod,   only : CHEM_MAXSTR, CHEM_KIND_R4
+raqmschem_config_mod.F90:  use chem_comm_mod,    only : chem_comm_bcast, chem_comm_isroot
+raqmschem_const_mod.F90:  use chem_types_mod
+raqmschem_data_mod.F90:  use chem_rc_mod
+raqmschem_data_mod.F90:  use chem_types_mod
+raqmschem_iodata_mod.F90:  use chem_rc_mod
+raqmschem_iodata_mod.F90:  use chem_types_mod
+raqmschem_iodata_mod.F90:  use raqmschem_io_mod
+raqmschem_iodata_mod.F90:  use chem_comm_mod
+raqmschem_iodata_mod.F90:  use raqmschem_model_mod, only : raqmschem_model_get
+raqmschem_iodata_mod.F90:  use raqmschem_model_mod, only : chem_config_type => raqmschem_config_type
+raqmschem_iodata_mod.F90:  use raqmschem_model_mod, only : chem_model_domain_get
+raqmschem_iodata_mod.F90:  use raqmschem_config_mod
+raqmschem_iodata_mod.F90:  use raqmschem_data_mod, only : chem_data_type
+raqmschem_iodata_mod.F90:  use raqmschemcomm_mod
+raqmschem_iodata_mod.F90:!  use raqmschem_data_mod
+raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod
+raqmschem_iodata_mod.F90:!    use raqmschemcomm_mod, only : allocatechemcommperm
+raqmschem_iodata_mod.F90:    use chem_types_mod
+raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod, only : prefi
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : thgrd
+raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod,only : iam
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : thgrd,o3vmr_inst
+raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod,only : iam
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : thgrd
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : thgrd
+raqmschem_iodata_mod.F90:    use raqmschem_species_mod, only : familyname,soluablechemname,nsol
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : wetc,wetl,wetcf,wetlf,lnox_save,lpaveij,cpaveij,wetccol
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : o3ften_save,o3dten_save,ch4ften_save,ch4dten_save
+raqmschem_iodata_mod.F90:    use raqmschemcomm_mod, only : n2often_save,n2odten_save,coften_save,codten_save
+raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod, only : iam,iamprn,iprnin,jprnin,kprnin,iprn,jprn
+raqmschem_iodata_mod.F90:    use chem_types_mod
+raqmschem_io_mod.F90:  use mpi
+raqmschem_io_mod.F90:  use mpishorthand
+raqmschem_io_mod.F90:  use chem_rc_mod
+raqmschem_io_mod.F90:  use chem_types_mod
+raqmschem_io_mod.F90:  use chem_comm_mod
+raqmschem_io_mod.F90:  use raqmschem_model_mod,only : chem_model_get => raqmschem_model_get
+raqmschem_io_mod.F90:  use raqmschem_model_mod,only : chem_model_domain_get 
+raqmschem_io_mod.F90:  use raqmschem_model_mod,only : chem_model_set => raqmschem_model_set
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use chem_comm_mod, only : chem_comm_get
+raqmschem_io_mod.F90:    use netcdf
+raqmschem_map_mod.F90:use raqmschemlocaltype_mod
+raqmschem_map_mod.F90:use raqmschem_pmgrid_mod, only : nc,nr,begj,endj,nlev,iam,ibeg
+raqmschem_map_mod.F90:use chem_types_mod, only : CHEM_KIND_R8
+raqmschem_map_mod.F90:use raqmschem_species_mod
+raqmschem_map_mod.F90:use raqmschemcomm_mod
+raqmschem_map_mod.F90:use raqmschem_pmgrid_mod, only : nc,nr,begj,endj,nlev
+raqmschem_map_mod.F90:use chem_types_mod, only : CHEM_KIND_R8,CHEM_KIND_R4
+raqmschem_map_mod.F90:use raqmschem_species_mod
+raqmschem_model_mod.F90:  use chem_rc_mod
+raqmschem_model_mod.F90:  use chem_types_mod
+raqmschem_model_mod.F90:!  use raqmschem_config_mod
+raqmschem_model_mod.F90:  use raqmschem_config_mod, only : raqmschem_config_control_init,raqmschem_config_type, &
+raqmschem_model_mod.F90:  use chem_clock_mod
+raqmschem_model_mod.F90:  use raqmschem_data_mod,     only : chem_data_type, chem_data_destroy
+raqmschem_model_mod.F90:  use chem_domain_mod,   only : chem_domain_type
+raqmschem_model_mod.F90:  use raqmschem_state_mod,    only : chem_state_type
+raqmschem_model_mod.F90:  use chem_iolayout_mod, only : chem_iolayout_type
+raqmschem_model_mod.F90:  use chem_comm_mod
+raqmschem_pmgrid_mod.F90:!  use mpi
+raqmschem_pmgrid_mod.F90:        write(6,*)'use twolayer_emsissions'
+raqmschem_pmgrid_mod.F90:    write(6,*)'dont use twolayer emissions'
+raqmschem_species_mod.F90:    use field_manager_mod, only : find_field_index
+raqmschem_state_mod.F90:  use chem_types_mod

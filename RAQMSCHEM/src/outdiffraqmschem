@@ -1,0 +1,293 @@
+Binary files chem/libraqmschem.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/libraqmschem.a differ
+diff -rBbw chem/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/Makefile
+240c240
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+243,245c243,245
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+264c264
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+277c277
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+294,297c294,297
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+310c310
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+318,319c318,319
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+327c327
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+Binary files chem/plume/libplume.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/libplume.a differ
+Binary files chem/plume/libplume_a-raqms_plume_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/libplume_a-raqms_plume_mod.o differ
+Binary files chem/plume/libplume_a-raq_plume_scalar_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/libplume_a-raq_plume_scalar_mod.o differ
+Binary files chem/plume/libplume_a-raq_plume_zero_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/libplume_a-raq_plume_zero_mod.o differ
+diff -rBbw chem/plume/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/Makefile
+171c171
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+174,176c174,176
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+195c195
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+208c208
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+225,228c225,228
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+241c241
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+249,250c249,250
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+258c258
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+diff -rBbw chem/plume/raqms_plume_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/raqms_plume_mod.F90
+77a78,80
+> !    write(200+iam,*)'ktopco',allocated(ktopco)
+> !    write(200+iam,*)'ime',ime-ims+1,'jms',jms,jme
+> !    call flush(200+iam)
+Binary files chem/plume/raqms_plume_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/raqms_plume_mod.mod differ
+Binary files chem/plume/raq_plume_data_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/raq_plume_data_mod.mod differ
+Binary files chem/plume/raq_plume_scalar_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/raq_plume_scalar_mod.mod differ
+Binary files chem/plume/raq_plume_zero_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume/raq_plume_zero_mod.mod differ
+diff -rBbw chem/raqms/chem_driver_3d_nmhc.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.F
+5714d5713
+< !     this routine is no longer used zlwigrd defined elsewhere
+5715a5715,5716
+> !     this routine is no longer used
+> !     zlwigrd defined elsewhere
+5776a5778,5779
+>       write(200+iam,*)'oro shape',shape(oro),lbound(oro),maxval(oro)
+>       call flush(200+iam)
+diff -rBbw chem/raqms/chem_driver_3d_nmhc.fastjtype.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.fastjtype.F
+5714d5713
+< !     this routine is no longer used zlwigrd defined elsewhere
+5715a5715,5716
+> !     this routine is no longer used
+> !     zlwigrd defined elsewhere
+5776a5778,5779
+>       write(200+iam,*)'oro shape',shape(oro),lbound(oro),maxval(oro)
+>       call flush(200+iam)
+Binary files chem/raqms/chem_driver_3d_nmhc.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.o differ
+diff -rBbw chem/raqms/chemgsimod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chemgsimod.F90
+142a143
+> ! moved to raqsm_model_mod.F90
+Binary files chem/raqms/chemgsimod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chemgsimod.mod differ
+Binary files chem/raqms/computeaod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/computeaod.mod differ
+Binary files chem/raqms/exchange_o3vmr_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/exchange_o3vmr_mod.mod differ
+Binary files chem/raqms/libraqms.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms.a differ
+Binary files chem/raqms/libraqms_a-calcaodgsi.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-calcaodgsi.o differ
+Binary files chem/raqms/libraqms_a-calcaod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-calcaod.o differ
+Binary files chem/raqms/libraqms_a-chemgsimod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-chemgsimod.o differ
+Binary files chem/raqms/libraqms_a-computeaod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-computeaod.o differ
+Binary files chem/raqms/libraqms_a-raq_dep_ctrans_grell_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raq_dep_ctrans_grell_mod.o differ
+Binary files chem/raqms/libraqms_a-raq_dep_wet_ls_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raq_dep_wet_ls_mod.o differ
+Binary files chem/raqms/libraqms_a-raqms_model_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raqms_model_mod.o differ
+Binary files chem/raqms/libraqms_a-raqms_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raqms_mod.o differ
+Binary files chem/raqms/libraqms_a-seasalt_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-seasalt_mod.o differ
+Binary files chem/raqms/libraqms_a-vertmx_driver_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-vertmx_driver_mod.o differ
+Binary files chem/raqms/libraqms_a-vertmxv_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-vertmxv_mod.o differ
+Binary files chem/raqms/libraqms_a-wetdep_alpha_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_alpha_mod.o differ
+Binary files chem/raqms/libraqms_a-wetdep_fam_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_fam_mod.o differ
+Binary files chem/raqms/libraqms_a-wetdep_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_mod.o differ
+Binary files chem/raqms/libraqms_a-wetdep_prep_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_prep_mod.o differ
+diff -rBbw chem/raqms/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/Makefile
+208c208
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+211,213c211,213
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+237c237
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+250c250
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+267,270c267,270
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+283c283
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+291,292c291,292
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+300c300
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+Binary files chem/raqms/raq_dep_ctrans_grell_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_ctrans_grell_mod.mod differ
+Binary files chem/raqms/raq_dep_wet_ls_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_wet_ls_mod.mod differ
+diff -rBbw chem/raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+425a426,427
+> !      write(200+iam,*)tile,'slmsk2d',maxval(statein%slmsk2d),minval(statein%slmsk2d)
+> !      call flush(200+iam)
+785a788
+> !   need to set stateout fror aerosols so have updated ones for gsi or output
+1034a1038,1041
+> !            write(200+iam,*)'ptrop',ptrop(i,j),ztrop(i,j),'ktrop',ktrop(i,j)
+> !            write(200+iam,*)'trop above 50 at',i,j
+> !          else
+> !            write(200+iam,*)i,j,'ptropraqms',ptropraq(i,j),ztropraq(i,j),ktrop(i,j)
+Binary files chem/raqms/raqms_model_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.mod differ
+Binary files chem/raqms/raqms_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_mod.mod differ
+Binary files chem/raqms/seasalt_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/seasalt_mod.mod differ
+Binary files chem/raqms/vertmx_driver_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/vertmx_driver_mod.mod differ
+Binary files chem/raqms/vertmxv_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/vertmxv_mod.mod differ
+Binary files chem/raqms/wetdep_alpha_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_alpha_mod.mod differ
+Binary files chem/raqms/wetdep_fam_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_fam_mod.mod differ
+Binary files chem/raqms/wetdep_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_mod.mod differ
+Binary files chem/raqms/wetdep_prep_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_prep_mod.mod differ
+Binary files chem/raqmschem_methods.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqmschem_methods.mod differ
+Binary files chem/raqmschm.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqmschm.mod differ
+Binary files chem/shr/calcdxdy.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcdxdy.mod differ
+Binary files chem/shr/calcvort_dgrid_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcvort_dgrid_mod.mod differ
+Binary files chem/shr/calcvort_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcvort_mod.mod differ
+Binary files chem/shr/libshr.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr.a differ
+Binary files chem/shr/libshr_a-calcdxdy.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcdxdy.o differ
+Binary files chem/shr/libshr_a-calcvort-dgrid_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcvort-dgrid_mod.o differ
+Binary files chem/shr/libshr_a-calcvort_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcvort_mod.o differ
+Binary files chem/shr/libshr_a-raqmschem_comm_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_comm_mod.o differ
+Binary files chem/shr/libshr_a-raqmschem_iodata_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_iodata_mod.o differ
+Binary files chem/shr/libshr_a-raqmschem_io_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_io_mod.o differ
+Binary files chem/shr/libshr_a-raqmschem_map_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_map_mod.o differ
+Binary files chem/shr/libshr_a-raqmschem_pmgrid_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_pmgrid_mod.o differ
+diff -rBbw chem/shr/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/Makefile
+209c209
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+212,214c212,214
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+233c233
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+246c246
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+263,266c263,266
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+279c279
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+287,288c287,288
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+296c296
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+Binary files chem/shr/mpishorthand.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/mpishorthand.mod differ
+Binary files chem/shr/raqmschem_comm_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_comm_mod.mod differ
+Binary files chem/shr/raqmschemcomm_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschemcomm_mod.mod differ
+Binary files chem/shr/raqmschem_config_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_config_mod.mod differ
+Binary files chem/shr/raqmschem_const_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_const_mod.mod differ
+Binary files chem/shr/raqmschem_data_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_data_mod.mod differ
+diff -rBbw chem/shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+1820a1821,1822
+> !        write(200+iam,*)'zwligrd',tile,maxval(zlwigrd),minval(zlwigrd)
+> !        call flush(200+iam)
+Binary files chem/shr/raqmschem_iodata_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.mod differ
+Binary files chem/shr/raqmschem_io_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.mod differ
+Binary files chem/shr/raqmschemlocaltype_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschemlocaltype_mod.mod differ
+Binary files chem/shr/raqmschem_map_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_map_mod.mod differ
+Binary files chem/shr/raqmschem_model_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_model_mod.mod differ
+diff -rBbw chem/shr/raqmschem_pmgrid_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_pmgrid_mod.F90
+460a461
+> !        write(200+iam,*)'ascend'
+Binary files chem/shr/raqmschem_pmgrid_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_pmgrid_mod.mod differ
+Binary files chem/shr/raqmschem_species_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_species_mod.mod differ
+Binary files chem/shr/raqmschem_state_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_state_mod.mod differ
+Binary files chem/shr/raqmschem_vars_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_vars_mod.mod differ

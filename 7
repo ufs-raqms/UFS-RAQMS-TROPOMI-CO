@@ -1,0 +1,657 @@
+Convert /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder
+...into /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder.mk
+Include /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/coupledFV3_GSDCHEM.appBuilder.mk
+Adding FV3 makeopts to FMS makeopts
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs                      ; \
+exec gmake  all
+gmake[1]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs'
+mkdir -p "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL"
+mv fms.mk "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL/."
+cp -fp *.a *.mod ../include/*.h "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL"/.
+gmake[1]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/fv3gfs'
+test -d /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+Compiling  into /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL on linux
+cp -fp /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/configure.nems \
+       "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3"/conf/configure.fv3
+cp -fp /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems   \
+       "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3"/conf/modules.fv3
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3 ; \
+  exec gmake COMP=FV3 COMP_SRCDIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3 COMP_BINDIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL MACHINE_ID=linux FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL  nemsinstall
+gmake[1]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake -C cpl                  FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 io ...
+
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/cpl'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/cpl'
+gmake -C gfsphysics      FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 gfsphysics ...
+
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics'
+gmake -C ipd                  FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 gfsphysics ...
+
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/ipd'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/ipd'
+gmake -C io                   FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 io ...
+
+$ESMF_INC is [-I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include]
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/io'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/io'
+gmake -C atmos_cubed_sphere   FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+
+Build standalone FV3 fv3core ...
+
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/atmos_cubed_sphere'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/atmos_cubed_sphere'
+gmake -C stochastic_physics   FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL 32BIT=N  # force gfs physics to 64bit
+
+Build standalone FV3 stochastic_physics ...
+
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/stochastic_physics'
+gmake[2]: Nothing to be done for `all'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/stochastic_physics'
+gmake libfv3cap.a  FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake[2]: `libfv3cap.a' is up to date.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+gmake esmf_make_fragment FMS_DIR=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+# additional include files needed for PGI
+#@echo "ESMF_DEP_INCPATH   = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/nems_dir" >> fv3.mk
+
+Finished generating ESMF self-describing build dependency makefile fragment: fv3.mk
+
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+Installation into "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL" complete!
+
+gmake[1]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3'
+test -d /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FV3/FV3_INSTALL
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; export                   ; \
+set -e                                                        ; \
+cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM                                          ; \
+./configure --prefix=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL                          \
+  --datarootdir=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL --libdir=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL    \
+          
+export ADVISOR_2018_DIR="/opt/intel/18/advisor_2018.4.0.574144"
+export BACIO_INC4=" "
+export BACIO_LIB4="/home/lenzen/FV3libs/lib/sorc/bacio_v2.0.1/lib/libbacio_4.a"
+export BASH_ENV="/usr/share/lmod/lmod/init/bash"
+export CC="icc"
+export CLASSPATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/mpi.jar:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/lib/daal.jar"
+export COMPUTERNAME="s4-submit"
+export CPATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/ipp/include:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/include:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/pstl/include:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/include:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/include:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/include"
+export CXX="icpc"
+export DAALROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal"
+export DISPLAY="localhost:20.0"
+export ESMFMKFILE="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk"
+export ESMFV="8.0.0"
+export ESMF_COMM="intelmpi"
+export ESMF_COMPILER="intel"
+export ESMF_DIR="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf"
+export ESMF_INC="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/src/include"
+export ESMF_LIB="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/libesmf.a"
+export ESMF_MOD="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/mod/modO/Linux.intel.64.intelmpi.default"
+export ESMF_MPIRUN="mpirun.sbatch"
+export ESMF_VERSION_MAJOR="8"
+export F77="ifort"
+export FC="mpiifort"
+export FI_PROVIDER="mlx"
+export FLEX_LIB_DIR="/usr/lib64/"
+export FORT_BUFFERED="true"
+export FOR_FASTMEM_RETRY="true"
+export FULL_MACHINE_ID="s4-submit"
+export GDBSERVER_MIC="/opt/intel/18/debugger_2018/gdb/targets/intel64/x200/bin/gdbserver"
+export GDB_CROSS="/opt/intel/18/debugger_2018/gdb/intel64/bin/gdb-ia"
+export GFSIO_DIR="/data/prod/ncep_libs/intel/18.0.3/gfsio/v1.1.0"
+export GFSIO_INC4="/data/prod/ncep_libs/intel/18.0.3/gfsio/v1.1.0/incmod/gfsio_v1.1.0_4"
+export GFSIO_LIB4="/data/prod/ncep_libs/intel/18.0.3/gfsio/v1.1.0/libgfsio_v1.1.0_4.a"
+export GFSIO_SRC="/data/prod/ncep_libs/intel/18.0.3/gfsio/v1.1.0/src"
+export HISTCONTROL="ignoredups"
+export HISTSIZE="1000"
+export HOJO25MED8="-L /home/lenzen/hojo8 -lhojo25nc.medium"
+export HOME="/home/lenzen"
+export HOSTNAME="s4"
+export INFOPATH="/opt/intel/18/documentation_2018/en/debugger//gdb-ia/info/:/opt/intel/18/documentation_2018/en/debugger//gdb-igfx/info/"
+export INSPECTOR_2018_DIR="/opt/intel/18/inspector_2018.4.0.574143"
+export INTEL_LICENSE_FILE="/opt/intel/18/licenses:/opt/intel/licenses:/root/intel/licenses:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/licenses:/opt/intel/licenses:/root/intel/licenses"
+export INTEL_PYTHONHOME="/opt/intel/18/debugger_2018/python/intel64/"
+export IPPROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/ipp"
+export IP_DIR="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0"
+export IP_INC4="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/include/ip_v3.0.0_4"
+export IP_INC8="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/include/ip_v3.0.0_8"
+export IP_INCd="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/include/ip_v3.0.0_d"
+export IP_LIB4="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/libip_v3.0.0_4.a"
+export IP_LIB8="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/libip_v3.0.0_8.a"
+export IP_LIBd="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/libip_v3.0.0_d.a"
+export IP_SRC="/data/prod/ncep_libs/intel/18.0.3/ip/v3.0.0/sorc"
+export I_MPI_CC="icc"
+export I_MPI_CXX="icpc"
+export I_MPI_DAPL_UD="enable"
+export I_MPI_DIR="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi"
+export I_MPI_F77="ifort"
+export I_MPI_F90="ifort"
+export I_MPI_INC="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/include64"
+export I_MPI_LIB="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/lib64"
+export I_MPI_PMI_LIBRARY="/usr/lib64/libpmi.so"
+export I_MPI_ROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi"
+export JASPERINC="/usr/include/jasper/"
+export JASPERLIB="/usr/lib64"
+export LANDSFCUTIL_DIR="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0"
+export LANDSFCUTIL_INC4="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0/include/landsfcutil_v2.1.0_4"
+export LANDSFCUTIL_INCd="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0/include/landsfcutil_v2.1.0_d"
+export LANDSFCUTIL_LIB4="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0/liblandsfcutil_v2.1.0_4.a"
+export LANDSFCUTIL_LIBd="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0/liblandsfcutil_v2.1.0_d.a"
+export LANDSFCUTIL_SRC="/data/prod/ncep_libs/intel/18.0.3/landsfcutil/v2.1.0/src"
+export LANG="en_US.iso-8859-15"
+export LAPACK_PATH=" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+export LD_LIBRARY_PATH="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default:/opt/udunits/2.2.26-intel-18.0.3/lib:/opt/netcdf4/4.6.2-intel-18.0.3/lib:/opt/hdf5/1.8.21-intel-18.0.3/lib:/opt/hdf4/4.2.14-intel-18.0.3/lib:/opt/intel/18/itac/2018.4.025/intel64/slib:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/mic/lib:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/ipp/lib/intel64:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/lib/intel64/gcc4.7:/opt/intel/18/debugger_2018/iga/lib:/opt/intel/18/debugger_2018/libipt/intel64/lib:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/../tbb/lib/intel64_lin/gcc4.4"
+export LESSOPEN="||/usr/bin/lesspipe.sh %s"
+export LIBRARY_PATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/ipp/lib/intel64:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/lib/intel64/gcc4.7:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/lib/intel64/gcc4.7:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/lib/intel64_lin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/../tbb/lib/intel64_lin/gcc4.4"
+export LIB_NAME="W3EMC"
+export LMOD_CMD="/usr/share/lmod/lmod/libexec/lmod"
+export LMOD_DIR="/usr/share/lmod/lmod/libexec"
+export LMOD_FAMILY_COMPILER="intel"
+export LMOD_FAMILY_COMPILER_VERSION="18.0.4"
+export LMOD_FAMILY_MPI="impi"
+export LMOD_FAMILY_MPI_VERSION="18.0.4"
+export LMOD_PKG="/usr/share/lmod/lmod"
+export LMOD_ROOT="/usr/share/lmod"
+export LMOD_SETTARG_FULL_SUPPORT="no"
+export LMOD_VERSION="8.2.10"
+export LMOD_sys="Linux"
+export LM_LICENSE_FILE="27009@s4-head.s4"
+export LOADEDMODULES="license_intel/S4:impi/18.0.4:intel/18.0.4:hdf/4.2.14:hdf5/1.8.21:netcdf4/4.6.2:udunits2/2.2.26:ncview/2.1.7:esmf/8.0.0:nemsio/v1.0.0:landsfcutil/v2.1.0:sfcio/v1.0.0:nemsiogfs/v2.0.1:gfsio/v1.1.0:ip/v3.0.0:sigio/v2.0.1:bacio/v2.0.1:w3emc/v2.0.5:w3nco/v2.0.6:sp/v2.0.2"
+export LOGNAME="lenzen"
+export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=01;36:*.spx=01;36:*.xspf=01;36:"
+export MAIL="/var/spool/mail/lenzen"
+export MAKEFLAGS="app=coupledFV3_GSDCHEM"
+export MAKELEVEL="1"
+export MAKEOVERRIDES="\${-*-command-variables-*-}"
+export MANPATH="/opt/netcdf4/4.6.2-intel-18.0.3/share/info:/opt/netcdf4/4.6.2-intel-18.0.3/share/man:/opt/hdf4/4.2.14-intel-18.0.3/share/man:/opt/intel/18/itac/2018.4.025/man:/opt/intel/18/man/common:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/man:/opt/intel/18/documentation_2018/en/debugger/gdb-ia/man:/opt/intel/18/documentation_2018/en/debugger/gdb-igfx/man:/usr/share/lmod/lmod/share/man:/opt/puppetlabs/puppet/share/man::"
+export MFLAGS=""
+export MKLROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl"
+export MODULEPATH="/data/prod/ncep_libs/intel/18.0.3/modulefiles:/opt/apps/modulefiles/Compiler/intel/18:/opt/apps/modulefiles/Compiler/intel/non-default/18:/opt/apps/modulefiles/Linux:/opt/apps/modulefiles/Core:/usr/share/lmod/lmod/modulefiles/Core:/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles:/home/lenzen/FV3libs/modulefiles"
+export MODULEPATH_ROOT="/opt/apps/modulefiles"
+export MODULESHOME="/usr/share/lmod/lmod"
+export MPICC="mpicc"
+export MPICH_F77="ifort"
+export MPICH_F90="ifort"
+export MPICH_FC="mpiifort"
+export MPICXX="mpicxx"
+export MPIF77="mpif77"
+export MPIF90="mpif90"
+export MPIIFORT="mpiifort"
+export MPI_TYPE_DEPTH="20"
+export MPM_LAUNCHER="/opt/intel/18/debugger_2018/mpm/mic/bin/start_mpm.sh"
+export NEMSIOGFS_DIR="/data/prod/ncep_libs/intel/18.0.3/nemsiogfs/v2.0.1"
+export NEMSIOGFS_INC="/data/prod/ncep_libs/intel/18.0.3/nemsiogfs/v2.0.1/include/nemsiogfs"
+export NEMSIOGFS_LIB="/data/prod/ncep_libs/intel/18.0.3/nemsiogfs/v2.0.1/libnemsiogfs_v2.0.1.a"
+export NEMSIOGFS_SRC="/data/prod/ncep_libs/intel/18.0.3/nemsiogfs/v2.0.1/src"
+export NEMSIO_INC="/home/lenzen/FV3libs/lib/incmod/nemsio"
+export NEMSIO_LIB="/home/lenzen/FV3libs/lib/libnemsio.a"
+export NEMSIO_VER="v1.0.0"
+export NETCDF="/opt/netcdf4/4.6.2-intel-18.0.3"
+export NETCDF4="/opt/netcdf4/4.6.2-intel-18.0.3"
+export NETCDF_BIN="/opt/netcdf4/4.6.2-intel-18.0.3/bin"
+export NETCDF_DIR="/opt/netcdf4/4.6.2-intel-18.0.3"
+export NETCDF_INC="/opt/netcdf4/4.6.2-intel-18.0.3/include"
+export NETCDF_INCLUDE="-I/opt/netcdf4/4.6.2-intel-18.0.3/include"
+export NETCDF_LDFLAGS_F="-L/opt/netcdf4/4.6.2-intel-18.0.3/lib -lnetcdff -lnetcdf"
+export NETCDF_LIB="/opt/netcdf4/4.6.2-intel-18.0.3/lib"
+export NLSPATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64/locale/%l_%t/%N:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin/locale/%l_%t/%N:/opt/intel/18/debugger_2018/gdb/intel64/share/locale/%l_%t/%N"
+export OLDPWD
+export PATH="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/bin/binO/Linux.intel.64.intelmpi.default:/opt/ncview/2.1.7-intel-18.0.3/bin:/opt/udunits/2.2.26-intel-18.0.3/bin:/opt/netcdf4/4.6.2-intel-18.0.3/bin:/opt/hdf5/1.8.21-intel-18.0.3/bin:/opt/hdf4/4.2.14-intel-18.0.3/bin:/opt/intel/18/advisor_2018.4.0.574144/bin64:/opt/intel/18/inspector_2018.4.0.574143/bin64:/opt/intel/18/itac/2018.4.025/intel64/bin:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/bin/intel64:/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/bin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/puppetlabs/bin:/opt/dell/srvadmin/bin:/data/users/lenzen/global-workflow_v16b/util/ush:/data/users/lenzen/global-workflow_v16b/util/ush/produtil:/data/users/lenzen/global-workflow_v16b/ush/rocoto:/home/lenzen/.local/bin:/home/lenzen/bin:/opt/intel/18/parallel_studio_xe_2018.4.057/bin"
+export PKG_CONFIG_PATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/bin/pkgconfig"
+export PSTLROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/pstl"
+export PWD="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS"
+export PYTHONPATH="/opt/intel/18/advisor_2018.4.0.574144/pythonapi"
+export QTDIR="/usr/lib64/qt-3.3"
+export QTINC="/usr/lib64/qt-3.3/include"
+export QTLIB="/usr/lib64/qt-3.3/lib"
+export QT_GRAPHICSSYSTEM_CHECKED="1"
+export SFCIO_DIR="/data/prod/ncep_libs/intel/18.0.3/sfcio/v1.0.0"
+export SFCIO_INC4="/data/prod/ncep_libs/intel/18.0.3/sfcio/v1.0.0/incmod/sfcio_v1.0.0_4"
+export SFCIO_LIB4="/data/prod/ncep_libs/intel/18.0.3/sfcio/v1.0.0/libsfcio_v1.0.0_4.a"
+export SFCIO_SRC="/data/prod/ncep_libs/intel/18.0.3/sfcio/v1.0.0/src"
+export SHELL="/bin/bash"
+export SHLVL="3"
+export SIGIO_DIR="/data/prod/ncep_libs/intel/18.0.3/sigio/v2.0.1"
+export SIGIO_INC4="/data/prod/ncep_libs/intel/18.0.3/sigio/v2.0.1/incmod/sigio_v2.0.1_4"
+export SIGIO_LIB4="/data/prod/ncep_libs/intel/18.0.3/sigio/v2.0.1/libsigio_v2.0.1_4.a"
+export SIGIO_SRC="/data/prod/ncep_libs/intel/18.0.3/sigio/v2.0.1/libsrc"
+export SP_DIR="/data/prod/ncep_libs/intel/18.0.3/sp/v2.0.2"
+export SP_LIB4="/data/prod/ncep_libs/intel/18.0.3/sp/v2.0.2/libsp_v2.0.2_4.a"
+export SP_LIB8="/data/prod/ncep_libs/intel/18.0.3/sp/v2.0.2/libsp_v2.0.2_8.a"
+export SP_LIBd="/data/prod/ncep_libs/intel/18.0.3/sp/v2.0.2/libsp_v2.0.2_d.a"
+export SP_SRC="/data/prod/ncep_libs/intel/18.0.3/sp/v2.0.2/src"
+export SSEC_HDF4_BIN="/opt/hdf4/4.2.14-intel-18.0.3/bin"
+export SSEC_HDF4_DIR="/opt/hdf4/4.2.14-intel-18.0.3"
+export SSEC_HDF4_INC="/opt/hdf4/4.2.14-intel-18.0.3/include"
+export SSEC_HDF4_LIB="/opt/hdf4/4.2.14-intel-18.0.3/lib"
+export SSEC_HDF5_BIN="/opt/hdf5/1.8.21-intel-18.0.3/bin"
+export SSEC_HDF5_DIR="/opt/hdf5/1.8.21-intel-18.0.3"
+export SSEC_HDF5_INC="/opt/hdf5/1.8.21-intel-18.0.3/include"
+export SSEC_HDF5_LIB="/opt/hdf5/1.8.21-intel-18.0.3/lib"
+export SSEC_NCVIEW_BIN="/opt/ncview/2.1.7-intel-18.0.3/bin"
+export SSEC_NCVIEW_DIR="/opt/ncview/2.1.7-intel-18.0.3"
+export SSEC_NETCDF4_BIN="/opt/netcdf4/4.6.2-intel-18.0.3/bin"
+export SSEC_NETCDF4_DIR="/opt/netcdf4/4.6.2-intel-18.0.3"
+export SSEC_NETCDF4_INC="/opt/netcdf4/4.6.2-intel-18.0.3/include"
+export SSEC_NETCDF4_LIB="/opt/netcdf4/4.6.2-intel-18.0.3/lib"
+export SSEC_NETCDF_BIN="/opt/netcdf4/4.6.2-intel-18.0.3/bin"
+export SSEC_NETCDF_DIR="/opt/netcdf4/4.6.2-intel-18.0.3"
+export SSEC_NETCDF_INC="/opt/netcdf4/4.6.2-intel-18.0.3/include"
+export SSEC_NETCDF_LIB="/opt/netcdf4/4.6.2-intel-18.0.3/lib"
+export SSEC_SZIP_INC="/opt/szip/include"
+export SSEC_SZIP_LIB="/opt/szip/lib"
+export SSEC_UDUNITS2_BIN="/opt/udunits/2.2.26-intel-18.0.3/bin"
+export SSEC_UDUNITS2_DIR="/opt/udunits/2.2.26-intel-18.0.3"
+export SSEC_UDUNITS2_INC="/opt/udunits/2.2.26-intel-18.0.3/include"
+export SSEC_UDUNITS2_LIB="/opt/udunits/2.2.26-intel-18.0.3/lib"
+export SSH_CLIENT="128.104.109.220 59353 22"
+export SSH_CONNECTION="128.104.109.220 59353 128.104.110.112 22"
+export SSH_TTY="/dev/pts/28"
+export TBBROOT="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb"
+export TERM="vt100"
+export USER="lenzen"
+export VT_ADD_LIBS="-ldwarf"
+export VT_ARCH="intel64"
+export VT_LIB_DIR="/opt/intel/18/itac/2018.4.025/intel64/lib"
+export VT_MPI="impi4"
+export VT_ROOT="/opt/intel/18/itac/2018.4.025"
+export VT_SLIB_DIR="/opt/intel/18/itac/2018.4.025/intel64/slib"
+export W3EMC_INC4="/home/lenzen/FV3libs/lib/incmod/w3emc_4"
+export W3EMC_LIB4="/home/lenzen/FV3libs/lib/libw3emc_4.a"
+export W3EMC_LIB8="/home/lenzen/FV3libs/lib/libw3emc_8.a"
+export W3EMC_LIBd="/home/lenzen/FV3libs/lib/libw3emc_d.a"
+export W3EMC_VER="v2.0.5"
+export W3NCO_DIR="/data/prod/ncep_libs/intel/18.0.3/w3nco/v2.0.6"
+export W3NCO_LIB4="/data/prod/ncep_libs/intel/18.0.3/w3nco/v2.0.6/libw3nco_v2.0.6_4.a"
+export W3NCO_LIB8="/data/prod/ncep_libs/intel/18.0.3/w3nco/v2.0.6/libw3nco_v2.0.6_8.a"
+export W3NCO_LIBd="/data/prod/ncep_libs/intel/18.0.3/w3nco/v2.0.6/libw3nco_v2.0.6_d.a"
+export W3NCO_SRC="/data/prod/ncep_libs/intel/18.0.3/w3nco/v2.0.6/src"
+export W3emc_INC8="/home/lenzen/FV3libs/lib/incmod/w3emc_8"
+export WRFIO_NCD_LARGE_FILE_SUPPORT="1"
+export WRF_CHEM="1"
+export WRF_DIR="/home/lenzen/WRF/WRFV3.5.1/WRFV3"
+export WRF_EM_CORE="1"
+export WRF_KPP="1"
+export XDG_DATA_DIRS="/home/lenzen/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share"
+export XDG_RUNTIME_DIR="/run/user/331"
+export XDG_SESSION_ID="712691"
+export YACC="/usr/bin/yacc -d"
+export _LMFILES_="/opt/apps/modulefiles/Core/license_intel/S4.lua:/opt/apps/modulefiles/Core/impi/18.0.4.lua:/opt/apps/modulefiles/Core/intel/18.0.4.lua:/opt/apps/modulefiles/Compiler/intel/18/hdf/4.2.14.lua:/opt/apps/modulefiles/Compiler/intel/18/hdf5/1.8.21.lua:/opt/apps/modulefiles/Compiler/intel/18/netcdf4/4.6.2.lua:/opt/apps/modulefiles/Compiler/intel/18/udunits2/2.2.26.lua:/opt/apps/modulefiles/Compiler/intel/18/ncview/2.1.7.lua:/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles/esmf/8.0.0.lua:/home/lenzen/FV3libs/modulefiles/nemsio/v1.0.0.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/landsfcutil/v2.1.0.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/sfcio/v1.0.0.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/nemsiogfs/v2.0.1.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/gfsio/v1.1.0.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/ip/v3.0.0.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/sigio/v2.0.1.lua:/home/lenzen/FV3libs/modulefiles/bacio/v2.0.1.lua:/home/lenzen/FV3libs/modulefiles/w3emc/v2.0.5.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/w3nco/v2.0.6.lua:/data/prod/ncep_libs/intel/18.0.3/modulefiles/sp/v2.0.2.lua"
+export _ModuleTable001_="X01vZHVsZVRhYmxlXz17WyJNVHZlcnNpb24iXT0zLFsiY19yZWJ1aWxkVGltZSJdPTg2NDAwLFsiY19zaG9ydFRpbWUiXT1mYWxzZSxkZXB0aFQ9e30sZmFtaWx5PXtbImNvbXBpbGVyIl09ImludGVsIixbIm1waSJdPSJpbXBpIix9LG1UPXtiYWNpbz17WyJmbiJdPSIvaG9tZS9sZW56ZW4vRlYzbGlicy9tb2R1bGVmaWxlcy9iYWNpby92Mi4wLjEubHVhIixbImZ1bGxOYW1lIl09ImJhY2lvL3YyLjAuMSIsWyJsb2FkT3JkZXIiXT0xNyxwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJiYWNpby92Mi4wLjEiLH0sZXNtZj17WyJmbiJdPSIvaG9tZS9sZW56ZW4vRVNNRi44LjAuMC5CUzQ3LlM0L2VzbWYvbW9kdWxlZmls"
+export _ModuleTable002_="ZXMvZXNtZi84LjAuMC5sdWEiLFsiZnVsbE5hbWUiXT0iZXNtZi84LjAuMCIsWyJsb2FkT3JkZXIiXT05LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09ImVzbWYvOC4wLjAiLH0sZ2ZzaW89e1siZm4iXT0iL2RhdGEvcHJvZC9uY2VwX2xpYnMvaW50ZWwvMTguMC4zL21vZHVsZWZpbGVzL2dmc2lvL3YxLjEuMC5sdWEiLFsiZnVsbE5hbWUiXT0iZ2ZzaW8vdjEuMS4wIixbImxvYWRPcmRlciJdPTE0LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09Imdmc2lvL3YxLjEuMCIsfSxoZGY9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvbXBpbGVyL2ludGVs"
+export _ModuleTable003_="LzE4L2hkZi80LjIuMTQubHVhIixbImZ1bGxOYW1lIl09ImhkZi80LjIuMTQiLFsibG9hZE9yZGVyIl09NCxwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJoZGYvNC4yLjE0Iix9LGhkZjU9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvbXBpbGVyL2ludGVsLzE4L2hkZjUvMS44LjIxLmx1YSIsWyJmdWxsTmFtZSJdPSJoZGY1LzEuOC4yMSIsWyJsb2FkT3JkZXIiXT01LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09ImhkZjUvMS44LjIxIix9LGltcGk9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvcmUvaW1waS8xOC4wLjQubHVhIixb"
+export _ModuleTable004_="ImZ1bGxOYW1lIl09ImltcGkvMTguMC40IixbImxvYWRPcmRlciJdPTIscHJvcFQ9e30sWyJzdGFja0RlcHRoIl09MSxbInN0YXR1cyJdPSJhY3RpdmUiLFsidXNlck5hbWUiXT0iaW1waS8xOC4wLjQiLH0saW50ZWw9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvcmUvaW50ZWwvMTguMC40Lmx1YSIsWyJmdWxsTmFtZSJdPSJpbnRlbC8xOC4wLjQiLFsibG9hZE9yZGVyIl09Myxwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJpbnRlbC8xOC4wLjQiLH0saXA9e1siZm4iXT0iL2RhdGEvcHJvZC9uY2VwX2xpYnMvaW50ZWwvMTguMC4zL21vZHVsZWZpbGVzL2lwL3YzLjAuMC5sdWEiLFsiZnVsbE5hbWUiXT0i"
+export _ModuleTable005_="aXAvdjMuMC4wIixbImxvYWRPcmRlciJdPTE1LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09ImlwL3YzLjAuMCIsfSxsYW5kc2ZjdXRpbD17WyJmbiJdPSIvZGF0YS9wcm9kL25jZXBfbGlicy9pbnRlbC8xOC4wLjMvbW9kdWxlZmlsZXMvbGFuZHNmY3V0aWwvdjIuMS4wLmx1YSIsWyJmdWxsTmFtZSJdPSJsYW5kc2ZjdXRpbC92Mi4xLjAiLFsibG9hZE9yZGVyIl09MTEscHJvcFQ9e30sWyJzdGFja0RlcHRoIl09MCxbInN0YXR1cyJdPSJhY3RpdmUiLFsidXNlck5hbWUiXT0ibGFuZHNmY3V0aWwvdjIuMS4wIix9LGxpY2Vuc2VfaW50ZWw9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvcmUvbGljZW5zZV9p"
+export _ModuleTable006_="bnRlbC9TNC5sdWEiLFsiZnVsbE5hbWUiXT0ibGljZW5zZV9pbnRlbC9TNCIsWyJsb2FkT3JkZXIiXT0xLHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09ImxpY2Vuc2VfaW50ZWwiLH0sbmN2aWV3PXtbImZuIl09Ii9vcHQvYXBwcy9tb2R1bGVmaWxlcy9Db21waWxlci9pbnRlbC8xOC9uY3ZpZXcvMi4xLjcubHVhIixbImZ1bGxOYW1lIl09Im5jdmlldy8yLjEuNyIsWyJsb2FkT3JkZXIiXT04LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09Im5jdmlldyIsfSxuZW1zaW89e1siZm4iXT0iL2hvbWUvbGVuemVuL0ZWM2xpYnMvbW9kdWxlZmlsZXMvbmVtc2lvL3Yx"
+export _ModuleTable007_="LjAuMC5sdWEiLFsiZnVsbE5hbWUiXT0ibmVtc2lvL3YxLjAuMCIsWyJsb2FkT3JkZXIiXT0xMCxwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJuZW1zaW8vdjEuMC4wIix9LG5lbXNpb2dmcz17WyJmbiJdPSIvZGF0YS9wcm9kL25jZXBfbGlicy9pbnRlbC8xOC4wLjMvbW9kdWxlZmlsZXMvbmVtc2lvZ2ZzL3YyLjAuMS5sdWEiLFsiZnVsbE5hbWUiXT0ibmVtc2lvZ2ZzL3YyLjAuMSIsWyJsb2FkT3JkZXIiXT0xMyxwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJuZW1zaW9nZnMvdjIuMC4xIix9LG5ldGNkZjQ9e1siZm4iXT0iL29wdC9hcHBzL21vZHVsZWZp"
+export _ModuleTable008_="bGVzL0NvbXBpbGVyL2ludGVsLzE4L25ldGNkZjQvNC42LjIubHVhIixbImZ1bGxOYW1lIl09Im5ldGNkZjQvNC42LjIiLFsibG9hZE9yZGVyIl09Nixwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJuZXRjZGY0LzQuNi4yIix9LHNmY2lvPXtbImZuIl09Ii9kYXRhL3Byb2QvbmNlcF9saWJzL2ludGVsLzE4LjAuMy9tb2R1bGVmaWxlcy9zZmNpby92MS4wLjAubHVhIixbImZ1bGxOYW1lIl09InNmY2lvL3YxLjAuMCIsWyJsb2FkT3JkZXIiXT0xMixwcm9wVD17fSxbInN0YWNrRGVwdGgiXT0wLFsic3RhdHVzIl09ImFjdGl2ZSIsWyJ1c2VyTmFtZSJdPSJzZmNpby92MS4wLjAiLH0sc2lnaW89e1siZm4iXT0iL2RhdGEv"
+export _ModuleTable009_="cHJvZC9uY2VwX2xpYnMvaW50ZWwvMTguMC4zL21vZHVsZWZpbGVzL3NpZ2lvL3YyLjAuMS5sdWEiLFsiZnVsbE5hbWUiXT0ic2lnaW8vdjIuMC4xIixbImxvYWRPcmRlciJdPTE2LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09InNpZ2lvL3YyLjAuMSIsfSxzcD17WyJmbiJdPSIvZGF0YS9wcm9kL25jZXBfbGlicy9pbnRlbC8xOC4wLjMvbW9kdWxlZmlsZXMvc3AvdjIuMC4yLmx1YSIsWyJmdWxsTmFtZSJdPSJzcC92Mi4wLjIiLFsibG9hZE9yZGVyIl09MjAscHJvcFQ9e30sWyJzdGFja0RlcHRoIl09MCxbInN0YXR1cyJdPSJhY3RpdmUiLFsidXNlck5hbWUiXT0ic3AvdjIuMC4yIix9LHVkdW5pdHMyPXtbImZuIl09"
+export _ModuleTable010_="Ii9vcHQvYXBwcy9tb2R1bGVmaWxlcy9Db21waWxlci9pbnRlbC8xOC91ZHVuaXRzMi8yLjIuMjYubHVhIixbImZ1bGxOYW1lIl09InVkdW5pdHMyLzIuMi4yNiIsWyJsb2FkT3JkZXIiXT03LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09InVkdW5pdHMyIix9LHczZW1jPXtbImZuIl09Ii9ob21lL2xlbnplbi9GVjNsaWJzL21vZHVsZWZpbGVzL3czZW1jL3YyLjAuNS5sdWEiLFsiZnVsbE5hbWUiXT0idzNlbWMvdjIuMC41IixbImxvYWRPcmRlciJdPTE4LHByb3BUPXt9LFsic3RhY2tEZXB0aCJdPTAsWyJzdGF0dXMiXT0iYWN0aXZlIixbInVzZXJOYW1lIl09InczZW1jL3YyLjAuNSIsfSx3M25jbz17WyJmbiJdPSIv"
+export _ModuleTable011_="ZGF0YS9wcm9kL25jZXBfbGlicy9pbnRlbC8xOC4wLjMvbW9kdWxlZmlsZXMvdzNuY28vdjIuMC42Lmx1YSIsWyJmdWxsTmFtZSJdPSJ3M25jby92Mi4wLjYiLFsibG9hZE9yZGVyIl09MTkscHJvcFQ9e30sWyJzdGFja0RlcHRoIl09MCxbInN0YXR1cyJdPSJhY3RpdmUiLFsidXNlck5hbWUiXT0idzNuY28vdjIuMC42Iix9LH0sbXBhdGhBPXsiL2RhdGEvcHJvZC9uY2VwX2xpYnMvaW50ZWwvMTguMC4zL21vZHVsZWZpbGVzIiwiL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvbXBpbGVyL2ludGVsLzE4IiwiL29wdC9hcHBzL21vZHVsZWZpbGVzL0NvbXBpbGVyL2ludGVsL25vbi1kZWZhdWx0LzE4IiwiL29wdC9hcHBzL21vZHVsZWZpbGVzL0xpbnV4IiwiL29wdC9hcHBzL21vZHVs"
+export _ModuleTable012_="ZWZpbGVzL0NvcmUiLCIvdXNyL3NoYXJlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlIiwiL2hvbWUvbGVuemVuL0VTTUYuOC4wLjAuQlM0Ny5TNC9lc21mL21vZHVsZWZpbGVzIiwiL2hvbWUvbGVuemVuL0ZWM2xpYnMvbW9kdWxlZmlsZXMiLH0sWyJzeXN0ZW1CYXNlTVBBVEgiXT0iL29wdC9hcHBzL21vZHVsZWZpbGVzL0xpbnV4Oi9vcHQvYXBwcy9tb2R1bGVmaWxlcy9Db3JlOi91c3Ivc2hhcmUvbG1vZC9sbW9kL21vZHVsZWZpbGVzL0NvcmUiLH0="
+export _ModuleTable_Sz_="12"
+export _NEMS_MAKE_RECURSION_DETECT="X"
+export __LMOD_REF_COUNT_CLASSPATH="/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib/mpi.jar:7;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/lib/daal.jar:1"
+export __LMOD_REF_COUNT_INTEL_LICENSE_FILE="27009@s4-head.s4:1"
+export __LMOD_REF_COUNT_LD_LIBRARY_PATH="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default:1;/opt/udunits/2.2.26-intel-18.0.3/lib:1;/opt/netcdf4/4.6.2-intel-18.0.3/lib:1;/opt/hdf5/1.8.21-intel-18.0.3/lib:1;/opt/hdf4/4.2.14-intel-18.0.3/lib:1;/opt/intel/18/itac/2018.4.025/intel64/slib:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/compiler/lib/intel64_lin:2;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/lib:7;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/mic/lib:7;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/ipp/lib/intel64:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/tbb/lib/intel64/gcc4.7:2;/opt/intel/18/debugger_2018/iga/lib:1;/opt/intel/18/debugger_2018/libipt/intel64/lib:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/lib/intel64_lin:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/daal/../tbb/lib/intel64_lin/gcc4.4:1"
+export __LMOD_REF_COUNT_LM_LICENSE_FILE="27009@s4-head.s4:1"
+export __LMOD_REF_COUNT_LOADEDMODULES="license_intel/S4:1;impi/18.0.4:1;intel/18.0.4:1;hdf/4.2.14:1;hdf5/1.8.21:1;netcdf4/4.6.2:1;udunits2/2.2.26:1;ncview/2.1.7:1;esmf/8.0.0:1;nemsio/v1.0.0:1;landsfcutil/v2.1.0:1;sfcio/v1.0.0:1;nemsiogfs/v2.0.1:1;gfsio/v1.1.0:1;ip/v3.0.0:1;sigio/v2.0.1:1;bacio/v2.0.1:1;w3emc/v2.0.5:1;w3nco/v2.0.6:1;sp/v2.0.2:1"
+export __LMOD_REF_COUNT_MANPATH="/opt/netcdf4/4.6.2-intel-18.0.3/share/info:1;/opt/netcdf4/4.6.2-intel-18.0.3/share/man:1;/opt/hdf4/4.2.14-intel-18.0.3/share/man:1;/opt/intel/18/itac/2018.4.025/man:1;/opt/intel/18/man/common:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/man:2;/opt/intel/18/documentation_2018/en/debugger/gdb-ia/man:1;/opt/intel/18/documentation_2018/en/debugger/gdb-igfx/man:1;/usr/share/lmod/lmod/share/man:1;/opt/puppetlabs/puppet/share/man:1"
+export __LMOD_REF_COUNT_MODULEPATH="/data/prod/ncep_libs/intel/18.0.3/modulefiles:1;/opt/apps/modulefiles/Compiler/intel/18:1;/opt/apps/modulefiles/Compiler/intel/non-default/18:1;/opt/apps/modulefiles/Linux:1;/opt/apps/modulefiles/Core:1;/usr/share/lmod/lmod/modulefiles/Core:1;/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles:5;/home/lenzen/FV3libs/modulefiles:5"
+export __LMOD_REF_COUNT_PATH="/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/bin/binO/Linux.intel.64.intelmpi.default:1;/opt/ncview/2.1.7-intel-18.0.3/bin:1;/opt/udunits/2.2.26-intel-18.0.3/bin:1;/opt/netcdf4/4.6.2-intel-18.0.3/bin:1;/opt/hdf5/1.8.21-intel-18.0.3/bin:1;/opt/hdf4/4.2.14-intel-18.0.3/bin:1;/opt/intel/18/advisor_2018.4.0.574144/bin64:1;/opt/intel/18/inspector_2018.4.0.574143/bin64:1;/opt/intel/18/itac/2018.4.025/intel64/bin:2;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/bin/intel64:1;/opt/intel/18/compilers_and_libraries_2018.5.274/linux/mpi/intel64/bin:2;/usr/lib64/qt-3.3/bin:1;/usr/local/bin:1;/usr/bin:1;/usr/local/sbin:1;/usr/sbin:1;/opt/puppetlabs/bin:1;/opt/dell/srvadmin/bin:1;/data/users/lenzen/global-workflow_v16b/util/ush:1;/data/users/lenzen/global-workflow_v16b/util/ush/produtil:1;/data/users/lenzen/global-workflow_v16b/ush/rocoto:1;/home/lenzen/.local/bin:1;/home/lenzen/bin:1;/opt/intel/18/parallel_studio_xe_2018.4.057/bin:1"
+export __LMOD_REF_COUNT__LMFILES_="/opt/apps/modulefiles/Core/license_intel/S4.lua:1;/opt/apps/modulefiles/Core/impi/18.0.4.lua:1;/opt/apps/modulefiles/Core/intel/18.0.4.lua:1;/opt/apps/modulefiles/Compiler/intel/18/hdf/4.2.14.lua:1;/opt/apps/modulefiles/Compiler/intel/18/hdf5/1.8.21.lua:1;/opt/apps/modulefiles/Compiler/intel/18/netcdf4/4.6.2.lua:1;/opt/apps/modulefiles/Compiler/intel/18/udunits2/2.2.26.lua:1;/opt/apps/modulefiles/Compiler/intel/18/ncview/2.1.7.lua:1;/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles/esmf/8.0.0.lua:1;/home/lenzen/FV3libs/modulefiles/nemsio/v1.0.0.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/landsfcutil/v2.1.0.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/sfcio/v1.0.0.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/nemsiogfs/v2.0.1.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/gfsio/v1.1.0.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/ip/v3.0.0.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/sigio/v2.0.1.lua:1;/home/lenzen/FV3libs/modulefiles/bacio/v2.0.1.lua:1;/home/lenzen/FV3libs/modulefiles/w3emc/v2.0.5.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/w3nco/v2.0.6.lua:1;/data/prod/ncep_libs/intel/18.0.3/modulefiles/sp/v2.0.2.lua:1"
+export app="coupledFV3_GSDCHEM"
+export hostname="s4-submit"
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for cut... /usr/bin/cut
+checking for ESMF library... checking for /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk... yes
+checking whether the Fortran compiler works... yes
+checking for Fortran compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU Fortran compiler... no
+checking whether mpiifort accepts -g... yes
+checking whether MPI is supported... yes
+checking for Fortran flag to compile preprocessed .F90 files... none
+checking for Fortran compiler vendor... intel
+checking compiler for optimization options... -O2 -fp-model source -traceback -ftz -align array64byte -axavx -O2  -qno-opt-dynamic-align
+checking for Fortran flag needed to accept unlimited column source lines... none
+checking Fortran 90 module extension... mod
+checking Fortran 90 module inclusion flag... -I
+checking whether ESMF include flags work... yes
+checking whether ESMF works... yes
+checking for ranlib... ranlib
+checking for style of include used by make... GNU
+checking for gcc... icc
+checking whether we are using the GNU C compiler... yes
+checking whether icc accepts -g... yes
+checking for icc option to accept ISO C89... none needed
+checking whether icc understands -c and -o together... yes
+checking dependency style of icc... none
+checking for ar... ar
+checking the archiver (ar) interface... ar
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating src/chem/Makefile
+config.status: creating src/chem/shr/Makefile
+config.status: creating src/chem/gocart/Makefile
+config.status: creating src/chem/plume/Makefile
+config.status: creating src/chem/vash/Makefile
+config.status: creating src/chem/seas/Makefile
+config.status: creating src/chem/dust/Makefile
+config.status: creating src/chem/aero/Makefile
+config.status: creating src/chem/dep/Makefile
+config.status: creating src/chem/opt/Makefile
+config.status: executing depfiles commands
+
+gsdchem version 0.9.0 successfully configured.
+
+Compiler settings:
+=======================
+  FC      = mpiifort
+  FCFLAGS = -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include  -g -O2 -fp-model source -traceback -ftz -align array64byte -axavx -O2  -qno-opt-dynamic-align
+=======================
+NOTE: Settings imported from ESMF Makefile fragment: /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk
+
+Type 'make' to build.
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM ; exec gmake
+gmake[1]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+Making all in src
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+Making all in chem
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+Making all in shr
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+Making all in plume
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+Making all in vash
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+Making all in dust
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+Making all in aero
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+Making all in dep
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+Making all in seas
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+Making all in opt
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+Making all in gocart
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+gmake[4]: Nothing to be done for `all'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+Making all in .
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[4]: Nothing to be done for `all-am'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[3]: Nothing to be done for `all-am'.
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[2]: Nothing to be done for `all-am'.
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[1]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM ; exec gmake install
+gmake[1]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+Making install in src
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+Making install in chem
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+Making install in shr
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr'
+Making install in plume
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume'
+Making install in vash
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash'
+Making install in dust
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust'
+Making install in aero
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero'
+Making install in dep
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep'
+Making install in seas
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas'
+Making install in opt
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt'
+Making install in gocart
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+gmake[5]: Nothing to be done for `install-exec-am'.
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart'
+Making install in .
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+ /usr/bin/mkdir -p '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL'
+ /usr/bin/install -c -m 644  libgsdchem.a '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL'
+ ( cd '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL' && ranlib libgsdchem.a )
+gmake[5]: Nothing to be done for `install-data-am'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem'
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[4]: Nothing to be done for `install-exec-am'.
+gmake[4]: Nothing to be done for `install-data-am'.
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src'
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[3]: Nothing to be done for `install-exec-am'.
+ /usr/bin/mkdir -p '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL/doc/gsdchem'
+ /usr/bin/install -c -m 644 README '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL/doc/gsdchem'
+ /usr/bin/mkdir -p '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL'
+ /usr/bin/install -c -m 644 gsdchem.mk '/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL'
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+gmake[1]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM'
+test -d "/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL"
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; export COMP_SRCDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM" COMP_BINDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL" FMS_BINDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL" MACHINE_ID="linux"                  ; \
+set -e                                                        ; \
+cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM                                          ; \
+./configure --prefix=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL                          \
+  --datarootdir=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL --libdir=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for cut... /usr/bin/cut
+configure: checking environment for ESMFMKFILE...
+checking for "/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk"... yes
+getting ESMF Makefile fragment from environment variable ESMFMKFILE
+checking for gcc... icc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether icc accepts -g... yes
+checking for icc option to accept ISO C89... none needed
+checking whether icc understands -c and -o together... yes
+checking for style of include used by make... GNU
+checking dependency style of icc... none
+checking whether we are using the GNU Fortran compiler... no
+checking whether mpiifort accepts -g... yes
+checking whether we are using the GNU Fortran 77 compiler... no
+checking whether ifort accepts -g... yes
+configure: checking compiler for -fp-model option...
+adding -fp-model precise option for results consistency
+checking for ranlib... ranlib
+checking how to run the C preprocessor... icc -E
+checking for egrep... /usr/bin/grep -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for stdlib.h... (cached) yes
+checking for string.h... (cached) yes
+checking for unistd.h... (cached) yes
+checking for stdbool.h that conforms to C99... yes
+checking for _Bool... yes
+checking for pid_t... yes
+checking for bzero... yes
+checking for clock_gettime... yes
+checking for strerror... yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating src/chem/Makefile
+config.status: creating src/chem/shr/Makefile
+config.status: creating src/chem/plume/Makefile
+config.status: creating src/chem/raqms/Makefile
+config.status: creating config.h
+config.status: config.h is unchanged
+config.status: executing depfiles commands
+
+raqmschem version 0.1  successfully configured.
+
+Configuration settings:
+=======================
+  CC        = icc
+  CFLAGS    = -g -O2
+
+  CPP       = icc -E
+  CPPFLAGS  = 
+
+  FC        = mpiifort
+  FCFLAGS   = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+
+  LDFLAGS   = 
+  LIBS      = 
+  FCLIBS    =    -m64 -mcmodel=small -threads -Wl,--no-as-needed -L/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default -L/opt/netcdf4/4.6.2-intel-18.0.3/lib  -Wl,-rpath,/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default  -Wl,-rpath,/opt/netcdf4/4.6.2-intel-18.0.3/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf
+=======================
+NOTE: Settings imported from ESMF Makefile fragment: /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk
+
+Type 'make' to build.
+. /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/NEMS/src/conf/modules.nems ; cd /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM ; exec gmake             \
+  COMP_SRCDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM" COMP_BINDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL" FMS_BINDIR="/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/FMS/FMS_INSTALL" MACHINE_ID="linux"
+gmake[1]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM'
+gmake  all-recursive
+gmake[2]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM'
+Making all in src
+gmake[3]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src'
+Making all in chem
+gmake[4]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem'
+Making all in shr
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr'
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libshr_a-raqmschem_pmgrid_mod.o `test -f 'raqmschem_pmgrid_mod.F90' || echo './'`raqmschem_pmgrid_mod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libshr_a-raqmschemcomm_mod.o `test -f 'raqmschemcomm_mod.F90' || echo './'`raqmschemcomm_mod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libshr_a-raqmschem_iodata_mod.o `test -f 'raqmschem_iodata_mod.F90' || echo './'`raqmschem_iodata_mod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libshr_a-raqmschem_vars_mod.o `test -f 'raqmschem_vars_mod.F90' || echo './'`raqmschem_vars_mod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libshr_a-raqmschem_map_mod.o `test -f 'raqmschem_map_mod.F90' || echo './'`raqmschem_map_mod.F90
+rm -f libshr.a
+ar cru libshr.a libshr_a-raqmschem_species_mod.o libshr_a-raqmschem_config_mod.o libshr_a-raqmschem_const_mod.o libshr_a-mpishorthand.o libshr_a-raqmschem_pmgrid_mod.o libshr_a-raqmschem_model_mod.o libshr_a-raqmschem_data_mod.o libshr_a-raqmschem_io_mod.o libshr_a-raqmschemcomm_mod.o libshr_a-raqmschem_iodata_mod.o libshr_a-raqmschem_comm_mod.o libshr_a-raqmschem_state_mod.o libshr_a-raqmschem_vars_mod.o libshr_a-calcdxdy.o libshr_a-calcvort_mod.o libshr_a-calcvort-dgrid_mod.o libshr_a-raqmschem_map_mod.o libshr_a-raqmschemlocaltype_mod.o caldyi.o 
+ranlib libshr.a
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr'
+Making all in plume
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume'
+gmake[5]: Nothing to be done for `all'.
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/plume'
+Making all in raqms
+gmake[5]: Entering directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms'
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -nowarn -I . -I../../../../GSDCHEM/src/chem/shr/ -I../shr/ -I../plume/ -I../../../../FV3/gfsphysics -I../../../../FV3/gfsphysics/physics -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libraqms_a-raqms_mod.o `test -f 'raqms_mod.F90' || echo './'`raqms_mod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -nowarn -I . -I../../../../GSDCHEM/src/chem/shr/ -I../shr/ -I../plume/ -I../../../../FV3/gfsphysics -I../../../../FV3/gfsphysics/physics -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libraqms_a-chemgsimod.o `test -f 'chemgsimod.F90' || echo './'`chemgsimod.F90
+mpiifort -DHAVE_CONFIG_H -I. -I../../..    -nowarn -I . -I../../../../GSDCHEM/src/chem/shr/ -I../shr/ -I../plume/ -I../../../../FV3/gfsphysics -I../../../../FV3/gfsphysics/physics -I../../../../FMS/fv3gfs -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/ -c -o libraqms_a-raqms_model_mod.o `test -f 'raqms_model_mod.F90' || echo './'`raqms_model_mod.F90
+gmake[5]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms'
+gmake[4]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem'
+gmake[3]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src'
+gmake[2]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM'
+gmake[1]: Leaving directory `/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM'

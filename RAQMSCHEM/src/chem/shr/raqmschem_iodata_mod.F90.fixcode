@@ -1,0 +1,3236 @@
+module raqmschem_iodata_mod
+#include <options.h>
+  use chem_rc_mod
+  use chem_types_mod
+  use raqmschem_io_mod
+  use chem_comm_mod
+  use raqmschem_model_mod, only : raqmschem_model_get
+  use raqmschem_model_mod, only : chem_config_type => raqmschem_config_type
+  use raqmschem_model_mod, only : chem_model_domain_get
+  use raqmschem_config_mod
+  use raqmschem_data_mod, only : chem_data_type
+  use raqmschemcomm_mod
+!  use raqmschem_data_mod
+
+  implicit none 
+
+  private
+
+  public :: raqmschem_backgd_init
+  public :: raqmschem_backgd_read
+  public :: raqmschem_backgd_write
+  public :: raqmschem_chem_write
+  public :: raqmschem_chem_write_aodfcst
+  public :: raqmschem_gsi_write
+  public :: raqmschem_chem_write_o3vmr
+  public :: raqmschem_chem_writer4
+  public :: raqmschem_chem_write_debug
+  public :: raqmschem_chem_write_var
+  public :: raqmschem_chem_write_var_2d
+  public :: flipz
+  public :: dofirehr
+  logical :: dofirehr
+#ifdef WETDEPDIAG
+  public :: raqmschem_wetdepdiag_write
+#endif
+contains
+  subroutine raqmschem_backgd_init(rc)
+    use raqmschem_pmgrid_mod
+!    use raqmschemcomm_mod, only : allocatechemcommperm
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount
+    integer :: ids, ide, jds, jde,mype,jts,jte,its,ite
+    integer :: ncin,platin,begjin,endjin,nmonHTAPin,iamin,plevin
+    type(chem_data_type),   pointer :: data   => null()
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    write(6,*)'chem_model_get'
+!    call flush(6)
+    call chem_comm_get(localpe=mype, rc=localrc)
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+!    write(6,*)'did chem_model_get',decount
+!    call flush(6)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de, data=data, tile=tile,rc=localrc)
+!      write(6,*)'did raqmschem_model_get localrc',localrc
+!      call flush(6)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!      write(6,*)'call chem_model_odmain_get'
+!      call flush(6)
+      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, its=its,ite=ite, &
+        jts=jts,jte=jte,nl=plevin, rc=localrc)
+!      write(6,*)'did chem_model_domain_get',localrc
+!      call flush(6)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      ncin=ide-ids+1
+!      write(6,*)'ncin',ncin,'ids',ids,ide,'its',its,ite,jts,jte
+!      call flush(6)
+      platin=jte-jts+1
+      begjin=jds
+      endjin=jde
+      nmonHTAPin=12
+      iamin=mype
+!      if(mype.eq.0)write(6,*)'init mpgrid nl',plevin
+
+      call initraqmschem_pmgrid(ncin,platin,plevin,begjin,endjin,ids,ide,nmonHTAPin,iamin)
+!      write(6,*)'allocatechemcommperm'
+!      call flush(6)
+      call allocatechemcommperm(its,ite,jts,jte)
+
+      ! -- srcco_totl
+!      write(6,*)'allocated',allocated(data%srcco_totl)
+!      call flush(6)
+!      write(6,*)'shape srcco_totl',shape(srcco_totl)
+!      write(6,*)'lbound',lbound(srcco_totl)
+!      write(6,*)'ubound',ubound(srcco_totl)
+!      write(6,*)'ids',ids,ide,'jds',jds,jde
+!      call flush(6)
+    end do
+!    write(6,*)'bottom backgd_init'
+!    call flush(6)
+!    write(6,*)'bottom backgd_init'
+!    call flush(6)
+
+    return
+  end subroutine raqmschem_backgd_init
+  subroutine raqmschem_backgd_read(yy,mm,dd,bigendian,rc)
+    use chem_types_mod
+    use raqmschem_pmgrid_mod, only : prefi,iam
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co
+    use raqmschemcomm_mod, only : plumerisefire_frq,do85percentvoc
+    use raqmschemcomm_mod, only : lcedsair,intcoair,intnoxair,ktopcedsair
+    integer, optional, intent(out) :: rc
+    integer, intent(in) :: yy ! yyyy year
+    integer, intent(in) :: mm ! month
+    integer, intent(in) :: dd ! day
+  
+    logical,optional,intent(in) :: bigendian
+    
+
+    ! -- local variables
+    character *2 cmonth(2),file*256,cday*2,yyyy*4,yyyymm*6,yyyymmdd*8,cmm*2,cmonth2(2)
+    integer its,ite,jts,jte,i,j
+    integer :: localrc,imonth(2)
+    integer :: de, deCount, localpe, tile
+    type(chem_data_type),   pointer :: data => null()
+    type(raqmschem_config_type), pointer :: config => null()
+!    real(CHEM_KIND_R4),allocatable :: srcco_totl(:,:),srcnind(:,:)
+    integer ids,ide,jds,jde,recrange(2),m
+    real(chem_KIND_R4),allocatable,dimension(:,:) :: srcin
+    real(chem_KIND_R4),allocatable,dimension(:,:,:) :: srcin3d,srcinair
+    logical exist
+    logical :: debug=.false.
+!    logical :: debug=.true.
+    real(CHEM_KIND_R4) :: rad,pi
+    logical first,doco85,donox85,oldname
+    integer nlevin,k
+    real*4 amaxcedsair
+    real*4,allocatable :: air3d(:,:,:),srcinhr(:,:,:)
+    save first,doco85,donox85
+    data first/.true./,doco85/.false./,donox85/.false./
+    character *10 cenv,ctile*1
+!   to check for nox_scale_factor
+    character *256 nox_scale_factor_file,nox_scale_factor_path
+    character *256 adjnoxpath
+    adjnoxpath=' '
+    call getenv('ADJNOXPATH',adjnoxpath)
+    if(adjnoxpath/=' '.and.iam.eq.0)then
+      write(6,*)'ADJNOXPATH ',trim(adjnoxpath)
+    endif
+    nox_scale_factor_file=' '
+    nox_scale_factor_path=' '
+    call getenv('NOX_SCALE_FACTOR_FILE',nox_scale_factor_file)
+    call getenv('NOX_SCALE_FACTOR_PATH',nox_scale_factor_path)
+!    write(6,*)'top of read'
+!    call flush(6)
+    pi=4.*atan(1.)
+    rad=pi/180.
+    write(cday,'(i2.2)')dd
+    write(yyyy,'(i4.4)')yy
+    write(cmm,'(i2.2)')mm
+    yyyymm=yyyy//cmm
+    yyyymmdd=yyyymm//cday
+    
+    cmonth=' '
+    if(mm<10)then
+      write(cmonth(1:1),'(i1.1)')mm
+    else
+      write(cmonth,'(i2.2)')mm
+    endif
+    write(cmonth2(1),'(i2.2)')mm
+    imonth(1)=mm
+    if(mm.eq.12)then
+      imonth(2)=1
+    else
+      imonth(2)=mm+1
+    endif
+    if(imonth(2)<10)then
+      write(cmonth(2)(1:1),'(i1.1)')imonth(2)
+    else
+      write(cmonth(2),'(i2.2)')imonth(2)
+    endif
+    write(cmonth2(2),'(i2.2)')imonth(2)
+    recrange=3
+!    write(6,*)'cmonth',cmonth,'imonth',imonth
+!    call flush(6)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(decount>0)then
+      prefi=trim(config%emi_inname)//'/Input/'
+    endif
+    do de = 0, deCount-1
+    doplumerise=.false.
+    if(iam.eq.0)then
+      write(6,*)'plumerise_flag',config%plumerise_flag
+    endif
+!    write(6,*)'check plumeriseflag',decount
+!    call flush(6)
+    if(config%plumerise_flag.eq.2)then
+      doplumerise=.true.
+      if(iam.eq.0)then
+        write(6,*)'set plumerise'
+       endif
+!      write(6,*)'set frq'
+!      call flush(6)
+      plumerisefire_frq=config%plumerisefire_frq
+    endif
+    chem_conv_tr=config%chem_conv_tr
+    wetdep_ls_opt=config%wetdep_ls_opt
+      if(iam.eq.0)then
+     write(6,*)'doplumerise',doplumerise
+     call flush(6)
+    endif
+
+      call raqmschem_model_get(de=de, data=data, tile=tile, rc=localrc)
+    if(first)then
+      first=.false.
+      cenv=' '
+      call getenv('CO85PERCENT',cenv)
+      if(cenv.eq.'YES')then
+        doco85=.true.
+        if(iam.eq.0.and.tile.eq.1)then
+          write(6,*)'ajl DO CO85PERCENT'
+        endif
+      endif
+      cenv=' '
+      call getenv('NOX85PERCENT',cenv)
+      if(cenv.eq.'YES')then
+        donox85=.true.
+        if(iam.eq.0.and.tile.eq.1)then
+          write(6,*)'ajl DO NOX85PERCENT'
+        endif
+      endif
+      cenv=' '
+      call getenv('VOC85PERCENT',cenv)
+      if(cenv.eq.'YES')then
+        do85percentvoc=.true.
+        if(iam.eq.0.and.tile.eq.1)then
+          write(6,*)'ajl DO VOC85PERCENT'
+        endif
+      endif
+    endif
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, & 
+       its=its,ite=ite,jts=jts,jte=jte)
+!      write(6,*)'ids',ids,ide
+!      call flush(6)
+
+
+        ! -- dust erosion factors
+        allocate (srcin(ide-ids+1,jds:jde))
+        allocate (srcin3d(ide-ids+1,jds:jde,12))
+        allocate (srcinair(ide-ids+1,jds:jde,nlnair))
+    if(.not.allocated(data%plume))then
+!      write(6,*)'allocate num_plume_data',config%num_plume_data
+!      call flush(6)
+      allocate (data%plume(ids:ide,jds:jde,config%num_plume_data))
+      data%num_plume_data=config%num_plume_data
+!      write(6,*)'did allocate ',ids,ide,jds,jde
+!      call flush(6)
+      data%plume=0._CHEM_KIND_R4
+    endif
+        do m=1,2
+         if(config%cedsemi_inname/=' ')then
+           srcin=0.0
+!          write(6,*)m,'comnth2',cmonth2(m)
+           if(iam==0)then
+           write(6,*)'read path',trim(config % cedsemi_inname)//trim(cmonth2(m))
+           call flush(6)
+           endif   
+           call chem_io_read('emi_CO_molpercm2persec.dat', &
+           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+           bigendian=bigendian,rc=localrc,oldname=oldname)
+           if(iam==0)then
+            write(6,*)'ceds co_emis',maxval(srcin),minval(srcin)
+            call flush(6)
+           endif   
+          else 
+            call chem_io_read('edgar_HTAP_CO_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin, path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+!           write(6,*)'srcco_totl lb ',lbound(srcco_totl),'ub ',ubound(srcco_totl)
+!           call flush(6)
+          endif
+          if(doco85)then
+            srcin=srcin*.85
+          endif
+          srcco_totl(:,:,imonth(m))=srcin
+!        write(6,*)'chem_io_read',localrc
+!        call flush(6)
+!        if(iam.eq.0)then
+!        write(6,*)'diag edgar_HTAP_CO_emi_molpercm2persec_2010',localrc
+!        call flush(6)
+       !endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+           write(6,*)'eror file missing'
+           call killit('file missing')
+            return
+        endif
+        if(debug)then
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," co - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcco_totl(:,:,9)), maxval(srcco_totl(:,:,9))
+           call flush(6)
+        endif 
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_NOx_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds NOx_emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+          if(adjnoxpath/=' ')then
+            call chem_io_read('edgar_HTAP_NOX_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+            path=trim(adjnoxpath), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+          else
+            call chem_io_read('edgar_HTAP_NOX_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+             path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+           endif
+        endif
+         if(donox85)then
+           srcin=srcin*.85
+         endif
+         srcnind(:,:,imonth(m))=srcin
+!     if(iam.eq.0)then
+!     write(6,*)'srcnind',maxval(srcin),minval(srcin)
+!     write(6,*)'emi_inname',config % emi_inname
+         
+!        write(6,*)'diag edgar_HTAP_NOX_emi_molpercm2persec_2010',localrc
+!        call flush(6)
+!     !endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file nox missing'
+          call killit('file nox missing')
+            return
+        endif
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcnind(:,:,9)), maxval(srcnind(:,:,9))
+          endif
+!       ethane
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_ethane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  ehtaneemis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+          file='edgar_HTAP_ethane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat'
+          call chem_io_read(file, srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+!        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+          write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+        else
+          srcethane(:,:,imonth(m))=srcin
+         if(debug)then
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ethane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcethane), maxval(srcethane)
+          endif
+        endif
+!       ethene
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_ethene_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  ehtene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_ethene_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcethene(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ethene - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcethene), maxval(srcethene)
+          call flush(6)
+        endif
+!       propane
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_propane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  propanene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_propane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpropane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," propane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpropane), maxval(srcpropane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_butane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  butane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_butane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcbutane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," butane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcbutane), maxval(srcbutane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_pentane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  pentane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_pentane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpentane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," pentane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpentane), maxval(srcpentane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_hexane_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  hexane emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_hexane_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srchexane(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," hexane - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srchexane), maxval(srchexane)
+          call flush(6)
+        endif
+        if(config%cedsemi_inname/=' ')then
+          call chem_io_read('emi_propene_molpercm2persec.dat', &
+          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+          bigendian=bigendian,rc=localrc,oldname=oldname)
+          if(iam==0)then
+          write(6,*)'ceds  propene emis',maxval(srcin),minval(srcin)
+          call flush(6)
+          endif
+        else
+        call chem_io_read('edgar_HTAP_propene_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcpropene(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," propene - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcpropene), maxval(srcpropene)
+          call flush(6)
+        endif
+!        write(6,*)'now ch2o'
+!        call flush(6)
+        call chem_io_read('edgar_HTAP_ch2o_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcch2o(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ch2o - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcch2o), maxval(srcch2o)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_ald_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcald(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ald - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcald), maxval(srcald)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_alkanone_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcalkanone(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," alkanone - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcalkanone), maxval(srcalkanone)
+          call flush(6)
+        endif
+        call chem_io_read('edgar_HTAP_isop_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcisop(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," isop - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcisop), maxval(srcisop)
+        endif
+        call chem_io_read('edgar_HTAP_terp_emi_molpercm2persec_2010_'//trim(cmonth(m))//'.dat', srcin,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,bigendian=bigendian,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+         srcterp(:,:,imonth(m))=srcin
+
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," terp - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcterp), maxval(srcterp)
+        endif
+      end do
+!      write(6,*)'did loop'
+
+      if(do85percentvoc)then
+        if(tile.eq.1.and.iam.eq.0)then
+          write(6,*)'do 85 PERCENT VOC'
+        endif
+        srcethane=srcethane*.85
+        srcpropane=srcpropane*.85
+        srcbutane=srcbutane*.85
+        srcpentane=srcpentane*.85
+        srchexane=srchexane*.85
+        srcethene=srcethene*.85
+        srcpropene=srcpropene*.85
+        srcch2o=srcch2o*.85
+        srcald=srcald*.85
+        srcalkanone=srcalkanone*.85
+        srcisop=srcisop*.85
+        srcterp=srcterp*.85
+      endif
+!     now do non month sources
+!     surface oragphy
+      file='oro_data.nc'
+      call chem_io_read(file,zsurf, &
+           path=trim(config % emi_inname), de=de, recrange=recrange,varname='orog_raw',rc=localrc)
+!      write(6,*)'orog raw',maxval(zsurf),minval(zsurf)
+!      call flush(6)
+!      file='edgar_HTAP_CO_emi_molpercm2persec_AIR_2010_Annual.nc'
+      if(lcedsair)then
+!          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+        file='tile'//ctile//'/emi_CO-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        if(iam==0)then
+        write(6,*)'nlevin',nlevin
+        call flush(6)
+        endif
+        read(10)altair
+        if(iam==0)then
+        write(6,*)'altair',altair
+        call flush(6)
+        endif
+        intaltair(0)=0
+        intaltair(1)=2.*altair(1)
+        do k=2,nlnair
+          intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+        end do
+        if(iam==0)then
+          do k=1,nlnair
+            write(6,*)k,altair(k),intaltair(k)
+          end do
+        endif
+        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srccoair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srccoair),minval(srccoair)
+        call flush(6)
+        endif
+        close(10)
+        file='tile'//ctile//'/emi_NOx-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        read(10)altair
+!        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srcnair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srcnair),minval(srcnair)
+        call flush(6)
+        endif
+
+        close(10)
+        if(.not.allocated(intcoair))then
+          allocate(intcoair(ide-ids+1,jds:jde,0:nlnair))
+          allocate(intnoxair(ide-ids+1,jds:jde,0:nlnair))
+          intcoair(:,:,0)=0.0
+          intnoxair(:,:,0)=0.0
+          do k=1,nlnair
+            intcoair(:,:,k)=intcoair(:,:,k-1)+srccoair(:,:,k)
+            intnoxair(:,:,k)=intnoxair(:,:,k-1)+srcnair(:,:,k)
+          end do
+        endif
+!        if(iam==0)then
+          amaxcedsair=0.0
+          do k=0,nlnair
+            if(maxval(intcoair(:,:,k))>amaxcedsair)then
+              amaxcedsair=maxval(intcoair(:,:,k))
+              ktopcedsair=k
+            endif
+          end do
+!          do k=0,ktopcedsair
+!            write(6,*)k,intaltair(k),'co',maxval(intcoair(:,:,k))
+!            write(6,*)k,intaltair(k),'nox',maxval(intnoxair(:,:,k))
+!          end do
+!        endif
+      else
+        file='edgar_HTAP_CO_emi_molpercm2persec_AIR_2010.nc'
+!       inquire(file=trim(config%emi_inname)//file,exist=exist)
+!       if(exist)then
+          call chem_io_read(file,srcinair,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,varname='coair',rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+          write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+        else
+          srccoair=srcinair
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," srccoair - min/max = "2g16.6)') localpe, de, &
+            tile, minval(srccoair), maxval(srccoair)
+          endif
+        endif
+!       file='edgar_HTAP_NOx_emi_molpercm2persec_AIR_2010_Annual.nc'
+        file='edgar_HTAP_NOx_emi_molpercm2persec_AIR_2010.nc'
+!       inquire(file=trim(config%emi_inname)//file,exist=exist)
+!       if(exist)then
+        call chem_io_read(file,srcinair,  &
+           path=trim(config % emi_inname), de=de, recrange=recrange,varname='noxair',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+          write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+        else
+          srcnair=srcinair
+!         if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," srcnair - min/max = "2g16.6)') localpe, de, &
+            tile, minval(srcnair), maxval(srcnair)
+            call flush(6)
+!         endif
+        endif
+      endif
+      file='ch4_mean_2000-2004_cmdl_uwhyb.nc'
+!        inquire(file=trim(config%emi_inname)//file,exist=exist)
+!        if(exist)then
+      call chem_io_read('ch4_mean_2000-2004_cmdl_uwhyb.nc', srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='ch4_mean',rc=localrc)
+!        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        ch4clim=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ch4clim - min/max = "2g16.6)') localpe, de, &
+        tile, minval(ch4clim), maxval(ch4clim)
+        endif
+      endif
+      file='upd_bb_nox.nc'
+!        inquire(file=trim(config%emi_inname)//file,exist=exist)
+!        if(exist)then
+      call chem_io_read(file,srcin3d,  &
+          path=trim(config % emi_inname), de=de, recrange=recrange,varname='bb_nox',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        srcnbio=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," upd_bb_nox - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcnbio), maxval(srcnbio)
+        endif
+      endif
+!        file='upd_nox_soil_geia_uwhyb_BE_ALL.'//trim(cmonth(m))//'.dat'
+      file='upd_nox_soil_geia.nc'
+!        inquire(file=trim(config%emi_inname)//file,exist=exist)
+!        if(exist)then
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='upd_nox_soil_geia',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        srcnsoil=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," upd_nox_soil - min/max = "2g16.6)') localpe, de, &
+          tile, minval(srcnsoil), maxval(srcnsoil)
+        endif
+      endif
+      file='larc.deposition.nc'
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='depo3',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        dpo3=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," dpo3 - min/max = "2g16.6)') localpe, de, &
+          tile, minval(dpo3), maxval(dpo3)
+        endif
+      endif
+!      write(6,*)'dpo3 9 ',maxval(dpo3(:,:,9)),minval(dpo3(:,:,9))
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='dephno3',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        dphno3=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," dephno3 - min/max = "2g16.6)') localpe, de, &
+          tile, minval(dphno3), maxval(dphno3)
+         call flush(6)
+        endif
+      endif
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='deph2o2',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        dph2o2=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," deph2o2 - min/max = "2g16.6)') localpe, de, &
+          tile, minval(dph2o2), maxval(dph2o2)
+         call flush(6)
+        endif
+      endif
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='dpno2',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        dpno2=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," dpno2 - min/max = "2g16.6)') localpe, de, &
+          tile, minval(dpno2), maxval(dpno2)
+         call flush(6)
+        endif
+      endif
+      call chem_io_read(file,srcin3d,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname='dpco',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+         call flush(6)
+      else
+        dpco=srcin3d
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," depco - min/max = "2g16.6)') localpe, de, &
+          tile, minval(dpco), maxval(dpco)
+         call flush(6)
+        endif
+      endif
+#if 0
+      file='upd_nox_lghtn_uwhyb_BE_ALL.'//trim(cmonth(m))//'.dat'
+!        inquire(file=trim(config%emi_inname)//file,exist=exist)
+!        if(exist)then
+      call chem_io_read(file,srcin,  &
+         path=trim(config % emi_inname), de=de, recrange=recrange,varname=' ',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//trim(file)
+      else
+        slghtng(:,:,imonth(m))=srcin
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," upd_nox_lghtn - min/max = "2g16.6)') localpe, de, &
+            tile, minval(slghtng(:,:,imonth(m))), maxval(slghtng(:,:,imonth(m)))
+         call flush(6)
+        endif
+      endif
+#endif
+      if(.not.doplumerise)then
+        file='fireheight_bbco_Dv7.nc'
+        call chem_io_read(file,srcin,  &
+        path=trim(config % emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/', de=de, recrange=recrange,varname='firehtkm',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/'//trim(file)
+          call flush(6)
+        else
+          firehtkm_d=srcin
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," firehtkm_d - min/max = "2g16.6)') localpe, de, &
+          tile, minval(firehtkm_d), maxval(firehtkm_d)
+          call flush(6)
+        endif
+        file='fireheight_bbco_Nv7.nc'
+        call chem_io_read(file,srcin,  &
+        path=trim(config % emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/', de=de, recrange=recrange,varname='firehtkm',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/'//trim(file)
+          call flush(6)
+        else
+          firehtkm_n=srcin
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," firehtkm_n - min/max = "2g16.6)') localpe, de, &
+            tile, minval(firehtkm_n), maxval(firehtkm_n)
+            call flush(6)
+          endif
+        endif
+        write(6,*)'fireemi ',trim(config % fireemi_inname)
+        call flush(6)
+      endif
+      if(config % fireemi_inname(1:6).eq.'GBBEPx')then
+!      using GGBEPx files instead
+        file='ebu_co.nc'
+!        write(200+iam,*)'read ebu_co'
+!        call flush(200+iam)
+        if(inquire_file_var('ebu_co.tile1.nc','ebu_co',trim(config%fireemi_inname)))then
+!          write(6,*)'use ebu_co'
+          if(inquire_file_dim('ebu_co.tile1.nc','nhr',trim(config%fireemi_inname)))then
+ !           allocate (srcinhr(ide-ids+1,jds:jde,24))
+           dofirehr=.true.
+           allocate (data%bbco_hr(ide-ids+1,jds:jde,24))
+!           path=trim(config % fireemi_inname), de=de,
+!           recrange=recrange,varname='bb_co',rc=localrc)
+!           write(200+iam,*)'read ebu_co'
+!           call flush(200+iam)
+!           call chem_io_read(file,srcinhr,  &
+           call chem_io_read(file,data%bbco_hr,  &
+           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+!           write(200+iam,*)'allocate bbco_hr',ide-ids+1,jds,jde
+!           call flush(200+iam)
+!           data%bbco_hr=srcinhr
+ !          deallocate(srcinhr)
+          else
+            call chem_io_read(file,srcin,  &
+!           path=trim(config % fireemi_inname), de=de,
+!           recrange=recrange,varname='bb_co',rc=localrc)
+            path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+          endif
+        elseif(inquire_file_var('ebu_co.tile1.nc','bb_co',trim(config%fireemi_inname)))then
+!          write(6,*)'use bb_co'
+          call chem_io_read(file,srcin,  &
+           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='bb_co',rc=localrc)
+        else
+         write(6,*)'neither ebu_co nor bb_co in file ebu_co.nc'
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%fireemi_inname)//trim(file)
+          call flush(6)
+        else
+!         units in is KG need to convert to molecules
+!         kg * (mole/mwco g)*(avgro molecules/mole)*(1000g/kg)*(m2/10000cm2)
+!         .1* AVGRO*Kg=molecules
+!         do this after plumrise per Brad 3/29/2022
+!          srcin=srcin*.1*avgro/mw_co
+          bbco_d=srcin
+          bbco_n=srcin
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bbco_d - min/max = "2g16.6)') localpe, de, &
+            tile, minval(bbco_d), maxval(bbco_d)
+            call flush(6)
+           endif
+        endif
+!        write(6,*)'plumerise',config%plumerise_flag
+!        call flush(6)
+!        write(200+iam,*)'now plume'
+!        call flush(200+iam)
+!        if(config%plumerise_flag.eq.2)then
+        if(doplumerise)then
+          file='plumefrp.nc'
+!          write(6,*)'pliumefrp',trim(config % fireemi_inname)
+  
+          if(inquire_file_var('plumefrp.tile1.nc','plumefrp',trim(config%fireemi_inname)))then
+            if(inquire_file_dim('plumefrp.tile1.nc','nhr',trim(config%fireemi_inname)))then
+              allocate(data%plume_hr(ide-ids+1,jds:jde,24))
+              allocate (srcinhr(ide-ids+1,jds:jde,24))
+              call chem_io_read(file,srcinhr,  &
+              path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='plumefrp',rc=localrc)
+              data%plume_hr=srcinhr
+              deallocate(srcinhr)
+            else
+              call chem_io_read(file,srcin,  &
+              path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='plumefrp',rc=localrc)
+              data%plume(:,:,1)=srcin
+            endif
+          else
+              call chem_io_read(file,srcin,  &
+              path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='plumefrp',rc=localrc)
+              data%plume(:,:,1)=srcin
+          endif
+!          write(6,*)'srcin',maxval(srcin),minval(srcin)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+            write(6,*)'error plume'
+            write(6,*)'fireemi_inname',trim(config % fireemi_inname)
+            write(6,*)'file',trim(file)
+            write(0,*)'error plume'
+            write(0,*)'fireemi_inname',trim(config % fireemi_inname)
+            write(0,*)'file',trim(file)
+            call flush(6)
+            call flush(0)
+          endif
+        endif
+        file='bb_emiss_ratios.nc'
+!        write(6,*)'shape bbefac',shape(bbefac)
+        call chem_io_read(file,bbefac,  &
+        path=trim(config % fireemi_inname)//'/Inputfire/', de=de, recrange=recrange,varname='bb_emiss_ratios',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/Inputfire/'//trim(file)
+        else
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bb_emiss_ratios - min/max = "2g16.6)') localpe, de, &
+            tile, minval(bbefac), maxval(bbefac)
+          endif
+        endif
+!        write(6,*)'bbefac 1',maxval(bbefac(:,:,1)),' localrc',localrc,minval(bbefac(:,:,1))
+!        write(6,*)'bbefac 2',maxval(bbefac(:,:,2)),' localrc',localrc,minval(bbefac(:,:,2))
+        file='bb_co_scale_factor.nc'
+        call chem_io_read(file,scale_factor,  &
+        path=trim(config % emi_inname)//'/Inputfire/', de=de, recrange=recrange,varname='bb_co_scale_factor',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/Inputfire/'//trim(file)
+        else
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bb_co_scale_factor - min/max = "2g16.6)') localpe, de, &
+            tile, minval(scale_factor), maxval(scale_factor)
+          endif
+        endif
+      else
+
+!       using raqms files
+        file='fireheight_bbco_Dv7.nc'
+!       file='modis_Dv7_bb_co_fuel_BE.nc'
+        call chem_io_read(file,srcin,  &
+!         path=trim(config % fireemi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/', de=de, recrange=recrange,varname='bb_co_D',rc=localrc)
+         path=trim(config % fireemi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/', de=de, recrange=recrange,varname='bb_co',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/'//trim(file)
+          call flush(6)
+        else
+          bbco_d=srcin
+          if(debug)then
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bbco_d - min/max = "2g16.6)') localpe, de, &
+            tile, minval(bbco_d), maxval(bbco_d)
+            call flush(6)
+          endif
+          file='fireheight_bbco_Nv7.nc'
+          call chem_io_read(file,srcin,  &
+          path=trim(config % fireemi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/', de=de, recrange=recrange,varname='bb_co',rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+            write(6,*)'file not there',trim(config%emi_inname)//'/BB_CO/'//yyyy//'/'//yyyymmdd//'/'//trim(file)
+            call flush(6)
+          else
+            bbco_n=srcin
+            if(debug)then
+              write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bbco_n - min/max = "2g16.6)') localpe, de, &
+              tile, minval(bbco_d), maxval(bbco_d)
+            endif
+          endif
+        endif
+        file='bb_emiss_ratios.nc'
+        write(6,*)'shape bbefac',shape(bbefac)
+        call chem_io_read(file,bbefac,  &
+         path=trim(config % fireemi_inname)//'/Inputfire/', de=de, recrange=recrange,varname='bb_emiss_ratios',rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+          write(6,*)'file not there',trim(config%emi_inname)//'/Inputfire/'//trim(file)
+        else
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bb_emiss_ratios - min/max = "2g16.6)') localpe, de, &
+          tile, minval(bbefac), maxval(bbefac)
+        endif
+        endif
+      endif
+!      write(6,*)'bbefac 1',maxval(bbefac(:,:,1)),' localrc',localrc,minval(bbefac(:,:,1))
+!      write(6,*)'bbefac 2',maxval(bbefac(:,:,2)),' localrc',localrc,minval(bbefac(:,:,2))
+      file='bb_co_scale_factor.nc'
+      call chem_io_read(file,scale_factor,  &
+         path=trim(config % emi_inname)//'/Inputfire/', de=de, recrange=recrange,varname='bb_co_scale_factor',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(config%emi_inname)//'/Inputfire/'//trim(file)
+      else
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," bb_co_scale_factor - min/max = "2g16.6)') localpe, de, &
+          tile, minval(scale_factor), maxval(scale_factor)
+        endif
+      endif
+      deallocate (srcin)
+      deallocate (srcin3d,srcinair)
+!     now read in vort angle files
+!      file='angle.nc'
+!      call chem_io_read(file,angledx,ite,jte, path='INPUT/',varname='angle_dx',rc=localrc)
+!      call chem_io_read(file,angledy,ite,jte, path='INPUT/',varname='angle_dy',rc=localrc)
+!      if(iam.eq.0)then
+!        write(6,*)'angledx',tile,maxval(angledx),minval(angledx)
+!        write(6,*)'angledy',tile,maxval(angledy),minval(angledy)
+!        call flush(6)
+!      endif
+!      write(300+iam,*)'angledx',tile,maxval(angledx),minval(angledx)
+!      write(300+iam,*)'angledy',tile,maxval(angledy),minval(angledy)
+!      !call flush(300+iam)
+!      usina=sin(angledx*rad)
+!      ucosa=cos(angledx*rad)
+!      sinb=sin(angledy*rad)
+!      cosb=cos(angledy*rad)
+!      if(iam.eq.0)then
+!        write(6,*)'sina',maxval(usina),minval(usina)
+!        write(6,*)'cosa',maxval(ucosa),minval(ucosa)
+!        write(6,*)'sinb',maxval(sinb),minval(sinb)
+!        write(6,*)'cosb',maxval(cosb),minval(cosb)
+!      endif
+!      now check for nox_scale_factor_file
+       if(nox_scale_factor_file/=' ')then
+!        allocate (srcin(ide-ids+1,jds:jde))
+         allocate (bb_nox_scale_factor(ide-ids+1,jds:jde))
+         allocate (bb_nox_adjust(ide-ids+1,jds:jde))
+         bb_nox_scale_factor=0.0
+         bb_nox_adjust=0.0
+         file=nox_scale_factor_file
+         if(iam.eq.0)then
+         write(6,*)'nox_scale_factor_path',trim(nox_scale_factor_path)
+         write(6,*)'file',trim(file)
+         endif
+      call chem_io_read(file,bb_nox_scale_factor,  &
+         path=trim(nox_scale_factor_path), de=de, recrange=recrange,varname='nox_emiss_scale_fact',rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc))then
+        write(6,*)'file not there',trim(nox_scale_factor_path)//trim(file)
+      else
+        if(debug)then
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," nox_emiss_scale_factor - min/max = "2g16.6)') localpe, de, &
+          tile, minval(bb_nox_scale_factor), maxval(bb_nox_scale_factor)
+        endif
+      endif
+       endif
+    end do 
+!    write(0,*)'bottom raqmschem_backgd_read'
+!    call flush(0)
+    return
+    end subroutine raqmschem_backgd_read
+    subroutine raqmschem_backgd_write(rc)
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,itime,dims(2)
+    type(chem_data_type),   pointer :: data => null()
+    type(chem_config_type), pointer :: config => null()
+    real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: traceout
+    logical :: debug=.false.
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de, data=data, tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+
+      call chem_io_write('srcco_totl.nc',srcco_totl(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," co - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcco_totl), maxval(srcco_totl) 
+      endif
+      call chem_io_write('srcnind.nc', srcnind(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcethane.nc', srcethane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+!        dims=shape(srcethane(:,:,7))
+!        allocate (traceout(dims(1),dims(2),1))
+!        traceout(:,:,1)=srcethane(:,:,7)
+!        itime=1
+!        call chem_io_writenc('srcethane.nc',traceout,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='srcetane',units='ug/kg/sec',rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcethene.nc', srcethene(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcpropane.nc', srcpropane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcpropene.nc', srcpropene(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcbutane.nc', srcbutane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srcpentane.nc', srcpentane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+      call chem_io_write('srchexane.nc', srchexane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(debug)then
+      write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+        tile, minval(srcnind), maxval(srcnind) 
+      endif
+#if 0
+      if(allocated(data%griddx))then
+        call chem_io_write('griddx.nc', data % griddx, path=trim(config % emi_outname), de=de, rc=localrc)
+
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," griddx - min/max = "2g16.6)') localpe, de, &
+          tile, minval(data % griddx), maxval(data % griddx) 
+        call chem_io_write('griddy.nc', data % griddy, path=trim(config % emi_outname), de=de, rc=localrc)
+
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," griddy - min/max = "2g16.6)') localpe, de, &
+         tile, minval(data % griddy), maxval(data % griddy) 
+       endif
+#endif
+     end do
+     return
+     end subroutine raqmschem_backgd_write
+    subroutine raqmschem_gsi_write(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+    use raqmschemcomm_mod, only :tau6hr,jo1d_inst,jno_inst,lnox_save,no2ten,sourceno,colnox_save
+    use raqmschemcomm_mod, only : bbco_d,emisco3d,covermx,oxvermx
+    use raqmschemcomm_mod, only : rcav_write,rnav_write
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use raqmschemcomm_mod, only : o3vmr_inst,pblht
+!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem
+    use raqmschem_pmgrid_mod,only : gsidatatype,gsiarray,gsivarr
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co,grvity
+    use raqmschem_state_mod
+    use raqmschem_pmgrid_mod, only : iam,iamprn,iprnin,jprnin,kprnin,iprn,jprn
+    implicit none
+    integer dims(3),i,j,mype
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    type(chem_data_type) :: data
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout,colno2,tau2d,colnoy,dqdtsum
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bc,ext_oct
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: diffrc,diffrl,aodgsi
+    type(chem_state_type),  pointer :: stateIn, stateOut
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k,kk,nl,ii
+    integer idate
+    type(chem_config_type), pointer :: config => null()
+    REAL,    PARAMETER :: airmw    = 28.97
+    character *12 :: units
+    real(chem_kind_r4) :: fac,facdob
+    character*8,pointer,dimension(:) :: gsicem
+    integer,pointer,dimension(:) :: loccem
+    mype=iam
+    fac=avgro/airmw*10./grvity
+    facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+    cdatestr(1:4)=cdate(1:4)
+    cdatestr(5:5)='-'
+    cdatestr(6:7)=cdate(5:6)
+    cdatestr(8:8)='-'
+    cdatestr(9:10)=cdate(7:8)
+    cdatestr(11:11)=' '
+    cdatestr(12:13)=cdate(9:10)
+    cdatestr(14:)=':00:00'
+    if(iam.eq.0)then
+    write(6,*)'top gsi write chem'
+    endif
+!    write(200+iam,*)'top gsi write chem',trim(cdatestr)
+!    call flush(6)
+!    write(200+iam,*)'presnet fielname ',present(filename),'present cdate',present(cdate)
+!    call flush(200+iam)
+
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='tracer.'//cdate//'.nc'
+      else
+        fileout='tracer.nc'
+      endif
+    endif
+!    write(200+iam,*)'fileout',trim(fileout)
+!    call flush(200+iam)
+!    write(6,*)'at ajl zzyyy itime',present(itime)
+!    call flush(6)
+    nl=dims(3)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      sfcp(:,:)=statein%pr3d(:,:,1)
+      do k=1,dims(3)
+        dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))
+        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+      end do
+      if(present(itime))then
+!        write(200+iam,*)'chem_io_writenc'
+!        call flush(200+iam)
+        if(iam.eq.0)then
+          write(6,*)'gsi_path',trim(config%gsi_path)//'/'//trim(fileout)
+          flush(6)
+        endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='sphum',units='kg/kg',rc=localrc)
+!        call gsivar(numgsicem,gsicem,loccem)
+!        write(6,*)mype,'call gsivar in writenc'
+!        call flush(6)
+        call gsivar
+!        if(iam.eq.0)then
+!          do i=1,numgsicem
+!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+!          end do
+!        endif
+        if(iam.eq.0)then
+           write(6,*)'numgsicem',numgsicem
+        endif
+        if(numgsicem>=14)then
+        endif
+!        write(6,*)'gsi_write numgsicem',numgsicem
+        do ii=1,numgsicem
+          gsicem=>gsiarray(ii)%gsicem
+          loccem=>gsiarray(ii)%loccem
+          if(gsivarr(ii)=='AOD')then
+            if(iam.eq.0)then
+               write(6,*)'aodgsi',shape(aodgsi)
+            endif
+            aodgsi=0.0
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aod',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='incaod',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodbcoc',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aoddust',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodssalt',units=' ',rc=localrc)
+            call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='aodsulf',units=' ',rc=localrc)
+          endif
+            if(iam==0)then
+              write(6,*)'ii=',ii,'nsigvar',gsiarray(ii)%ngsivar,gsivarr(ii)
+             endif
+          do i=1,gsiarray(ii)%ngsivar
+             if(gsivarr(ii).eq.'o3vmr')then
+              call flipz(o3vmr_inst,traceout)
+              units='ppv'
+            elseif(gsivarr(ii)=='AOD')then
+!         convert to gsi units
+              units='ug/kg-dryair' ! these are gsi units for these variables
+!              write(6,*)'gsicem',i,gsicem(i),'loccem',loccem(i)
+              traceout=tr3d(:,:,:,loccem(i))
+            else
+!             write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+              traceout=tr3d(:,:,:,loccem(i))
+              units='ppv'
+            endif
+!            if(iam==0)then
+!              write(6,*)'output i',i,'ii',ii,gsicem(i),'loccem',loccem(i)
+            !endif
+            call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+            varname=gsicem(i),units=units,rc=localrc)
+            traceout=0.0
+            call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+            varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+            if(gsivarr(ii)=='o3vmr')then
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+              varname='inco3lp',units=units,rc=localrc)
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+              varname='inco3nm',units=units,rc=localrc)
+            endif
+          end do
+        end do
+!        write(6,*)mype,'gsi ps out'
+!        call flush(6)
+        call chem_io_writenc(trim(fileout),sfcp,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='ps',units='pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),zsurf,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='zsurf',units='m',rc=localrc)
+        call chem_io_writenc(trim(fileout),pblht,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='pblht',units='m',rc=localrc)
+        aodgsi=0.0
+        call chem_io_writenc(trim(fileout),aodgsi,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='aodgsi',units=' ',rc=localrc)
+        traceout=dpm
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='delp',units='pa',rc=localrc)
+!        traceout=statein%pr3d
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+!        varname='psol',units='mb',rc=localrc)
+        traceout=statein%prl3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='pres',units='pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%gsi_path),de=de,time=itime, &
+        varname='V',units='m/s',rc=localrc)
+      endif
+    end do
+!    write(6,*)mype,'end of gsi_write'
+!    call flush(6)
+    return
+    end subroutine raqmschem_gsi_write
+
+
+    subroutine raqmschem_gsi_readinc(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+    use raqmschem_pmgrid_mod,only : iam,cdatestr
+    use raqmschem_state_mod
+    implicit none
+    type(chem_state_type),  pointer :: stateIn, stateOut
+    integer dims(3),i,j
+    integer,optional :: itime
+    real*4 :: data(:,:,:)
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    return
+    end subroutine raqmschem_gsi_readinc
+
+
+    subroutine raqmschem_chem_write(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+    use raqmschemcomm_mod, only :tau6hr,jo1d_inst,jno_inst,lnox_save,no2ten,sourceno,colnox_save
+    use raqmschemcomm_mod, only : bbco_d,emisco3d,covermx,oxvermx,oh_inst
+    use raqmschemcomm_mod, only : rcav_write,rnav_write
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+!    use raqmschemcomm_mod, only : percov,intco
+    use raqmschemcomm_mod, only : pergsiv,colgsiinc
+    use raqmschemcomm_mod, only : srccocedsair
+!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+    use raqmschem_pmgrid_mod,only : gsiarray,gsivarr
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co,grvity
+    use raqmschem_state_mod
+    implicit none
+    integer dims(3),i,j
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    type(chem_data_type) :: data
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout,cotend
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout,colno2,tau2d,colnoy,dqdtsum
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc,ext_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot,aod_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bc,aod_oc
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: diffrc,diffrl
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: cotot,gsitotinc,pergsiinc,no2tot
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: colMLSinc,colOMIinc
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: colNUCAPSinc,colTROPOMIinc
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: perco
+    type(chem_state_type),  pointer :: stateIn, stateOut
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k,kk,nl,mm
+    type(chem_config_type), pointer :: config => null()
+    REAL,    PARAMETER :: airmw    = 28.97
+    character *10 :: units
+    real(chem_kind_r4) :: fac,facdob
+    logical aerosol_ugpKg,lcodiag
+    character *10 caerosol_ugpKg
+    integer,pointer,dimension(:) :: loccem
+    character *8,pointer,dimension(:) :: gsicem
+    real*4,pointer,dimension(:,:,:,:) :: gsiinc
+    character ccodiag*10
+    ccodiag=' '
+    call getenv('CODIAG',ccodiag)
+    if(ccodiag=='YES')then
+      lcodiag=.true.
+    else
+      lcodiag=.false.
+    endif
+    if(iam==0)then
+      write(6,*)'write codiag',lcodiag
+      call flush(6)
+    endif
+    caerosol_ugpKg=' '
+    call getenv('AEROSOL_ugpKg',caerosol_ugpKg)
+    if(caerosol_ugpKg/=' ')then
+      if(caerosol_ugpKg=='YES')then
+        aerosol_ugpKg=.true.
+        if(iam==0)then
+          write(6,*)'aersol_ugpKg'
+        endif
+      elseif(caerosol_ugpKg=='NO')then
+        aerosol_ugpKg=.false.
+        if(iam==0)then
+          write(6,*)'aersol_ppmv'
+        endif
+      endif
+    else ! make default
+      aerosol_ugpKg=.true.
+      if(iam==0)then
+        write(6,*)'aersol_ugpKg'
+      endif
+    endif
+      
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    fac=avgro/airmw*10./grvity
+    facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+    cdatestr(1:4)=cdate(1:4)
+    cdatestr(5:5)='-'
+    cdatestr(6:7)=cdate(5:6)
+    cdatestr(8:8)='-'
+    cdatestr(9:10)=cdate(7:8)
+    cdatestr(11:11)=' '
+    cdatestr(12:13)=cdate(9:10)
+    cdatestr(14:)=':00:00'
+!    write(6,*)'ajl top chem_write'
+!    write(200+iam,*)'ajl top chem_write',trim(cdatestr)
+!    call flush(6)
+!    call flush(200+iam)
+
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'present filename',present(filename),'presend cdate',present(cdate)
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='tracer.'//cdate//'.nc'
+      else
+        fileout='tracer.nc'
+      endif
+    endif
+!    write(6,*)'at ajl zzyyy itime',present(itime)
+!    write(200+iam,*)'at ajl zzyyy itime',present(itime)
+!    write(200+iam,*)'at ajl zzyyy fileout',trim(fileout)
+!    call flush(200+iam)
+!    call flush(6)
+    nl=dims(3)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      sfcp(:,:)=statein%pr3d(:,:,1)*.01
+      do k=1,dims(3)
+        dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))*.01
+        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+      end do
+      colno2=0.0
+      colnoy=0.0
+      tau2d=0.0
+      dqdtsum=0.0
+      cotot=0.0
+      no2tot=0.0
+!      if(allocated(gsiinc))then
+        if(allocated(incMLS3d))then
+          colMLSinc=0.0
+          colOMIinc=0.0
+        endif
+        if(allocated(incnucapsco3d))then
+          colnucapsinc=0.0
+        endif
+        if(allocated(inctropomico3d))then
+          coltropomiinc=0.0
+        endif
+!      endif
+      do k=1,dims(3)
+        colno2(:,:)=colno2(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_no2)
+        colnoy(:,:)=colnoy(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_noy)
+        tau2d(:,:)=tau2d(:,:)+tau6hr(:,:,k)
+        dqdtsum=dqdtsum+statein%dqdt(:,:,k)*dpm(:,:,k)
+        cotot(:,:)=cotot(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_co)
+        no2tot(:,:)=no2tot(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_no2)
+!        if(allocated(gsiinc))then
+!        endif
+        if(allocated(incMLS3d))then
+          colMLSinc(:,:)=colMLSinc(:,:)+dpm(:,:,k)*incMLS3d(:,:,k)
+          colOMIinc(:,:)=colOMIinc(:,:)+dpm(:,:,k)*incOMI3d(:,:,k)
+        endif
+        if(allocated(incnucapsco3d))then
+          colnucapsinc=colnucapsinc+dpm(:,:,k)*incnucapsco3d(:,:,k)
+        endif
+        if(allocated(inctropomico3d))then
+          coltropomiinc=coltropomiinc+dpm(:,:,k)*inctropomico3d(:,:,k)
+        endif
+      end do
+      if(allocated(incMLS3d))then
+        colMLSinc=colMLSinc*facdob
+        colOMIinc=colOMIinc*facdob
+      endif
+      do k=1,dims(3)
+        perco(:,:,k)=dpm(:,:,k)*tr3d(:,:,k,p_co)/cotot(:,:)*100.
+      enddo
+!      colno2=colno2*avgro/airmw*1.e-4/grvity
+      colno2=colno2*avgro/airmw*10./grvity
+      colnoy=colnoy*avgro/airmw*10./grvity
+      cotot=cotot*avgro/airmw*10./grvity*1.e-18
+      no2tot=no2tot*avgro/airmw*10./grvity*1.e-18
+!      if(allocated(gsiinc))then
+!      endif
+      if(allocated(rcav_write))then
+      else
+        allocate(rcav_write(dims(1),dims(2)),rnav_write(dims(1),dims(2)))
+        rcav_write=0.0
+        rnav_write=0.0
+      endif
+!     convert to mm/day
+!      diffrc=statein%rc2d
+!      diffrl=statein%rn2d-diffrc
+      rcav_write=cprate+rcav_write
+      rnav_write=lprate+rnav_write
+      diffrc=cprate/float(ncplprate)*86400.
+      diffrl=lprate/float(ncplprate)*86400.
+      ncplprate=0
+      cprate=0.0
+      lprate=0.0
+!      rcav_write=statein%rc2d+rcav_write
+!      rnav_write=statein%rn2d+rnav_write
+!      write(6,*)'present itime',present(itime)
+!      call flush(6)
+!      write(6,*)'present itime',present(itime)
+!      call flush(6)
+      if(present(itime))then
+!        do k=1,63
+!          write(6,*)'out q',k,maxval(traceout(:,:,k))
+!        end do
+!        write(6,*)'emi_outname',trim(config%emi_outname)
+!        call flush(6)
+!        write(200+iam,*)'chem_io_writenc',trim(fileout)
+!        write(200+iam,*)'emi_outname',trim(config%emi_outname)
+!        call flush(200+iam)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='q',units='kg/kg',rc=localrc)
+!        write(200+iam,*)'did chem_io_writenc'
+!        call flush(200+iam)
+        traceout=tr3d(:,:,:,p_atm_o3mr)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3mrphys',units='kg/kg',rc=localrc)
+        if(allocated(srccocedsair))then
+          traceout=srccocedsair
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cedscoair',units='mol/ccm3',rc=localrc)
+        endif
+        call flipz(o3vmr_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3vmr',units='ppv',rc=localrc)
+        call flipz(oh_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='oh',units='ppv',rc=localrc)
+!        traceout=data%ugrid
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='ugrid',units='m/sec',rc=localrc)
+!        traceout=data%vgrid
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='vgrid',units='m/sec',rc=localrc)
+        traceout=data%potvort
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='potvort',units=' ',rc=localrc)
+        traceout=statein%vort
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='vort',units=' ',rc=localrc)
+!        do k=1,dims(3)
+!          traceout(:,:,k)=statein%vort(:,:,k)+data%fcor
+!        end do
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='absvort',units=' ',rc=localrc)
+        traceout=data%absvort
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='absvort',units=' ',rc=localrc)
+!        traceout=pgrd
+!!        write(6,*)'iodata pgrd',maxval(pgrd),minval(pgrd)
+!        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='pdash',units='Pa',rc=localrc)
+        do k=1,dims(3)
+          traceout(:,:,k)=zsurf(:,:)+statein%phl3d(:,:,k)/9.80616
+        end do
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zdash',units='m',rc=localrc)
+        traceout=dpm *100.
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dpm',units='Pa',rc=localrc)
+        traceout=dz
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dz',units='m',rc=localrc)
+        traceout=statein%prl3d
+!        write(6,*)'iodata pdash',maxval(traceout),minval(traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='pdash',units='Pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='V',units='m/s',rc=localrc)
+        if(iam==0)write(6,*)'doallgsiaod 1'
+#ifdef DOALLGSIAOD
+        if(iam==0)write(6,*)'doallgsiaod 1aod'
+        trace2dout=data%aod
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='aod',units='1',rc=localrc)
+#endif
+        if(iam==0)write(6,*)'doallgsiaod 2'
+        trace2dout=data%plume(:,:,1)
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='plumefrp',units=' ',rc=localrc)
+        if(allocated(ptropgsi))then
+          call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ptrop',units='Pa',attribute='using gsi code to calc ptrop',rc=localrc)
+        endif
+        if(allocated(ztropgsi))then
+          call chem_io_writenc(trim(fileout),ztropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ztrop',units='m',attribute='using gsi code to calc ztrop',rc=localrc)
+        endif
+         if(allocated(data%aodg5))then
+          trace2dout=data%aodg5
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodg5',units='1',rc=localrc)
+        endif
+        if(iam==0)write(6,*)'doallgsiaod 3'
+#ifdef DOALLGSIAOD
+        if(allocated(data%aodgsi))then
+          trace2dout=data%aodgsi
+        if(iam==0)write(6,*)'doallgsiaod 4'
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodgsi',units='1',rc=localrc)
+        endif
+#endif
+!        write(200+iam,*)'allocated adoincgsi',allocated(data%aodincgsi)
+        if(allocated(data%aodincgsi))then
+          trace2dout=data%aodincgsi
+!          write(200+iam,*)'aodincgsi out ',maxval(trace2dout),minval(trace2dout)
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='incaodgsi',units='1',rc=localrc)
+          data%aodincgsi=0.0
+        endif
+#ifdef DOALLGSIAOD
+        if(iam==0)write(6,*)'doallgsiaod 5'
+        if(allocated(data%aodgsibcoc))then
+          trace2dout=data%aodgsibcoc
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='gaodbcoc',units='1',rc=localrc)
+        endif
+        if(allocated(data%aodgsidust))then
+          trace2dout=data%aodgsidust
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='gaoddust',units='1',rc=localrc)
+        endif
+        if(allocated(data%aodgsissalt))then
+          trace2dout=data%aodgsissalt
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='gaodssalt',units='1',rc=localrc)
+        endif
+        if(allocated(data%aodgsisulf))then
+          trace2dout=data%aodgsisulf
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='gaodsulf',units='1',rc=localrc)
+        endif
+#endif
+        if(iam==0)write(6,*)'doallgsiaod 6'
+!        write(6,*)'out sulf'
+!        call flush(6)
+!        write(500+iam)'did incaodgsi'
+!        call flush(500+iam)
+#ifdef DOALLGSIAOD
+        if(.not.allocated(data%ext_3d))then
+          write(300+iam,*)'write ext_3d error'
+          flush(300+iam)
+!        else
+!          write(300+iam,*)'write 3xt_3d allocated at chem io write'
+!          flush(300+iam)
+        endif
+        write(6,*)iam,'allocated ext3d',allocated(data%ext_3d)
+        call flush(6)
+        if(allocated(data%ext_3d))then
+        if(iam==0)write(6,*)'doallgsiaod 7'
+          traceout=data%ext_3d(:,:,:,1)
+          write(6,*)iam,'do old ext_sulf'
+          call flush(6)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_sulf',units='1',rc=localrc)
+          ext_bcoc=0.0
+          aod_bcoc=0.0
+          aod_dust=0.0
+          aod_seasalt=0.0
+          aod_sulf=0.0
+          do m=2,5
+            ext_bcoc=ext_bcoc+data%ext_3d(:,:,:,m)
+          end do
+          ext_dust=0.0
+          ext_dust1=0.0
+          ext_seasalt=0.0
+!         raqms 7 is dust1
+          do m=7,10 ! change 7/6/2022 to test
+            ext_dust=ext_dust+data%ext_3d(:,:,:,m)
+          end do
+         do m=11,14
+            ext_seasalt=ext_seasalt+data%ext_3d(:,:,:,m)
+          end do
+          do k=1,dims(3)
+            aod_bcoc(:,:)=aod_bcoc(:,:)+ext_bcoc(:,:,k)*dz(:,:,k)
+            aod_seasalt(:,:)=aod_seasalt(:,:)+ext_seasalt(:,:,k)*dz(:,:,k)
+            aod_dust(:,:)=aod_dust(:,:)+ext_dust(:,:,k)*dz(:,:,k)
+            aod_sulf(:,:)=aod_sulf(:,:)+data%ext_3d(:,:,k,1)*dz(:,:,k)
+          end do
+          ext_tot=ext_bcoc+ext_dust+ext_seasalt+data%ext_3d(:,:,:,1)
+          call chem_io_writenc(trim(fileout),ext_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_bcoc',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_dust',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_seas',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_tot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_tot',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcoc',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodssalt',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aoddust',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_sulf,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodsulf',units='1',rc=localrc)
+        endif
+#endif
+        if(allocated(data%ext_3dg))then
+          traceout=data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_sulfg',units='1',rc=localrc)
+          ext_bcoc=0.0
+          ext_bc=0.0
+          ext_oc=0.0
+          aod_bcoc=0.0
+          aod_bc=0.0
+          aod_oc=0.0
+          aod_dust=0.0
+          aod_seasalt=0.0
+          aod_sulf=0.0
+          do m=2,5
+            ext_bcoc=ext_bcoc+data%ext_3dg(:,:,:,m)
+            if(m<=3)then
+              ext_bc=ext_bc+data%ext_3dg(:,:,:,m)
+            else
+              ext_oc=ext_oc+data%ext_3dg(:,:,:,m)
+            endif
+          end do
+          ext_dust=0.0
+          ext_seasalt=0.0
+!         shoule be 6,10 ajl
+!         for gsi should be 6,10 since now have 5 dust bins and 6 is now dust1
+!         and not no3 which we don't have in model
+!         for gsi aod 6 is dust1 since have 1-5
+          do m=6,10
+            ext_dust=ext_dust+data%ext_3dg(:,:,:,m)
+!            write(6,*)'ext_dust',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+         ext_dust1=data%ext_3dg(:,:,:,6)
+         do m=11,14
+            ext_seasalt=ext_seasalt+data%ext_3dg(:,:,:,m)
+!            write(300+iam,*)'ext_3dg',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+          aod_dust1=0.0
+          do k=1,dims(3)
+            aod_bcoc(:,:)=aod_bcoc(:,:)+ext_bcoc(:,:,k)*dz(:,:,k)
+            aod_bc(:,:)=aod_bc(:,:)+ext_bc(:,:,k)*dz(:,:,k)
+            aod_oc(:,:)=aod_oc(:,:)+ext_oc(:,:,k)*dz(:,:,k)
+            aod_seasalt(:,:)=aod_seasalt(:,:)+ext_seasalt(:,:,k)*dz(:,:,k)
+            aod_dust(:,:)=aod_dust(:,:)+ext_dust(:,:,k)*dz(:,:,k)
+            aod_sulf(:,:)=aod_sulf(:,:)+data%ext_3d(:,:,k,1)*dz(:,:,k)
+            aod_tot(:,:)=aod_bcoc(:,:)+aod_seasalt(:,:)+aod_dust(:,:)+aod_sulf(:,:)
+            aod_dust1(:,:)=aod_dust1(:,:)+ext_dust1(:,:,k)*dz(:,:,k)
+          end do
+!          write(6,*)'aod_dust1',maxval(aod_dust1)
+!          write(6,*)'aod_dust',maxval(aod_dust)
+!          write(6,*)'maxvalaod',maxval(aod_tot),maxval(data%aodgsi)
+          ext_tot=ext_bcoc+ext_dust+ext_seasalt+data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),ext_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_bcocg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_dustg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_seasg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_tot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_totg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcocg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_oc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_ocg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodssaltg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aoddustg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_sulf,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodsulfg',units='1',rc=localrc)
+        endif
+   
+        traceout=statein%dqdt
+!       write(6,*)'dqdt',maxval(traceout)
+!       call flush(6)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cvdqdt',units=' ',rc=localrc)
+!        write(6,*)'shape dqdtsum',shape(dqdtsum)
+!        call flush(6)
+!        write(6,*)'shape traceout',shape(traceout),'dims3',dims(3)
+!        call flush(6)
+        call chem_io_writenc(trim(fileout),dqdtsum,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dqdtsum',units=' ',rc=localrc)
+!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+!        call flush(500+iam)
+!        if(allocated(gsiinc))then
+!        call gsivar(numgsicem,gsicem,loccem)
+!        write(6,*)iam,'call second gsivar'
+!        call flush(6)
+        call gsivar
+        do mm=1,numgsicem
+          if(allocated(gsiarray(mm)%gsiinc))then
+            gsiinc=>gsiarray(mm)%gsiinc
+            if(gsiarray(mm)%ngsivar==1)then
+!             ajl check on this find
+              gsitotinc=0.0
+              do k=1,nl
+                gsitotinc(:,:)=gsitotinc(:,:)+dpm(:,:,k)*gsiinc(:,:,k,1)
+              end do
+              gsitotinc=gsitotinc*avgro/airmw*10./grvity*1.e-18
+            endif
+            do m=1,gsiarray(mm)%ngsivar
+       
+              traceout=gsiinc(:,:,:,m)
+!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+!            call flush(6)
+              if(gsivarr(mm)=='AOD')then
+                units='ug/kg-dryair'
+                call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+                varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='units',rc=localrc)
+              else
+                call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+                varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='ppv',rc=localrc)
+              endif
+              gsiinc(:,:,:,m)=0.0
+            end do ! m
+          endif ! gsiarray%gsiinc
+          if(gsivarr(mm).eq.'o3vmr')then
+            traceout=incMLS3d
+!            write(6,*)'ompsgsi',ompsgsi,'incLP',maxval(traceout),minval(traceout)
+            if(ompsgsi)then
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='inco3lp',units='ppv',rc=localrc)
+            else
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='MLSinc3d',units='ppv',rc=localrc)
+            endif
+            traceout=incOMI3d
+            if(ompsgsi)then
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='inco3nm',units='ppv',rc=localrc)
+            else
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='OMIinc3d',units='ppv',rc=localrc)
+            endif
+            incMLS3d=0.0
+            incOMI3d=0.0
+            if(ompsgsi)then
+              call chem_io_writenc(trim(fileout),colMLSinc,path=trim(config%emi_outname), &
+              de=de,time=itime, varname='LPOMPSinc',units='dobson',rc=localrc)
+              call chem_io_writenc(trim(fileout),colOMIinc,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='NMOMPSinc',units='dobson',rc=localrc)
+            else
+              call chem_io_writenc(trim(fileout),colMLSinc,path=trim(config%emi_outname), &
+              de=de,time=itime, varname='MLSinc',units='dobson',rc=localrc)
+              call chem_io_writenc(trim(fileout),colOMIinc,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='OMIinc',units='dobson',rc=localrc)
+            endif
+            
+          endif ! o3vmr
+          if(gsivarr(mm).eq.'co')then
+            if(allocated(incNUCAPSco3d))then
+              traceout=incNUCAPSco3d*avgro/airmw*10./grvity*1.e-18
+!             gsitotinc=gsitotinc*avgro/airmw*10./grvity*1.e-18
+!              write(6,*)'cogsi','incNUCAPS',maxval(traceout),minval(traceout)
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='NUCAPSinc3d',units='10**18 molec/cm2',rc=localrc)
+              incNUCAPSco3d=0.0
+              call chem_io_writenc(trim(fileout),colNUCAPSinc,path=trim(config%emi_outname), &
+              de=de,time=itime, varname='NUCOinc',units=' ',rc=localrc)
+            endif
+            if(allocated(incTROPOMIco3d))then
+              traceout=incTROPOMIco3d*avgro/airmw*10./grvity*1.e-18
+              call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='TROMIinc3d',units='10**18 molec/cm2',rc=localrc)
+              incTROPOMIco3d=0.0
+              call chem_io_writenc(trim(fileout),colTROPOMIinc,path=trim(config%emi_outname), &
+              de=de,time=itime,varname='TROMIinc',units=' ',rc=localrc)
+            endif
+            
+          endif ! co
+!          write(6,*)'gsiarray mm ngsivar ',mm,gsiarray(mm)%ngsivar
+!          call flush(6)
+          if(gsiarray(mm)%ngsivar==1)then
+!            write(6,*)'mm',mm,'gsicem',gsiarray(mm)%gsicem(1)
+!            call flush(6)
+!            write(6,*)'gsitotinc',maxval(gsitotinc)
+!            call flush(6)
+            call chem_io_writenc(trim(fileout),gsitotinc,path=trim(config%emi_outname),de=de,time=itime, &
+            varname=trim(gsiarray(mm)%gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+!            write(6,*)'did iowriet'
+!            call flush(6)
+            if(gsiarray(mm)%gsicem(1)=='co')then
+              pergsiinc=gsitotinc/cotot
+              call chem_io_writenc(trim(fileout),pergsiinc,path=trim(config%emi_outname),de=de,time=itime, &
+              varname='per'//trim(gsiarray(mm)%gsicem(1))//'inc',units='percent',rc=localrc)
+            endif
+          endif
+        end do ! mm findhere
+!          write(6,*)iam,'out cotot'
+!          call flush(6)
+          call chem_io_writenc(trim(fileout),cotot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='cotot',units='10**18 molec/cm2',rc=localrc)
+          call chem_io_writenc(trim(fileout),no2tot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='no2tot',units='10**18 molec/cm2',rc=localrc)
+          
+!        endif
+!        write(6,*)iam,'bottom of loop'
+!        call flush(6)
+
+
+      else
+        write(6,*)'output time=1 '
+        call flush(6)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='q',units='kg/kg',rc=localrc)
+        traceout=tr3d(:,:,:,p_atm_o3mr)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='o3mrphys',units='kg/kg',rc=localrc)
+        traceout=o3vmr_inst
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='o3vmr',units='ppv',rc=localrc)
+        traceout=data%potvort
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='potvort',units=' ',rc=localrc)
+        traceout=data%absvort
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='absvort',units=' ',rc=localrc)
+        traceout=statein%prl3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='pdash',units=' ',rc=localrc)
+        traceout=dpm*100.
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='dpm',units='Pa',rc=localrc)
+        traceout=statein%prl3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='pdash',units='Pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='V',units='m/s',rc=localrc)
+      endif
+
+!      write(6,*)'ninput',ninput,'fileout',trim(fileout)  
+!      call flush(6)
+      do m=1,ninput
+        units='ppv'
+        traceout=tr3d(:,:,:,icheminputpt(m))
+!       convert to raqms units
+        if(cheminput(m)(1:2).eq.'bc'.or.cheminput(m)(1:3).eq.'oc1'.or. &
+          cheminput(m)(1:3).eq.'oc2'.or.                               &
+          cheminput(m)(1:3).eq.'dus'.or.cheminput(m)(1:3).eq.'sea'.or. &
+!          cheminput(m)(1:3).eq.'so2'.or.cheminput(m)(1:4).eq.'sulf')then
+          cheminput(m)(1:4).eq.'sulf')then
+          if( aerosol_ugpKg)then
+            units='ug/kg-dryair'
+            if(cheminput(m)(1:3).eq.'bc1')then
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cheminput(m)(1:3).eq.'bc2')then
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cheminput(m)(1:3).eq.'oc1')then
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cheminput(m)(1:3).eq.'oc2')then
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cheminput(m)(1:4).eq.'sulf')then
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            endif
+          else
+!           convert  from ppv to ugpkg ?
+            traceout=traceout*1.e-9
+            if(cheminput(m)(1:3).eq.'bc1')then
+               traceout=traceout*airmw/tcmw(idbc1)
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cheminput(m)(1:3).eq.'bc2')then
+              traceout=traceout*airmw/tcmw(idbc2)
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cheminput(m)(1:3).eq.'oc1')then
+              traceout=traceout*airmw/tcmw(idoc1)
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cheminput(m)(1:3).eq.'oc2')then
+              traceout=traceout*airmw/tcmw(idoc2)
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cheminput(m)(1:4).eq.'sulf')then
+              traceout=traceout*airmw/mw_so4_aer
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            else
+              units='kg kg-1'
+            endif
+          endif
+!          if(tile.eq.5)then
+            !write(300+iam,*)cheminput(m)(1:4),maxval(traceout),minval(traceout)
+!            flush(300+iam)
+!          endif
+        endif
+!        if(cheminput(m)(1:3).eq.'dms'.or.cheminput(m)(1:3).eq.'msa')then
+!       they changed so2 to ppm
+        if(cheminput(m)(1:3).eq.'dms'.or.cheminput(m)(1:3).eq.'msa'.or.cheminput(m)(1:3).eq.'so2')then
+          traceout=traceout*1.e-6
+        endif
+!        !if(iam.eq.0.and.tile.eq.2)then
+!          write(6,*)'m',m,'icheminputpt',cheminputlist(m),'cheminput',cheminput(m)
+!          call flush(6)
+!        endif
+!        write(200+iam,*)'m',m,cheminput(m),units
+!        call flush(200+iam)
+        if(present(itime))then
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname=cheminput(m),units=units,rc=localrc)
+        else
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+          varname=cheminput(m),units=units,rc=localrc)
+        endif
+!        write(6,*)'varname',trim(cheminput(m)),'rc',localrc
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+      o3dep_save=o3dep_save*86400.
+      if(present(itime))then
+        trace2dout=sfcp*100.
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcp',units='Pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),zsurf,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcz',units='m',rc=localrc)
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),o3dep_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3dep',units='ppv day -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zlwigrd',units=' ',rc=localrc)
+        trace2dout=rcav_write
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cumprec',units='kg m-2',rc=localrc)
+        trace2dout=rnav_write
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cumprel',units='kg m-2',rc=localrc)
+        call chem_io_writenc(trim(fileout),diffrc,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='prec',units='kg m-2 ',rc=localrc)
+        varname='prec',units='mm day-1 ',rc=localrc)
+        call chem_io_writenc(trim(fileout),diffrl,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='prel',units='kg m-2',rc=localrc)
+        varname='prel',units='mm day-1',rc=localrc)
+        if(allocated(bb_nox_adjust))then
+          call chem_io_writenc(trim(fileout),bb_nox_adjust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='bbnoxadj',units='ppv day -1',rc=localrc)
+          bb_nox_adjust=0.0
+        endif
+      else
+        trace2dout=sfcp*100.
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),time=1,de=de, &
+        varname='sfcp',units='Pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),o3dep_save,path=trim(config%emi_outname),time=1,de=de, &
+        varname='o3dep',units='ppv day -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='zlwigrd',units=' ',rc=localrc)
+      endif
+      o3dep_save=0.0
+      if(present(itime))then
+#ifdef DIAGCO
+        if(lcodiag)then
+        call flipz(coften_save,traceout)
+        cotend=traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosrc',units='ppv sec -1',rc=localrc)
+        call flipz(codten_save,traceout)
+        cotend=cotend-traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosink',units='ppv sec -1',rc=localrc)
+        cotend(:,:,1)=cotend(:,:,1)-codep_save(:,:)
+        call chem_io_writenc(trim(fileout),cotend,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotend',units='ppv sec -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),codep_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='codepsec',units='ppv sec -1',rc=localrc)
+        endif
+#endif
+        codep_save=codep_save*86400.
+        call chem_io_writenc(trim(fileout),cotot,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotot',units='10**18 mol/cm2',rc=localrc)
+        call chem_io_writenc(trim(fileout),colno2,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='colno2',units='mol/cm2',rc=localrc)
+!        colno2=colno2/2.69e16
+!        call chem_io_writenc(trim(fileout),colno2,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='colno2',units='dobson',rc=localrc)
+        call chem_io_writenc(trim(fileout),colnoy,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='colnoy',units='mol/cm2',rc=localrc)
+        call chem_io_writenc(trim(fileout),tau2d,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='tau2d',units=' ',rc=localrc)
+        call chem_io_writenc(trim(fileout),sourceno,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='srcno',units=' ',rc=localrc)
+        colnox_save=colnox_save*fac
+        call chem_io_writenc(trim(fileout),colnox_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='lnox2d',units=' ',rc=localrc)
+        colnox_save=0.0
+      else
+        call chem_io_writenc(trim(fileout),codep_save,path=trim(config%emi_outname),time=1,de=de, &
+        varname='codep',units='ppv day -1',rc=localrc)
+      endif
+      codep_save=0.0
+      noydep_save=noydep_save*86400.
+      if(present(itime))then
+        call chem_io_writenc(trim(fileout),noydep_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='noydep',units='ppv day -1',rc=localrc)
+      else
+        call chem_io_writenc(trim(fileout),noydep_save,path=trim(config%emi_outname),time=1,de=de, &
+        varname='noydep',units='ppv day -1',rc=localrc)
+      endif
+      noydep_save=0.0
+!      if(iam.eq.0)then
+!        write(6,*)'navg before save',navg
+!      endif 
+      navg=0
+      if(present(itime))then
+!       note 1 is at top of these so must flip before outpout
+!        call flipz(no2ten,traceout)
+        call chem_io_writenc(trim(fileout),no2ten,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='no2ten',units=' ',rc=localrc)
+        no2ten=0.0
+        call flipz(lnox_save,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='lnox',units=' ',rc=localrc)
+        lnox_save=0.0
+        call flipz(jo1d_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='jo1d',units=' ',rc=localrc)
+        call flipz(jno_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='jno',units=' ',rc=localrc)
+!        call flipz(tau6hr,traceout)
+        call chem_io_writenc(trim(fileout),tau6hr,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cot6hr',units=' ',rc=localrc)
+        tau6hr=0.0
+        if(allocated(emisco3d))then
+          if(allocated(emisco3dave))then
+            emisco3dave=emisco3dave/float(navgfire)
+            call flipz(emisco3dave,traceout)
+            navgfire=0.0
+            emisco3dave=0.0
+          else
+            call flipz(emisco3d,traceout)
+          endif
+        else
+          traceout=0.0
+          traceout(:,:,1)=bbco_d
+        endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='emcofire',units=' ',rc=localrc)
+        call chem_io_writenc(trim(fileout),covermx,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='covermx',units=' ',rc=localrc)
+        call chem_io_writenc(trim(fileout),oxvermx,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='oxvermx',units=' ',rc=localrc)
+!        if(allocated(colemisco))then
+!          write(300+iam,*)'out colemisco',maxval(colemisco),minval(colemisco),shape(colemisco)
+          !trace2dout=colemisco
+          !call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          !varname='colecofire',units=' ',rc=localrc)
+        !endif
+!        if(allocated(colemisco_chem))then
+!          trace2dout=colemisco_chem
+!          write(300+iam,*)'out colemisco_chem',maxval(colemisco_chem),minval(colemisco_chem),shape(colemisco_chem)
+          !call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          !varname='chem_colemcofire',units=' ',rc=localrc)
+          !trace2dout=colemisco_chem-colemisco
+!          write(300+iam,*)'out did colemisco_chem',maxval(trace2dout),minval(trace2dout)
+!          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+!          varname='diffcolemcofire',units=' ',rc=localrc)
+!        endif
+
+      endif
+      
+    end do
+    if(iam==0)then
+       write(6,*)'bottom chem_write'
+    endif
+!    write(200+iam,*)'bottom'
+!    call flush(200+iam)
+     
+    return
+    end subroutine raqmschem_chem_write
+
+    subroutine raqmschem_chem_write_aodfcst(tr3d,data,statein,dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+    use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+    use raqmschem_pmgrid_mod,only : gsiarray,gsivarr,cemaod
+    use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co,grvity
+    use raqmschem_state_mod
+    implicit none
+    integer dims(3),i,j
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    character*100 :: aodatt='using aod coeff defived from geos-5 crtm coefficients'
+    integer, optional, intent(out) :: rc
+    type(chem_data_type) :: data
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout,cotend
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+    real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc,ext_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot,aod_dust1
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bc,aod_oc
+    real(chem_kind_r4),dimension(dims(1),dims(2)) :: cotot
+    type(chem_state_type),  pointer :: stateIn, stateOut
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k,kk,nl,mm
+    type(chem_config_type), pointer :: config => null()
+    REAL,    PARAMETER :: airmw    = 28.97
+    character *10 :: units,cemadd(3)*8
+    real(chem_kind_r4) :: fac,facdob
+    logical aerosol_ugpKg,doadd
+    character *10 caerosol_ugpKg,cenv
+    integer,pointer,dimension(:) :: loccem
+    integer  nadd,iadd(4)
+    character *8,pointer,dimension(:) :: gsicem
+    real*4,pointer,dimension(:,:,:,:) :: gsiinc
+    iadd(1)=p_ox
+    iadd(2)=p_no2
+    iadd(3)=p_ch2o
+    iadd(4)=p_ch4
+    cemadd(1)='ox'
+    cemadd(2)='no2'
+    cemadd(3)='ch2o'
+    cemadd(4)='ch4'
+    cenv=' '
+    call getenv('ADD_OX_NO2_CH2O',cenv)
+    
+    if(cenv/=' ')then
+      write(6,*)'ADD_OX_NO2_CH2O',trim(cenv)
+      doadd=.true.
+      nadd=4
+    else
+      doadd=.false.
+      nadd=0
+    endif
+    caerosol_ugpKg=' '
+    call getenv('AEROSOL_ugpKg',caerosol_ugpKg)
+    if(iam==0)then
+       write(6,*)'top aodfcst '
+    endif
+    if(caerosol_ugpKg/=' ')then
+      if(caerosol_ugpKg=='YES')then
+        aerosol_ugpKg=.true.
+        if(iam==0)then
+          write(6,*)'aersol_ugpKg'
+        endif
+      elseif(caerosol_ugpKg=='NO')then
+        aerosol_ugpKg=.false.
+        if(iam==0)then
+          write(6,*)'aersol_ppmv'
+        endif
+      endif
+    else ! make default
+      aerosol_ugpKg=.true.
+      if(iam==0)then
+        write(6,*)'aersol_ugpKg'
+      endif
+    endif
+      
+!    character*20 :: gsicem(100)
+!    integer numgsicem,loccem(100)
+    fac=avgro/airmw*10./grvity
+    facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+    cdatestr(1:4)=cdate(1:4)
+    cdatestr(5:5)='-'
+    cdatestr(6:7)=cdate(5:6)
+    cdatestr(8:8)='-'
+    cdatestr(9:10)=cdate(7:8)
+    cdatestr(11:11)=' '
+    cdatestr(12:13)=cdate(9:10)
+    cdatestr(14:)=':00:00'
+!    write(6,*)'ajl top chem_write'
+!    write(200+iam,*)'ajl top chem_write',trim(cdatestr)
+!    call flush(6)
+!    call flush(200+iam)
+
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!    write(6,*)'present filename',present(filename),'presend cdate',present(cdate)
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='tracer.'//cdate//'.nc'
+      else
+        fileout='tracer.nc'
+      endif
+    endif
+    nl=dims(3)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      sfcp(:,:)=statein%pr3d(:,:,1)*.01
+      do k=1,dims(3)
+        dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))*.01
+        dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+        cotot(:,:)=cotot(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_co)
+      end do
+      cotot=cotot*avgro/airmw*10./grvity*1.e-18
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='q',units='kg/kg',rc=localrc)
+        do k=1,dims(3)
+          traceout(:,:,k)=zsurf(:,:)+statein%phl3d(:,:,k)/9.80616
+        end do
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zdash',units='m',rc=localrc)
+        traceout=dpm*100. ! make pascals
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dpm',units='Pa',rc=localrc)
+        traceout=dz
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='dz',units='m',rc=localrc)
+        traceout=statein%prl3d
+!        write(6,*)'iodata pdash',maxval(traceout),minval(traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='pdash',units='Pa',rc=localrc)
+        traceout=statein%tk3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='T',units='K',rc=localrc)
+        traceout=statein%us3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='U',units='m/s',rc=localrc)
+        traceout=statein%vs3d
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='V',units='m/s',rc=localrc)
+        if(allocated(data%ext_3dg))then
+          traceout=data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_sulfg',units='1',attribute=aodatt,rc=localrc)
+          ext_bcoc=0.0
+          ext_bc=0.0
+          ext_oc=0.0
+          aod_bcoc=0.0
+          aod_bc=0.0
+          aod_oc=0.0
+          aod_dust=0.0
+          aod_seasalt=0.0
+          aod_sulf=0.0
+          do m=2,5
+            ext_bcoc=ext_bcoc+data%ext_3dg(:,:,:,m)
+            if(m<=3)then
+              ext_bc=ext_bc+data%ext_3dg(:,:,:,m)
+            else
+              ext_oc=ext_oc+data%ext_3dg(:,:,:,m)
+            endif
+          end do
+          ext_dust=0.0
+          ext_seasalt=0.0
+!         shoule be 6,10 ajl
+!         for gsi should be 6,10 since now have 5 dust bins and 6 is now dust1
+!         and not no3 which we don't have in model
+!         for gsi aod 6 is dust1 since have 1-5
+          do m=6,10
+            ext_dust=ext_dust+data%ext_3dg(:,:,:,m)
+!            write(6,*)'ext_dust',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+         ext_dust1=data%ext_3dg(:,:,:,6)
+         do m=11,14
+            ext_seasalt=ext_seasalt+data%ext_3dg(:,:,:,m)
+!            write(300+iam,*)'ext_3dg',m,maxval(data%ext_3dg(:,:,:,m))
+          end do
+          aod_dust1=0.0
+          do k=1,dims(3)
+            aod_bcoc(:,:)=aod_bcoc(:,:)+ext_bcoc(:,:,k)*dz(:,:,k)
+            aod_bc(:,:)=aod_bc(:,:)+ext_bc(:,:,k)*dz(:,:,k)
+            aod_oc(:,:)=aod_oc(:,:)+ext_oc(:,:,k)*dz(:,:,k)
+            aod_seasalt(:,:)=aod_seasalt(:,:)+ext_seasalt(:,:,k)*dz(:,:,k)
+            aod_dust(:,:)=aod_dust(:,:)+ext_dust(:,:,k)*dz(:,:,k)
+            aod_sulf(:,:)=aod_sulf(:,:)+data%ext_3d(:,:,k,1)*dz(:,:,k)
+            aod_tot(:,:)=aod_bcoc(:,:)+aod_seasalt(:,:)+aod_dust(:,:)+aod_sulf(:,:)
+            aod_dust1(:,:)=aod_dust1(:,:)+ext_dust1(:,:,k)*dz(:,:,k)
+          end do
+!          write(6,*)'aod_dust1',maxval(aod_dust1)
+!          write(6,*)'aod_dust',maxval(aod_dust)
+!          write(6,*)'maxvalaod',maxval(aod_tot),maxval(data%aodgsi)
+          ext_tot=ext_bcoc+ext_dust+ext_seasalt+data%ext_3dg(:,:,:,1)
+          call chem_io_writenc(trim(fileout),ext_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_bcocg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_dustg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_seasg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),ext_tot,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ext_totg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcocg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_bc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_bcg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_oc,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aod_ocg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodssaltg',units='1',attribute=aodatt,rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_dust,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aoddustg',units='1',rc=localrc)
+          call chem_io_writenc(trim(fileout),aod_sulf,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodsulfg',units='1',attribute=aodatt,rc=localrc)
+        endif
+        if(allocated(ptropgsi))then
+          call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ptrop',units='Pa',attribute='using gsi code to calc ptrop',rc=localrc)
+        endif
+        if(allocated(ztropgsi))then
+          call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='ztrop',units='m',attribute='using gsi code to calc ztrop',rc=localrc)
+        endif
+        if(allocated(data%aodg5))then
+          trace2dout=data%aodg5
+          call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname='aodg5',units='1',attribute=aodatt,rc=localrc)
+
+        endif  
+#ifdef DIAGCO2
+        call flipz(coften_save,traceout)
+        cotend=traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosrc',units='ppv sec -1',rc=localrc)
+        call flipz(codten_save,traceout)
+        cotend=cotend-traceout
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cosink',units='ppv sec -1',rc=localrc)
+        cotend(:,:,1)=cotend(:,:,1)-codep_save(:,:)
+        call chem_io_writenc(trim(fileout),cotend,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotend',units='ppv sec -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),codep_save,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='codep',units='ppv sec -1',rc=localrc)
+        call chem_io_writenc(trim(fileout),cotot,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cotot',units='molec/ccm2*10-18',rc=localrc)
+#endif
+   
+      if(iam==0)then
+         write(6,*)'nsolmax',nsolmax
+      endif
+      do m=1,nsolmax
+!        m=idaodgsi(mm)
+        units='ppv'
+!        traceout=tr3d(:,:,:,icheminputpt(m))
+        traceout=tr3d(:,:,:,idaodgsi(m))
+!       convert to raqms units
+        if(iam==0)then
+          write(6,*)m,'aodfcst cheminput',cheminput(m)
+        endif
+        if(cemaod(m)(1:2).eq.'bc'.or.cemaod(m)(1:3).eq.'oc1'.or. &
+          cemaod(m)(1:3).eq.'oc2'.or.                               &
+          cemaod(m)(1:3).eq.'dus'.or.cemaod(m)(1:3).eq.'sea'.or. &
+!          cemaod(m)(1:3).eq.'so2'.or.cemaod(m)(1:4).eq.'sulf')then
+          cemaod(m)(1:4).eq.'sulf')then
+          if( aerosol_ugpKg)then
+            units='ug/kg-dryair'
+            if(cemaod(m)(1:3).eq.'bc1')then
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'bc2')then
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc1')then
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc2')then
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cemaod(m)(1:4).eq.'sulf')then
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            endif
+          else
+!           convert  from ppv to ugpkg ?
+            traceout=traceout*1.e-9
+            if(cemaod(m)(1:3).eq.'bc1')then
+               traceout=traceout*airmw/tcmw(idbc1)
+               if(iam.eq.0)then
+                 write(6,*)'bc1',tcmw(idbc1),idbc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'bc2')then
+              traceout=traceout*airmw/tcmw(idbc2)
+               if(iam.eq.0)then
+                 write(6,*)'bc2',tcmw(idbc2),idbc2
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc1')then
+              traceout=traceout*airmw/tcmw(idoc1)
+               if(iam.eq.0)then
+                 write(6,*)'oc1',tcmw(idoc1),idoc1
+               endif
+            elseif(cemaod(m)(1:3).eq.'oc2')then
+              traceout=traceout*airmw/tcmw(idoc2)
+               if(iam.eq.0)then
+                 write(6,*)'oc2',tcmw(idoc2),idoc2
+               endif
+            elseif(cemaod(m)(1:4).eq.'sulf')then
+              traceout=traceout*airmw/mw_so4_aer
+               if(iam.eq.0)then
+                 write(6,*)'so4',mw_so4_aer
+               endif
+!              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+            else
+              units='kg kg-1'
+            endif
+          endif
+!          if(tile.eq.5)then
+            !write(300+iam,*)cemaod(m)(1:4),maxval(traceout),minval(traceout)
+!            flush(300+iam)
+!          endif
+        endif
+!        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa')then
+!       they changed so2 to ppm
+        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa'.or.cemaod(m)(1:3).eq.'so2')then
+          traceout=traceout*1.e-6
+        endif
+!        !if(iam.eq.0.and.tile.eq.2)then
+!          write(6,*)'m',m,'icemaodpt',cemaodlist(m),'cemaod',cemaod(m)
+!          call flush(6)
+!        endif
+!        write(200+iam,*)'m',m,cemaod(m),units
+!        call flush(200+iam)
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname=cemaod(m),units=units,rc=localrc)
+!        write(6,*)'varname',trim(cemaod(m)),'rc',localrc
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+        trace2dout=sfcp*100. ! make Pa
+        call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcp',units='Pa',rc=localrc)
+        call chem_io_writenc(trim(fileout),zsurf,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='sfcz',units='m',rc=localrc)
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='zlwigrd',units=' ',rc=localrc)
+        call chem_io_writenc(trim(fileout),tau6hr,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='cot6hr',units=' ',rc=localrc)
+        navg=0
+        tau6hr=0.0
+      
+    call flipz(o3vmr_inst,traceout)
+    call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+      varname='o3vmr',units='ppv',rc=localrc)
+      traceout=tr3d(:,:,:,p_co)
+    call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+      varname='co',units='ppv',rc=localrc)
+      if(nadd>0)then
+        do m=1,nadd
+          traceout=tr3d(:,:,:,iadd(m))
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+         varname=cemadd(m),units='ppv',rc=localrc)
+        end do
+      endif
+    end do
+     
+    return
+    end subroutine raqmschem_chem_write_aodfcst
+    subroutine raqmschem_chem_write_o3vmr(dims,itime,cdate,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd,o3vmr_inst
+    use raqmschem_pmgrid_mod,only : iam
+    implicit none
+    integer dims(3)
+    integer,optional :: itime
+    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    
+!    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m,k
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    write(6,*)'o3vmr write'
+!    call flush(6)
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+      if(present(cdate))then
+        fileout='o3vmr.'//cdate//'.nc'
+      else
+        fileout='o3vmr.nc'
+      endif
+    endif
+!    write(6,*)'at ajl zzyyy itime',present(itime)
+!    call flush(6)
+!    write(200+iam,*)'o3vmr'
+!    call flush(200+iam)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      if(present(itime))then
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),pgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='press',units='pa',rc=localrc)
+        call flipz(o3vmr_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3vmr',units='ppv',rc=localrc)
+        call chem_io_writenc(trim(fileout),o3mr,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3mr',units='kg kg-1',rc=localrc)
+      else
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='theta',units='K',rc=localrc)
+        call chem_io_writenc(trim(fileout),pgrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='press',units='pa',rc=localrc)
+        call flipz(o3vmr_inst,traceout)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),time=1,de=de, &
+        varname='o3vmr',units='ppv',rc=localrc)
+        call chem_io_writenc(trim(fileout),o3mr,path=trim(config%emi_outname),time=1,de=de, &
+        varname='o3mr',units='kg kg-1',rc=localrc)
+      endif
+      
+    end do
+!    write(200+iam,*)'bottom chem_write_o3vmr'
+!    call flush(200+iam)
+     
+    return
+    end subroutine raqmschem_chem_write_o3vmr
+    subroutine raqmschem_chem_write_var(outvar,dims,isave,name,cdate,rc)
+    use raqmschem_species_mod
+    implicit none
+    character *(*)name
+    integer dims(3),isave
+    character*10, optional, intent(in) :: cdate
+    integer, optional, intent(out) :: rc
+    
+    real(CHEM_KIND_R4),dimension(:,:,:) :: outvar
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+!    write(6,*)'chem_write_var',trim(name)
+!    call flush(6)
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        traceout=outvar
+        if(present(cdate))then
+          call chem_io_writenc('tracer.'//cdate//'.nc',traceout,path=trim(config%emi_outname),de=de,time=isave, &
+          varname=name,rc=localrc)
+        else
+          call chem_io_writenc('tracer.out.nc',traceout,path=trim(config%emi_outname),de=de,time=isave, &
+          varname=name,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+     end do
+     return
+     end subroutine raqmschem_chem_write_var
+    subroutine raqmschem_chem_write_var_2d(outvar,dims,isave,name,cdate,rc)
+    use raqmschem_species_mod
+    implicit none
+    character *(*)name
+    integer dims(2),isave
+    character*10, optional, intent(in) :: cdate
+    integer, optional, intent(out) :: rc
+    
+    real(CHEM_KIND_R4),dimension(:,:) :: outvar
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2)) :: traceout
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        traceout=outvar
+        if(present(cdate))then
+          write(6,*)'out 2d shape traceout',shape(traceout),'isave',isave,'cdate',cdate,'isave',isave
+          call flush(6)
+          call chem_io_writenc('tracer.'//cdate//'.nc',traceout,path=trim(config%emi_outname),de=de,time=isave, &
+          varname=name,rc=localrc)
+        else
+          call chem_io_writenc('tracer.out.nc',traceout,path=trim(config%emi_outname),de=de,time=isave, &
+          varname=name,rc=localrc)
+        endif
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+     end do
+     return
+     end subroutine raqmschem_chem_write_var_2d
+
+    subroutine raqmschem_chem_write_debug(tr3d,dims,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd
+    implicit none
+    integer dims(3)
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    
+    real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+        fileout='tracer.nc'
+    endif
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      write(6,*)'output time=1 q'
+      call flush(6)
+      call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname), &
+      varname='q',time=1,de=de,rc=localrc)
+
+!      write(6,*)'now tracers debug ',ninput',ninput,'fileout',trim(fileout)  
+      do m=1,ninput
+        traceout=tr3d(:,:,:,icheminputpt(m))
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname=cheminput(m),time=1,de=de,rc=localrc)
+        write(6,*)'write_debug varname',trim(cheminput(m)),'rc',localrc
+        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+      
+    end do
+     
+    return
+    end subroutine raqmschem_chem_write_debug
+    subroutine raqmschem_chem_writer4(tr3d,dims,itime,filename,rc)
+    use raqmschem_species_mod
+    use raqmschemcomm_mod, only : thgrd
+    implicit none
+    integer dims(3)
+    integer,optional :: itime
+!    character*10, optional, intent(in) :: cdate
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    integer, optional, intent(out) :: rc
+    
+    real(CHEM_KIND_R4),dimension(:,:,:,:) :: tr3d
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+        fileout='tracer.nc'
+    endif
+!    write(6,*)'at ajl zzyyy itime',present(itime)
+!    call flush(6)
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      traceout=tr3d(:,:,:,1)
+      if(present(itime))then
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='q',units='kg kg-1',rc=localrc)
+        traceout=tr3d(:,:,:,p_atm_o3mr)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3mrphys',units='kg kg-1',rc=localrc)
+        traceout=o3vmr_inst
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='o3vmr',units='ppv',rc=localrc)
+      else
+!        write(6,*)'output time=1 '
+!        call flush(6)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='q',units='kg kg-1',rc=localrc)
+        traceout=tr3d(:,:,:,p_atm_o3mr)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='o3mrphys',units='kg kg-1',rc=localrc)
+        traceout=o3vmr_inst
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+        varname='o3vmr',rc=localrc)
+      endif
+
+!      write(6,*)'ninput',ninput,'fileout',trim(fileout)  
+      do m=1,ninput
+        if(icheminputpt(m)>0)then
+        traceout=tr3d(:,:,:,icheminputpt(m))
+        if(maxval(abs(traceout))>1.e-30)then
+        write(6,*)'diag out write ',trim(fileout),maxval(traceout),minval(traceout),m,cheminput(m),icheminputpt(m)
+        call flush(6)
+        endif
+        if(present(itime))then
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+          varname=cheminput(m),rc=localrc)
+        else
+          call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=1, &
+          varname=cheminput(m),rc=localrc)
+        endif
+!        write(6,*)'varname',trim(cheminput(m)),'rc',localrc
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        endif
+      end do
+!      o3dep_save=o3dep_save*86400.
+      if(present(itime))then
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+        varname='theta',rc=localrc)
+!        call chem_io_writenc(trim(fileout),o3dep_save,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='o3dep',rc=localrc)
+!        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),de=de,time=itime, &
+!        varname='zlwigrd',rc=localrc)
+      else
+        call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='theta',rc=localrc)
+!        call chem_io_writenc(trim(fileout),o3dep_save,path=trim(config%emi_outname),time=1,de=de, &
+!        varname='o3dep',rc=localrc)
+!        call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),time=1,de=de, &
+!        varname='zlwigrd',rc=localrc)
+      endif
+!      o3dep_save=0.0
+      
+    end do
+     
+    return
+    end subroutine raqmschem_chem_writer4
+#ifdef WETDEPDIAG
+    subroutine raqmschem_wetdepdiag_write(dims,filename,rc)
+    use raqmschem_species_mod, only : familyname,soluablechemname,nsol
+    use raqmschemcomm_mod, only : wetc,wetl,wetcf,wetlf,lnox_save,lpaveij,cpaveij,wetccol
+    use raqmschemcomm_mod, only : wetlcol,gsdcol,gsd3d
+    use raqmschemcomm_mod, only : o3ften_save,o3dten_save,ch4ften_save,ch4dten_save
+    use raqmschemcomm_mod, only : n2often_save,n2odten_save,coften_save,codten_save
+    use raqmschem_pmgrid_mod, only : iam,iamprn,iprnin,jprnin,kprnin,iprn,jprn
+    implicit none
+    integer dims(3)
+    character*100 fileout
+    character *(*), optional, intent(in) :: filename
+    character *3 :: gsdname(4)
+    data gsdname/'bc1','bc2','oc1','oc2'/
+    integer, optional, intent(out) :: rc
+    
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+    real(CHEM_KIND_R4),dimension(dims(1),dims(2)) :: traceout2d
+    real(CHEM_KIND_R4),parameter :: secday=86400.
+    real(CHEM_KIND_R4),parameter :: one=1.
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, localpe, tile ,m
+    type(chem_config_type), pointer :: config => null()
+!    write(300+iam,*)'top wetdepdiag'
+!    call flush(300+iam)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    if(present(filename))then
+      fileout=trim(filename)
+    else
+        fileout='wetdepdiag.nc'
+    endif
+    cpaveij=cpaveij/float(nwetdepdiag)*86400.
+    lpaveij=lpaveij/float(nwetdepdiag)*86400.
+#ifdef DIAGWETDEP
+    write(6,*)'cpave',maxval(cpaveij),'nwetdepdiag',nwetdepdiag,'nsol',nsol
+    call flush(6)
+#endif
+   
+
+    do de = 0, deCount-1
+      call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        call chem_io_writenc(trim(fileout),cpaveij,path=trim(config%emi_outname),time=1,de=de,&
+        varname='cp',rc=localrc)
+        call chem_io_writenc(trim(fileout),lpaveij,path=trim(config%emi_outname),time=1,de=de,&
+        varname='lp',rc=localrc)
+
+!      write(6,*)'now tracers debug ',ninput',ninput,'fileout',trim(fileout)  
+      do m=1,nsol
+        traceout=wetc(:,:,:,m)/float(nwetdepdiag)*86400.
+        traceout2d=wetccol(:,:,m)/float(nwetdepdiag)*86400.
+!        if(iam.eq.iamprn)then
+!          write(300+iam,*)'tile ',tile,'iprn',iprn,jprn,'iprnin',iprnin,jprnin
+!          write(300+iam,*)'nwetdepdiagout ',nwetdepdiag,' wetccol ', &
+!          wetccol(iprn,jprnin,m),' traceout2d ',traceout2d(iprn,jprn)
+!          write(300+iam,*)m,'col'//soluablechemname(m)
+!        endif
+#ifdef DIAGWETDEP
+        if(iam.eq.iamprn)then
+        write(6,*)'write_wetdepdiag varname',m,'c'//trim(soluablechemname(m)),'rc',localrc
+        call flush(6)
+        endif
+#endif
+        call chem_io_writenc(trim(fileout),traceout2d,path=trim(config%emi_outname),&
+        varname='col'//soluablechemname(m),time=1,de=de,rc=localrc)
+        traceout2d=wetlcol(:,:,m)/float(nwetdepdiag)*86400.
+        call chem_io_writenc(trim(fileout),traceout2d,path=trim(config%emi_outname),&
+        varname='cll'//soluablechemname(m),time=1,de=de,rc=localrc)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='c'//soluablechemname(m),time=1,de=de,rc=localrc)
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+#ifdef DIAGWETDEP
+        if(iam.eq.iamprn)then
+           write(6,*)m,'wetl out ',iprn,iprnin,wetl(iprn,jprnin,kprnin,m)
+           call flush(6)
+        endif
+#endif
+        traceout=wetl(:,:,:,m)/float(nwetdepdiag)*86400.
+#ifdef DIAGWETDEP
+        if(iam.eq.0)then
+        write(6,*)'write_wetdepdiag varname','l'//trim(soluablechemname(m)),'rc',localrc
+        call flush(6)
+        endif
+        if(iam.eq.iamprn)then
+          write(6,*)'out ls ',m,trim(soluablechemname(m)),maxval(traceout),minval(traceout)
+          call flush(6)
+        endif
+#endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='l'//trim(soluablechemname(m)),time=1,de=de,rc=localrc)
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+      do m=1,4
+        traceout=gsd3d(:,:,:,m)/float(nwetdepdiag)
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='g3d'//trim(gsdname(m)),time=1,de=de,rc=localrc)
+        traceout2d=gsdcol(:,:,m)
+        call chem_io_writenc(trim(fileout),traceout2d,path=trim(config%emi_outname),&
+        varname='gcol'//trim(gsdname(m)),time=1,de=de,rc=localrc)
+      end do
+      gsd3d=0.0
+      gsdcol=0.0
+      do m=1,4
+        traceout=wetcf(:,:,:,m)/float(nwetdepdiag)*86400.
+#ifdef DIAGWETDEP
+        if(iam.eq.iamprn)then
+        write(6,*)'familyname ',familyname(m)
+        endif
+#endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='c'//familyname(m),time=1,de=de,rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        traceout=wetlf(:,:,:,m)/float(nwetdepdiag)*86400.
+#ifdef DIAGWETDEP
+        if(iam.eq.iamprn)then
+        write(6,*)'write_wetdepdiag varname',m,'l'//trim(soluablechemname(m)),maxval(traceout),minval(traceout)
+        call flush(6)
+        endif
+#endif
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='l'//trim(familyname(m)),time=1,de=de,rc=localrc)
+!        call flush(6)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      end do
+!      write(6,*)'shape lnox_save',shape(lnox_save),'traceout',shape(traceout)
+!      do m=1,63
+!        write(6,*)'k',m,'lnox_save',maxval(lnox_save(:,:,m))
+!        call flush(6)
+!      end do
+      call flipz(lnox_save,traceout,factor=secday)
+!        traceout=lnox_save*secday
+      call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='lnox',time=1,de=de,rc=localrc)
+!        traceout=o3ften_save*secday
+      call flipz(o3ften_save,traceout,factor=secday)
+      call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='o3ften',time=1,de=de,rc=localrc)
+      call flipz(o3dten_save,traceout,factor=secday)
+!        traceout=o3dten_save*secday
+      call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='o3dten',time=1,de=de,rc=localrc)
+      call flipz(ch4ften_save,traceout,factor=secday)
+!        traceout=ch4ften_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='ch4ften',time=1,de=de,rc=localrc)
+      call flipz(ch4dten_save,traceout,factor=secday)
+!        traceout=ch4dten_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='ch4dten',time=1,de=de,rc=localrc)
+!      write(6,*)'flipz n2often',maxval(n2often_save),minval(n2often_save)
+!      call flush(6)
+      call flipz(n2often_save,traceout,factor=secday)
+!        traceout=n2often_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='n2often',time=1,de=de,rc=localrc)
+!      write(6,*)'flipz n2odten',maxval(n2odten_save),minval(n2odten_save)
+!      call flush(6)
+      call flipz(n2odten_save,traceout,factor=secday)
+!        !traceout=n2odten_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='n2odten',time=1,de=de,rc=localrc)
+      call flipz(coften_save,traceout,factor=secday)
+!        traceout=coften_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='coften',time=1,de=de,rc=localrc)
+      call flipz(codten_save,traceout,factor=secday)
+!        traceout=codten_save*secday
+        call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),&
+        varname='codten',time=1,de=de,rc=localrc)
+      call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),time=1,de=de, &
+        varname='zlwi',rc=localrc)
+    end do
+    nwetdepdiag=0
+    cpaveij=0.0
+    lpaveij=0.0
+    wetc=0.0
+    wetccol=0.0
+    wetlcol=0.0
+    wetcf=0.0
+    wetl=0.0
+    wetlf=0.0
+    return
+    end subroutine raqmschem_wetdepdiag_write
+#endif
+    subroutine flipz(datai,datao,factor)
+    use chem_types_mod
+    implicit none
+    real(CHEM_KIND_R4), dimension(:,:,:),intent(in) :: datai
+    real(CHEM_KIND_R4), dimension(:,:,:),intent(out) :: datao
+    real(CHEM_KIND_R4), optional, intent(in) :: factor
+    integer dim(3),dimo(3),k
+    dim=shape(datai)
+    dimo=shape(datao)
+    if(dim(1).ne.dimo(1).or.dim(2).ne.dimo(2).or.dim(3).ne.dimo(3))then
+      write(6,*)'diffs wrong'
+      call flush(6)
+    endif
+    if(present(factor))then
+      do k=1,dim(3)
+        datao(:,:,dim(3)-k+1)=datai(:,:,k)*factor
+      end do
+    else
+      do k=1,dim(3)
+        datao(:,:,dim(3)-k+1)=datai(:,:,k)
+      end do
+    endif
+    return
+    end subroutine flipz
+
+
+end module raqmschem_iodata_mod
+!    subroutine setdatestr(datestr)
+!    use raqmschem_pmgrid_mod, only : cdatestr
+!    character *(*) datestr
+!    datestr=cdatestr
+!    end subroutine setdatestr(datestr)

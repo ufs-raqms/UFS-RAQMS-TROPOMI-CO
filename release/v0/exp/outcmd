@@ -1,0 +1,1 @@
+sed -i s/NGSIPROC/$GSIPROCIN/ runjob.submit.tropomi.assim.scr

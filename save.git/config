@@ -1,0 +1,22 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[submodule]
+	active = .
+[remote "origin"]
+	url = gerrit:EMC_FV3GFS-GSDCHEM
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[submodule "FMS"]
+	url = https://github.com/NOAA-EMC/FMS
+[submodule "FV3"]
+	url = gerrit:FV3
+[submodule "GSDCHEM"]
+	url = gerrit:GSDCHEM
+[submodule "NEMS"]
+	url = https://github.com/NOAA-EMC/NEMS.git
+[submodule "ccpp/framework"]
+	url = https://github.com/NCAR/ccpp-framework
+[submodule "ccpp/physics"]
+	url = https://github.com/NCAR/ccpp-physics

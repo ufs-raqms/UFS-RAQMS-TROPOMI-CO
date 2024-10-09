@@ -1,0 +1,3210 @@
+diff -Bbw raqms/chem_driver_3d_nmhc.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.F
+53c53
+<       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,begj,endj,nr=>plat,nc,nl=>plev
+---
+>       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,jbeg,nr=>plat,nc,nl=>plev
+89d88
+<       use raqmschemcomm_mod, only : bbco_hr
+978d976
+<       use raqmschem_pmgrid_mod,only : begj,endj
+1024,1025c1022
+<       use raqmschemcomm_mod, only : lcedsair,intaltair,docedsair
+<       use raqmschemcomm_mod, only : srccoair,ktopcedsair,intcoair,intnoxair
+---
+>       use raqmschemcomm_mod, only : srccoair
+1031d1027
+<       use raqmschemcomm_mod, only : bbco_hr
+1035,1037d1030
+<       use raqmschemcomm_mod, only : srccocedsair,kbotcedsair,intcedsair
+<       use raqmschemcomm_mod, only : srcn2ocedsair
+<       use raqmschemcomm_mod, only : srcso2cedsair,ratioso2ceds,ratiococeds,ration2oceds
+1058d1050
+< !      use raqmschemcomm_mod, only : docedsair
+1232,1233d1223
+<       logical zupset,zloset
+< c save Ox photochemical tendency
+1234a1225
+> c save Ox photochemical tendency
+1257,1258c1248,1249
+<       real rr,coefpr94,af,coiplo,coiphi,noxiplo,noxiphi
+<       integer errcount,idum,k1
+---
+>       real rr,coefpr94
+>       integer errcount,idum
+1270,1278d1260
+< #ifdef DIAGCEDS
+<       if(tile==1.and.iam==11)then
+<         do i=1,nc
+<         if(i+ibeg-1==178.and.j==31)then
+<           write(6,*)'top doloop  i',i,j,'ibeg',ibeg
+<         endif
+<         end do
+<       endif
+< #endif
+1281,1284d1262
+< !      if(j==96)then
+< !        write(6,*)'nlnair',nlnair,'srcco',maxval(srccoair),'no',maxval(srcnair)
+< !        call flush(6)
+< !      endif
+1657,1659d1634
+< !                if(isnan(dwcon(1)))then
+< !                   write(6,*)'bc1grd',i,lbt,bc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1662,1664d1636
+< !                if(isnan(dwcon(2)))then
+< !                   write(6,*)'oc1grd',i,lbt,oc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1669,1672d1640
+< !                  if(isnan(wwcon(5)))then
+< !                     write(6,*)'ss3',ss3grdr8,ss4grdr8,ss5grdr8
+< !                   endif
+< 
+1696,1698d1663
+< !                if(isnan(dwcon(1)))then
+< !                   write(6,*)'bc1grd',i,lbt,bc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1701,1703d1665
+< !                if(isnan(dwcon(2)))then
+< !                   write(6,*)'oc1grd',i,lbt,oc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1810,1812d1771
+< !                  if(isnan(wwcon(ian)).or.isnan(aer_opd(irhn,ll)))then
+< !                   write(6,*)'wwcon',ian,wwcon(ian),irhn,ll
+< !                  endif
+1829,1831d1787
+< !                if(isnan(aer_opd(irhn,ll)))then
+< !                  write(6,*)'dwcon',ian-1,dwcon(ian-1),'qaa',qaa(4,indx(ian)),'den',aer_den(ian),'raa',raa(4,indx(ian))
+< !                 endif
+2471,2477d2426
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop inside so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+2617,2618c2566
+<                     write(6,*)'NAN phoj ',lbot-ip+1,'lbot',lbot,'ip',ip,ii,phoj(ii)
+<                     write(6,*)'iatchem',iatchem,katchem,'j',j,'kdn',kdn,'ktf',ktf,'l',l
+---
+>                     write(6,*)'NAN phoj ',ii,phoj(ii)
+2620d2567
+<                     call killit('nan phoj')
+3332,3357d3278
+<        if(lcedsair)then
+<          if(.not.allocated(srccocedsair))then
+<            allocate (srccocedsair(nc,begj:endj,nl))
+<          endif
+<          if(.not.allocated(srcn2ocedsair))then
+<            allocate (srcn2ocedsair(nc,begj:endj,nl))
+<            srcn2ocedsair=0.0
+<          endif
+<          if(.not.allocated(ratioso2ceds))then
+<            allocate (ratioso2ceds(nc,begj:endj,nl))
+<            ratioso2ceds=0.0
+<          endif
+<          if(.not.allocated(ration2oceds))then
+<            allocate (ration2oceds(nc,begj:endj,nl))
+<            ration2oceds=0.0
+<          endif
+<          if(.not.allocated(ratiococeds))then
+<            allocate (ratiococeds(nc,begj:endj,nl))
+<            ratiococeds=0.0
+<          endif
+<          srccocedsair(i,j,ip)=0.0
+<          if(.not.allocated(srcso2cedsair))then
+<            allocate (srcso2cedsair(nc,begj:endj,nl))
+<          endif
+<          srcso2cedsair(i,j,ip)=0.0
+<        endif
+3376,3399d3296
+< !       if(tile==5.and.j==192)then
+< !       write(6,*)iam,'ibeg',ibeg,'i',i,j,'tile',tile
+<        !write(6,*)'ibeg+i-1',ibeg+i-1
+<        !if(ibeg+i-1==168)write(6,*)'found 168'
+<        !call flush(6) 
+< !       endif
+< !       if(ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'iam',iam,'tile',tile,'lcedsir',lcedsair
+<          !call flush(6)
+< !       endif
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'found 168 lcedsair',lcedsair,i,j,'ip',ip,'lbot',lbot
+< !         call flush(6)
+< !       endif
+< !       if(iam==0.and.tile==1)then
+< !          write(6,*)'lcedsair2 ',lcedsair
+<        !endif
+<        if(lcedsair)then
+< !         write(6,*)'ktopcedsair',ktopcedsair,'shape',shape(intaltair)
+<          !flush(6)
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'before doceds so2grd',l,so2grd(i,l)
+< !             end do
+3401,3525d3297
+< !           endif  
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop before docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          call docedsair(i,j,ip,lbot,ltb,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop after docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          zloset=.false.
+<          zupset=.false.
+< !        need to find depth of layer 1 in altitude
+< !         if(lbot>ubound(zgeoh).or.lbot<1)then
+< !           write(6,*)'lbot'
+< !           flush(6)
+< !         endif
+< !         if(ip>ubound(zgeoh).or.ip<1)then
+< !           write(6,*)'ip',ip
+< !           flush(6)
+< !         endif
+<          zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !         write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !       endif
+<          if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<            zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !         end do
+< !           endif
+<            coiplo=0.0
+<            coiphi=0.0
+<            noxiplo=0.0
+<            noxiphi=0.0
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              coiphi=intcoair(i,j,ktopcedsair(i,j,1))
+<              noxiphi=intnoxair(i,j,ktopcedsair(i,j,1))
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(iam==75.and.i==1.and.j==49)then
+<                 write(6,*)'old zlo',zlo,'k',k,'intaltair',intaltair(k-1),intaltair(k)
+<              endif
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiplo=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                write(6,*)i,j,ip,'old zlo',zlo,'k',k,'af',af
+<                write(6,*)'old coiplo',coiplo
+<                flush(6)
+<                endif
+<                noxiplo=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+< !               write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiphi=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                  write(6,*)'old zup',zup,'k',k,'af',af,'coiphi',coiphi
+<                  flush(6)
+<                endif
+<                noxiphi=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+< !             write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<            saccoold=(coiphi-coiplo)/(zup-zlo)*1.e-5
+<            sacnoxold=(noxiphi-noxiplo)/(zup-zlo)*1.e-5
+< !           if(iam==75)then
+< !           if(iam==75.and.i==1.and.j==49)then
+<            saccoold=max(saccoold,0.0)
+<            if(saccoold/=sacco)then
+<               write(6,*)'saccoold',i,j,ip,saccoold,'newsacco ',sacco
+<               write(6,*)'old kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<               do k=kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<                 write(6,*)'old intcedsairold',k,intcedsair(i,j,k,1),'intaltair',intaltair(k)
+<               end do
+<            endif
+< !           endif
+< !           endif
+<            if(sacco<0.0)sacco=0.0
+<            srccocedsair(i,j,l)=sacco
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'after doceds so2grd',l,so2grd(i,l)
+< !             end do
+<              
+< !           endif  
+3527,3528d3298
+<          endif ! zlo< ip/=1
+<        else ! lceds
+3530a3301,3304
+> !       if(i.eq.iprn.and.j.eq.jprnin)then
+> !         write(300+iam,*)'ll',l,' sairnox_p ',sairnox_p(ll)
+> !         call flush(300+iam)
+> !        endif
+3553c3327
+<                else ! ll==1
+---
+>              else
+3589,3595c3363
+<                endif ! ll=1
+< !             endif ! press >=
+< !           end do ! do ll ajl test
+< !         endif ! lcedsair
+< !         if(sacnox/=0.0.or.sacco/=0.0 )then
+< !          write(6,*)'sacnox',i,j,ll,sacnox,'pfac',pfac
+< !         endif
+---
+>              endif
+3618,3622d3385
+<          if(ip<=1)then
+< !         if (press .ge. sairnox_p(nlnair)) then
+<            write(6,*)'error ip',ip,'press',press,'nlnair',nlnair,'p',sairnox_p(nlnair)
+<            flush(6)
+<          endif
+3656,3659c3419,3421
+<          endif ! pres
+<          enddo ! ll
+<          endif ! pres >
+<        endif ! lceds
+---
+>            endif
+>          enddo
+>        endif
+3766,3767d3527
+< !        write(6,*)'call do_chem',ibeg+i-1,j,l
+< !        call flush(6)
+3904,3911d3663
+< #ifdef DIAGCO
+<         coften_save(i,j,ip) = coften_save(i,j,ip)+coprodloss(1)/dens
+<         codten_save(i,j,ip) = codten_save(i,j,ip)+coprodloss(2)/dens
+<         coresidual=(cotend-(coprodloss(1)-coprodloss(2)-coprodloss(3)))/dens
+<         if(abs(coresidual)>1.e20)then
+<           write(6,*)'coresidual',i,j,ip,coresidual
+<         endif
+< #endif
+4867c4619
+<         write(6,*)'sairnox_p',sairnox_p
+---
+> !!        write(6,*)'sairnox_p',sairnox_p
+5939,5940d5690
+< #if 0
+< !     this routine is no longer used zlwigrd defined elsewhere
+6028d5777
+< #endif
+6054,6055c5803,5804
+< !        write(6,*)'did open file',trim(bbdir)//trim(filename)
+< !        call flush(6)
+---
+>         write(6,*)'did open file',trim(bbdir)//trim(filename)
+>         call flush(6)
+6159,6270d5907
+<       subroutine docedsair2(i,j,ip,lbot,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+<       use raqmschemlocaltype_mod
+<       use raqmschem_pmgrid_mod,only : iam
+<       use raqmschemcomm_mod, only : intcedsair,ccedsair,p_ceds_co,p_ceds_nox,p_ceds_so2
+<       use raqmschemcomm_mod, only : p_ceds_bc,p_ceds_oc,p_ceds_n2o
+<       use raqmschemcomm_mod, only : numcedsair,ktopcedsair
+<       use raqmschemcomm_mod, only : srccocedsair
+<       use raqmschemcomm_mod, only : lcedsair,intaltair
+<       implicit none
+<       type(chemlocaltype),target :: chemlocal
+< 
+< 
+<       integer lbot,klo,kup,k,i,j,ip,m,l
+<       real dens,sacco,sacnox,zgeoh(:),aflo,afup,dt
+<       real intvallo,intvalup,zlo,zup,sacso2
+<       logical :: zloset,zupset
+< #include <chemlocaldefinepointerF.h>
+< #include <chemlocaldefinepointer2F.h>
+< #include <chemlocalsetpointer.h>
+< #include <chemlocalsetpointer2.h>
+<       write(6,*)'cogrd shape',shape(cogrd)
+<       flush(6)
+<       zloset=.false.
+<       zupset=.false.
+< !     need to find depth of layer 1 in altitude
+<       zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !     if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !       write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !       write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !     endif
+< !      write(6,*)'ktopcedsair2',ktopcedsair
+< !      flush(6)
+< !      write(6,*)'allocated',allocated(intaltair)
+< !      flush(6)
+< !      write(6,*)'ktopcedsair2',ktopcedsair,'shape intaltair',shape(intaltair)
+< !      call flush(6)
+<       if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<         zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !        end do
+< !           endif
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              kup=ktopcedsair(i,j,1)
+<              afup=1.
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                klo=k
+<                aflo=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+<                !write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+<                !call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                kup=k
+<                afup=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+<              !write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<          do m=1,numcedsair
+<            select case (ccedsair(m))
+<            case ('CO')
+<              intvallo=intcedsair(i,j,klo,p_ceds_co)*aflo+intcedsair(i,j,klo,p_ceds_co)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_co)*afup+intcedsair(i,j,kup,p_ceds_co)*(1.-afup)
+<              sacco=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<              if(iam==75)then
+<                write(6,*)'fast sacco',i,j,ip,sacco,'klo',klo,kup
+<                write(6,*)'fast aflo',aflo,afup
+<                write(6,*)'fast intvallo',intvallo,intvalup
+<              endif
+<              srccocedsair(i,j,ip)=sacco
+<            case ('NOx')
+<              intvallo=intcedsair(i,j,klo,p_ceds_nox)*aflo+intcedsair(i,j,klo,p_ceds_nox)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_nox)*afup+intcedsair(i,j,kup,p_ceds_nox)*(1.-afup)
+<              sacnox=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<            case ('SO2')
+<              intvallo=intcedsair(i,j,klo,p_ceds_so2)*aflo+intcedsair(i,j,klo,p_ceds_so2)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_so2)*afup+intcedsair(i,j,kup,p_ceds_so2)*(1.-afup)
+<              sacso2=(intvalup-intvallo)/(zup-zlo)*1.e05
+<              so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+<            case default
+<            end select
+<          end do ! M  
+<            
+6272,6273d5908
+<          endif ! zlo< ip/=1
+<       end subroutine docedsair2
+diff -Bbw raqms/chem_driver_3d_nmhc.fastjtype.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.fastjtype.F
+53c53
+<       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,begj,endj,nr=>plat,nc,nl=>plev
+---
+>       use raqmschem_pmgrid_mod, only : beglat,endlat,iam,masterproc,jbeg,nr=>plat,nc,nl=>plev
+89d88
+<       use raqmschemcomm_mod, only : bbco_hr
+978d976
+<       use raqmschem_pmgrid_mod,only : begj,endj
+1024,1025c1022
+<       use raqmschemcomm_mod, only : lcedsair,intaltair,docedsair
+<       use raqmschemcomm_mod, only : srccoair,ktopcedsair,intcoair,intnoxair
+---
+>       use raqmschemcomm_mod, only : srccoair
+1031d1027
+<       use raqmschemcomm_mod, only : bbco_hr
+1035,1037d1030
+<       use raqmschemcomm_mod, only : srccocedsair,kbotcedsair,intcedsair
+<       use raqmschemcomm_mod, only : srcn2ocedsair
+<       use raqmschemcomm_mod, only : srcso2cedsair,ratioso2ceds,ratiococeds,ration2oceds
+1058d1050
+< !      use raqmschemcomm_mod, only : docedsair
+1232,1233d1223
+<       logical zupset,zloset
+< c save Ox photochemical tendency
+1234a1225
+> c save Ox photochemical tendency
+1257,1258c1248,1249
+<       real rr,coefpr94,af,coiplo,coiphi,noxiplo,noxiphi
+<       integer errcount,idum,k1
+---
+>       real rr,coefpr94
+>       integer errcount,idum
+1270,1278d1260
+< #ifdef DIAGCEDS
+<       if(tile==1.and.iam==11)then
+<         do i=1,nc
+<         if(i+ibeg-1==178.and.j==31)then
+<           write(6,*)'top doloop  i',i,j,'ibeg',ibeg
+<         endif
+<         end do
+<       endif
+< #endif
+1281,1284d1262
+< !      if(j==96)then
+< !        write(6,*)'nlnair',nlnair,'srcco',maxval(srccoair),'no',maxval(srcnair)
+< !        call flush(6)
+< !      endif
+1657,1659d1634
+< !                if(isnan(dwcon(1)))then
+< !                   write(6,*)'bc1grd',i,lbt,bc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1662,1664d1636
+< !                if(isnan(dwcon(2)))then
+< !                   write(6,*)'oc1grd',i,lbt,oc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1669,1672d1640
+< !                  if(isnan(wwcon(5)))then
+< !                     write(6,*)'ss3',ss3grdr8,ss4grdr8,ss5grdr8
+< !                   endif
+< 
+1696,1698d1663
+< !                if(isnan(dwcon(1)))then
+< !                   write(6,*)'bc1grd',i,lbt,bc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1701,1703d1665
+< !                if(isnan(dwcon(2)))then
+< !                   write(6,*)'oc1grd',i,lbt,oc1grd(i,lbt),'dens',dens,'airmw',airmw
+< !                endif
+1810,1812d1771
+< !                  if(isnan(wwcon(ian)).or.isnan(aer_opd(irhn,ll)))then
+< !                   write(6,*)'wwcon',ian,wwcon(ian),irhn,ll
+< !                  endif
+1829,1831d1787
+< !                if(isnan(aer_opd(irhn,ll)))then
+< !                  write(6,*)'dwcon',ian-1,dwcon(ian-1),'qaa',qaa(4,indx(ian)),'den',aer_den(ian),'raa',raa(4,indx(ian))
+< !                 endif
+2471,2477d2426
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop inside so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+2617,2618c2566
+<                     write(6,*)'NAN phoj ',lbot-ip+1,'lbot',lbot,'ip',ip,ii,phoj(ii)
+<                     write(6,*)'iatchem',iatchem,katchem,'j',j,'kdn',kdn,'ktf',ktf,'l',l
+---
+>                     write(6,*)'NAN phoj ',ii,phoj(ii)
+2620d2567
+<                     call killit('nan phoj')
+3332,3357d3278
+<        if(lcedsair)then
+<          if(.not.allocated(srccocedsair))then
+<            allocate (srccocedsair(nc,begj:endj,nl))
+<          endif
+<          if(.not.allocated(srcn2ocedsair))then
+<            allocate (srcn2ocedsair(nc,begj:endj,nl))
+<            srcn2ocedsair=0.0
+<          endif
+<          if(.not.allocated(ratioso2ceds))then
+<            allocate (ratioso2ceds(nc,begj:endj,nl))
+<            ratioso2ceds=0.0
+<          endif
+<          if(.not.allocated(ration2oceds))then
+<            allocate (ration2oceds(nc,begj:endj,nl))
+<            ration2oceds=0.0
+<          endif
+<          if(.not.allocated(ratiococeds))then
+<            allocate (ratiococeds(nc,begj:endj,nl))
+<            ratiococeds=0.0
+<          endif
+<          srccocedsair(i,j,ip)=0.0
+<          if(.not.allocated(srcso2cedsair))then
+<            allocate (srcso2cedsair(nc,begj:endj,nl))
+<          endif
+<          srcso2cedsair(i,j,ip)=0.0
+<        endif
+3376,3399d3296
+< !       if(tile==5.and.j==192)then
+< !       write(6,*)iam,'ibeg',ibeg,'i',i,j,'tile',tile
+<        !write(6,*)'ibeg+i-1',ibeg+i-1
+<        !if(ibeg+i-1==168)write(6,*)'found 168'
+<        !call flush(6) 
+< !       endif
+< !       if(ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'iam',iam,'tile',tile,'lcedsir',lcedsair
+<          !call flush(6)
+< !       endif
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'found 168 lcedsair',lcedsair,i,j,'ip',ip,'lbot',lbot
+< !         call flush(6)
+< !       endif
+< !       if(iam==0.and.tile==1)then
+< !          write(6,*)'lcedsair2 ',lcedsair
+<        !endif
+<        if(lcedsair)then
+< !         write(6,*)'ktopcedsair',ktopcedsair,'shape',shape(intaltair)
+<          !flush(6)
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'before doceds so2grd',l,so2grd(i,l)
+< !             end do
+3401,3525d3297
+< !           endif  
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop before docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          call docedsair(i,j,ip,lbot,ltb,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+< #ifdef DIAGCEDS
+<          if(tile==1.and.iam==11)then
+<            if(i+ibeg-1==178.and.j==31)then
+<              write(6,*)'doloop after docedsair so2grd',l,so2grd(i,l)
+<            endif
+<          endif
+< #endif
+<          zloset=.false.
+<          zupset=.false.
+< !        need to find depth of layer 1 in altitude
+< !         if(lbot>ubound(zgeoh).or.lbot<1)then
+< !           write(6,*)'lbot'
+< !           flush(6)
+< !         endif
+< !         if(ip>ubound(zgeoh).or.ip<1)then
+< !           write(6,*)'ip',ip
+< !           flush(6)
+< !         endif
+<          zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !         write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !         write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !       endif
+<          if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<            zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !         end do
+< !           endif
+<            coiplo=0.0
+<            coiphi=0.0
+<            noxiplo=0.0
+<            noxiphi=0.0
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              coiphi=intcoair(i,j,ktopcedsair(i,j,1))
+<              noxiphi=intnoxair(i,j,ktopcedsair(i,j,1))
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(iam==75.and.i==1.and.j==49)then
+<                 write(6,*)'old zlo',zlo,'k',k,'intaltair',intaltair(k-1),intaltair(k)
+<              endif
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiplo=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                write(6,*)i,j,ip,'old zlo',zlo,'k',k,'af',af
+<                write(6,*)'old coiplo',coiplo
+<                flush(6)
+<                endif
+<                noxiplo=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+< !               write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                k1=k-1
+<                af=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+<                coiphi=intcoair(i,j,k)*af+intcoair(i,j,k1)*(1.-af)
+<                if(iam==75.and.i==1.and.j==49)then
+<                  write(6,*)'old zup',zup,'k',k,'af',af,'coiphi',coiphi
+<                  flush(6)
+<                endif
+<                noxiphi=intnoxair(i,j,k)*af+intnoxair(i,j,k-1)*(1.-af)
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+< !             write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<            saccoold=(coiphi-coiplo)/(zup-zlo)*1.e-5
+<            sacnoxold=(noxiphi-noxiplo)/(zup-zlo)*1.e-5
+< !           if(iam==75)then
+< !           if(iam==75.and.i==1.and.j==49)then
+<            saccoold=max(saccoold,0.0)
+<            if(saccoold/=sacco)then
+<               write(6,*)'saccoold',i,j,ip,saccoold,'newsacco ',sacco
+<               write(6,*)'old kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<               do k=kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+<                 write(6,*)'old intcedsairold',k,intcedsair(i,j,k,1),'intaltair',intaltair(k)
+<               end do
+<            endif
+< !           endif
+< !           endif
+<            if(sacco<0.0)sacco=0.0
+<            srccocedsair(i,j,l)=sacco
+< !           if(tile==1.and.j==31.and.i+ibeg-1==178)then
+< !             do k=1,64
+< !               write(6,*)'after doceds so2grd',l,so2grd(i,l)
+< !             end do
+<              
+< !           endif  
+3527,3528d3298
+<          endif ! zlo< ip/=1
+<        else ! lceds
+3530a3301,3304
+> !       if(i.eq.iprn.and.j.eq.jprnin)then
+> !         write(300+iam,*)'ll',l,' sairnox_p ',sairnox_p(ll)
+> !         call flush(300+iam)
+> !        endif
+3553c3327
+<                else ! ll==1
+---
+>              else
+3589,3595c3363
+<                endif ! ll=1
+< !             endif ! press >=
+< !           end do ! do ll ajl test
+< !         endif ! lcedsair
+< !         if(sacnox/=0.0.or.sacco/=0.0 )then
+< !          write(6,*)'sacnox',i,j,ll,sacnox,'pfac',pfac
+< !         endif
+---
+>              endif
+3618,3622d3385
+<          if(ip<=1)then
+< !         if (press .ge. sairnox_p(nlnair)) then
+<            write(6,*)'error ip',ip,'press',press,'nlnair',nlnair,'p',sairnox_p(nlnair)
+<            flush(6)
+<          endif
+3656,3659c3419,3421
+<          endif ! pres
+<          enddo ! ll
+<          endif ! pres >
+<        endif ! lceds
+---
+>            endif
+>          enddo
+>        endif
+3766,3767d3527
+< !        write(6,*)'call do_chem',ibeg+i-1,j,l
+< !        call flush(6)
+3904,3911d3663
+< #ifdef DIAGCO
+<         coften_save(i,j,ip) = coften_save(i,j,ip)+coprodloss(1)/dens
+<         codten_save(i,j,ip) = codten_save(i,j,ip)+coprodloss(2)/dens
+<         coresidual=(cotend-(coprodloss(1)-coprodloss(2)-coprodloss(3)))/dens
+<         if(abs(coresidual)>1.e20)then
+<           write(6,*)'coresidual',i,j,ip,coresidual
+<         endif
+< #endif
+4867c4619
+<         write(6,*)'sairnox_p',sairnox_p
+---
+> !!        write(6,*)'sairnox_p',sairnox_p
+5939,5940d5690
+< #if 0
+< !     this routine is no longer used zlwigrd defined elsewhere
+6028d5777
+< #endif
+6054,6055c5803,5804
+< !        write(6,*)'did open file',trim(bbdir)//trim(filename)
+< !        call flush(6)
+---
+>         write(6,*)'did open file',trim(bbdir)//trim(filename)
+>         call flush(6)
+6159,6270d5907
+<       subroutine docedsair2(i,j,ip,lbot,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+<       use raqmschemlocaltype_mod
+<       use raqmschem_pmgrid_mod,only : iam
+<       use raqmschemcomm_mod, only : intcedsair,ccedsair,p_ceds_co,p_ceds_nox,p_ceds_so2
+<       use raqmschemcomm_mod, only : p_ceds_bc,p_ceds_oc,p_ceds_n2o
+<       use raqmschemcomm_mod, only : numcedsair,ktopcedsair
+<       use raqmschemcomm_mod, only : srccocedsair
+<       use raqmschemcomm_mod, only : lcedsair,intaltair
+<       implicit none
+<       type(chemlocaltype),target :: chemlocal
+< 
+< 
+<       integer lbot,klo,kup,k,i,j,ip,m,l
+<       real dens,sacco,sacnox,zgeoh(:),aflo,afup,dt
+<       real intvallo,intvalup,zlo,zup,sacso2
+<       logical :: zloset,zupset
+< #include <chemlocaldefinepointerF.h>
+< #include <chemlocaldefinepointer2F.h>
+< #include <chemlocalsetpointer.h>
+< #include <chemlocalsetpointer2.h>
+<       write(6,*)'cogrd shape',shape(cogrd)
+<       flush(6)
+<       zloset=.false.
+<       zupset=.false.
+< !     need to find depth of layer 1 in altitude
+<       zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+< !     if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !       write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !       write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !     endif
+< !      write(6,*)'ktopcedsair2',ktopcedsair
+< !      flush(6)
+< !      write(6,*)'allocated',allocated(intaltair)
+< !      flush(6)
+< !      write(6,*)'ktopcedsair2',ktopcedsair,'shape intaltair',shape(intaltair)
+< !      call flush(6)
+<       if(zlo<intaltair(ktopcedsair(i,j,1)).and.ip/=1)then
+<         zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !        end do
+< !           endif
+<            if(zup>=intaltair(ktopcedsair(i,j,1)))then
+<              kup=ktopcedsair(i,j,1)
+<              afup=1.
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                klo=k
+<                aflo=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+<                !write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+<                !call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                kup=k
+<                afup=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+<              !write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+< !           endif
+<          do m=1,numcedsair
+<            select case (ccedsair(m))
+<            case ('CO')
+<              intvallo=intcedsair(i,j,klo,p_ceds_co)*aflo+intcedsair(i,j,klo,p_ceds_co)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_co)*afup+intcedsair(i,j,kup,p_ceds_co)*(1.-afup)
+<              sacco=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<              if(iam==75)then
+<                write(6,*)'fast sacco',i,j,ip,sacco,'klo',klo,kup
+<                write(6,*)'fast aflo',aflo,afup
+<                write(6,*)'fast intvallo',intvallo,intvalup
+<              endif
+<              srccocedsair(i,j,ip)=sacco
+<            case ('NOx')
+<              intvallo=intcedsair(i,j,klo,p_ceds_nox)*aflo+intcedsair(i,j,klo,p_ceds_nox)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_nox)*afup+intcedsair(i,j,kup,p_ceds_nox)*(1.-afup)
+<              sacnox=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<            case ('SO2')
+<              intvallo=intcedsair(i,j,klo,p_ceds_so2)*aflo+intcedsair(i,j,klo,p_ceds_so2)*(1.-aflo)
+<              intvalup=intcedsair(i,j,kup,p_ceds_so2)*afup+intcedsair(i,j,kup,p_ceds_so2)*(1.-afup)
+<              sacso2=(intvalup-intvallo)/(zup-zlo)*1.e05
+<              so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+<            case default
+<            end select
+<          end do ! M  
+<            
+6272,6273d5908
+<          endif ! zlo< ip/=1
+<       end subroutine docedsair2
+Only in raqms: chem_driver_3d_nmhc.fastjtype.F.07.5.2023
+Binary files raqms/chem_driver_3d_nmhc.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/chem_driver_3d_nmhc.o differ
+Only in raqms: chemgsimod.F90
+Only in raqms: chemgsimod.mod
+diff -Bbw raqms/choosechem.h /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/choosechem.h
+8d7
+< #define DIAGCO
+diff -Bbw raqms/combined_chemsource_nmhc.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/combined_chemsource_nmhc.F
+649d648
+<       real dcpos,dcneg
+712c711
+< !      write(200+iam,*)'iatchem',iatchem,jatchem,katchem
+---
+> !      write(200+iam,*)iatchem,jatchem,katchem
+714d712
+< !      write(200+iam,*)'iat',iat,jat,kat
+1623,1627d1620
+< #ifdef CHECKCHEM
+<       if(rho2oh<0.0)then
+<         write(6,*)'rho2oh one ',rho2oh,' neg pho2',pho2,dho2,'dens',dens
+<       endif
+< #endif
+1897,1898d1889
+< !        write(6,*)'dn1',dn(1),'roo3',roo3,ro1do3
+< !        call flush(6)
+2621,2631d2611
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 two',dn(19),'dens',dens
+<         do ii=1,inum
+<           if(dn(ii)<0.0)then
+<             write(6,*)'dn neg',ii,dn(ii)
+<           endif
+<         end do
+<        
+<       endif
+< #endif
+2650,2654d2629
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 three',dn(19)
+<       endif
+< #endif
+2662,2666d2636
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 four',dn(19)
+<       endif
+< #endif
+2966,2992d2935
+< #ifdef CHECKCHEM
+<       dcpos = r(6)*dn(2)+r(12)*dn(1)+2.*r(16)*dn(9)+r(17)*dn(10)+
+<      1  r(18)*dens*dn(4)+r(21)*dn(8)+r(29)*dn(5)*hno3g_r+r(31)*dn(37)+
+<      2 r(52)*dn(38)+r(53)*dn(14)+2.*r(64)*dens*dn(9)+r(66)*dn(18)+
+<      3 r(70)*dn(39)+r(72)*dn(36)+(r(80)+r(81))*dn(25)+r(83)*dn(19)+
+<      4  r(85)*dn(20)+r(86)*dn(23)+0.7*r(87)*dn(21)
+<      5  +r(212)*dn(84)
+<        dcneg=r(15)*dn(1)*rhoh
+<        if(dcpos/dcneg<2.0)then
+<          write(6,*)iat,jat,kat,'tile',tile,'dcpos',dcpos,'dcneg',dcneg,'ratio',dcpos/dcneg
+<          write(6,*)'dens',dens
+<          write(6,*)'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+< !        limit dcneg to be at most .9 dcpos
+<          dcneg=min(.5*dcpos,dcneg)
+<          dctmp=dcpos-dcneg
+<        endif
+< #endif
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 1',dctmp,'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'neg term',-r(15)*dn(1)*rhoh,'r15',r(15),'dn1',dn(1),'rhoh',rhoh
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+<        endif
+< #endif
+2995,2999d2937
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 2',dctmp,dn(20),r(76),dens
+<        endif
+< #endif
+3011,3021d2948
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 3',dctmp,'fac_olei',fac_olei,'dens',dens
+<             write(6,*)'rate',maxval(r),minval(r),'fac_isop',fac_isop
+<             do ii=1,inum
+<               if(dn(ii)<0.0)then
+<                 write(6,*)'dn ii neg cd',ii,dn(ii)
+<               endif
+<             end do
+<        endif
+< #endif
+3026,3030d2952
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 4',dctmp
+<        endif
+< #endif
+3034,3038d2955
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 5',dctmp
+<        endif
+< #endif
+3045,3049d2961
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 6',dctmp
+<        endif
+< #endif
+3053,3063d2964
+< #ifdef CHECKCHEM
+<        if(rho2oh<0.0)then
+<          write(6,*)'rho2oh neg',rho2oh,'datmp',datmp,'dn10',dn(10),'dbtmp',dbtmp,'dctmp',dctmp
+<          write(6,*)'dens',dens
+<          do ii=1,inum
+<            if(dn(ii)<0.0)then
+<              write(6,*)'dn',ii,'neg rho2oh dn ii',dn(ii)
+<           endif
+<          end do
+<        endif
+< #endif
+3161,3166d3061
+< #ifdef CHECKCHEM
+<       if(dn(10)<0.0)then
+<         write(6,*)'dn10 neg rho2oh',rho2oh,'dn9',dn(9)
+<         call flush(6)
+<       endif
+< #endif
+3946,3950d3840
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 tendr',dn(19)
+<       endif
+< #endif
+6324d6212
+< !       make default ajl 1/4/2023 all of the run scripts had it on
+6326,6328c6214
+<         if(cenv.eq.'NO')then
+<           donew=.false.
+<         else
+---
+>         if(cenv.eq.'YES')then
+6329a6216,6217
+>         else
+>           donew=.false.
+6493d6380
+<       real*8 ratiodt
+6500c6387
+<       integer ibin,iadj,ncount
+---
+>       integer ibin,iadj
+6525,6530d6411
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'before dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6533,6546d6413
+< #ifdef CHECKCHEM
+<         if(n>500)then 
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<           write(6,*)'dt',dt,'n',n,'t',t,'timinc',timinc,'xhbr',xhbr
+<           write(6,*)'xhobr',xhobr,'xbrcl',xbrcl,'xbr2',xbr2,'xbro',xbro,'xbr',xbr
+<           call flush(6)
+<         endif
+<         if(n>1000)then
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<            write(6,*)'error n brintg',n,t,'dt',dt,'timinc',timinc
+<            call flush(6)
+<            call killit('brintg 10')
+<         endif
+< #endif
+6550,6555d6416
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6565,6596d6425
+<         if(xbr<0.0)then
+<           write(6,*)'input brintg xbr neg',xbr
+<           call flush(6)
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'input brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'input brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'input brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'input brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'input brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'input bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+<         endif 
+<         if(dn(19)<0.0)then
+<           write(6,*)'dn19 neg',dn(19)
+<         endif
+6605,6621d6433
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'top xbr neg',xbr,'n',n,'t',t
+<            call flush(6)
+<         endif
+<         if(dn(3)>1.d24)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'dn3 big',n,dn(3),'r99',r(99),'pbr',pbr,'dbr',dbr,'prod',r(99)*dn(3)
+<           call flush(6)
+<         endif
+<         if(pbr/dbr>1.e15)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'n',n,'t',t,'pbr',pbr,'dbr',dbr,'dn',dn(2),dn(3),dn(25)
+<           write(6,*)'xbro',xbro,'dn9',dn(9),'xhbr',xhbr
+<           write(6,*)'xvf2',xvf2,'xbrno3',xbrno3
+<           write(6,*)'phoj',phoj(32),phoj(31),phoj(34),phoj(35)
+<           call flush(6)
+<         endif
+< #endif
+6629,6635d6440
+< #ifdef CHECKCHEM
+<         if(phbr<0.0)then
+<           write(6,*)'phbr',phbr,'dn10',dn(10),'dn(19)',dn(19),'xbr',xbr,'r',r(95),r(96)
+<           call flush(6)
+<         endif
+< #endif
+< 
+6679,6684d6483
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'xbrnegative',xbr,'dbr',dbr,'dt',dt,'prod',dbr*dt,'ratio',pbr/dbr,'old',xbrold
+<            call flush(6)
+<         endif
+< #endif
+6705,6711d6503
+< #ifdef CHECKCHEM
+<         if(xhbr<0.0)then
+<           write(6,*)'xhbr neg',xhbr,'phbr',phbr,dhbr,'dt',dt,exp(-dhbr*dt)
+<           write(6,*)'old',xhbrold
+<           call flush(6)
+<         endif
+< #endif
+6885,6888d6674
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/1.e-20/1.2
+<               else
+6890d6675
+<               endif
+6894,6900d6678
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/dlimit/1.2
+< !                write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+< !                write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+< !                call flush(6)
+<               else 
+6903d6680
+<             endif
+6919,6921d6695
+<         if(iadj/=0)then
+<            write(6,*)'iadj 10 day ',iadj
+<         endif
+6927d6700
+<         ncount=0
+6929,6936d6701
+<         ncount=ncount+1
+< #ifdef CHECKCHEM
+<         if(ncount>1000)then
+<             write(6,*)iatchem,jatchem,katchem,'ncount',ncouunt,'dt',dt,'t',t,'n',n
+<             call flush(6)
+<              call killit('bringg')
+<         endif
+< #endif
+7004,7006d6768
+<         if(xbr<0.0)then
+<             write(6,*)'xbr neg night',xbr,pbr,dbr
+<         endif
+7202,7206c6964
+<          write(6,*)'brintg 20 loop iadj',iadj
+<          call flush(6)
+<       endif
+<         if(xbr<0.0)then
+<           write(6,*)'output brintg xbr neg',xbr
+---
+>          write(6,*)'brintg iadj'
+7208,7232d6965
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'output brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'output brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'output brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'output brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'output brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'output bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+Binary files raqms/combined_chemsource_nmhc.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/combined_chemsource_nmhc.o differ
+diff -Bbw raqms/combined_chemsource_nmhc_v200902.murali.7.HTAPMONTH.newdt.fv3.J /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/combined_chemsource_nmhc_v200902.murali.7.HTAPMONTH.newdt.fv3.J
+649d648
+<       real dcpos,dcneg
+712c711
+< !      write(200+iam,*)'iatchem',iatchem,jatchem,katchem
+---
+> !      write(200+iam,*)iatchem,jatchem,katchem
+714d712
+< !      write(200+iam,*)'iat',iat,jat,kat
+1623,1627d1620
+< #ifdef CHECKCHEM
+<       if(rho2oh<0.0)then
+<         write(6,*)'rho2oh one ',rho2oh,' neg pho2',pho2,dho2,'dens',dens
+<       endif
+< #endif
+1897,1898d1889
+< !        write(6,*)'dn1',dn(1),'roo3',roo3,ro1do3
+< !        call flush(6)
+2621,2631d2611
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 two',dn(19),'dens',dens
+<         do ii=1,inum
+<           if(dn(ii)<0.0)then
+<             write(6,*)'dn neg',ii,dn(ii)
+<           endif
+<         end do
+<        
+<       endif
+< #endif
+2650,2654d2629
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 three',dn(19)
+<       endif
+< #endif
+2662,2666d2636
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 four',dn(19)
+<       endif
+< #endif
+2966,2992d2935
+< #ifdef CHECKCHEM
+<       dcpos = r(6)*dn(2)+r(12)*dn(1)+2.*r(16)*dn(9)+r(17)*dn(10)+
+<      1  r(18)*dens*dn(4)+r(21)*dn(8)+r(29)*dn(5)*hno3g_r+r(31)*dn(37)+
+<      2 r(52)*dn(38)+r(53)*dn(14)+2.*r(64)*dens*dn(9)+r(66)*dn(18)+
+<      3 r(70)*dn(39)+r(72)*dn(36)+(r(80)+r(81))*dn(25)+r(83)*dn(19)+
+<      4  r(85)*dn(20)+r(86)*dn(23)+0.7*r(87)*dn(21)
+<      5  +r(212)*dn(84)
+<        dcneg=r(15)*dn(1)*rhoh
+<        if(dcpos/dcneg<2.0)then
+<          write(6,*)iat,jat,kat,'tile',tile,'dcpos',dcpos,'dcneg',dcneg,'ratio',dcpos/dcneg
+<          write(6,*)'dens',dens
+<          write(6,*)'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+< !        limit dcneg to be at most .9 dcpos
+<          dcneg=min(.5*dcpos,dcneg)
+<          dctmp=dcpos-dcneg
+<        endif
+< #endif
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 1',dctmp,'rhoh',rhoh,'hno3g_r',hno3g_r
+<          write(6,*)'neg term',-r(15)*dn(1)*rhoh,'r15',r(15),'dn1',dn(1),'rhoh',rhoh
+<          write(6,*)'ox',ox,'frox',frox,'tmpo3',tmpo3
+<          call flush(6)
+<        endif
+< #endif
+2995,2999d2937
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<          write(6,*)'dctmp 2',dctmp,dn(20),r(76),dens
+<        endif
+< #endif
+3011,3021d2948
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 3',dctmp,'fac_olei',fac_olei,'dens',dens
+<             write(6,*)'rate',maxval(r),minval(r),'fac_isop',fac_isop
+<             do ii=1,inum
+<               if(dn(ii)<0.0)then
+<                 write(6,*)'dn ii neg cd',ii,dn(ii)
+<               endif
+<             end do
+<        endif
+< #endif
+3026,3030d2952
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 4',dctmp
+<        endif
+< #endif
+3034,3038d2955
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 5',dctmp
+<        endif
+< #endif
+3045,3049d2961
+< #ifdef CHECKCHEM
+<        if(dctmp<0.0)then
+<             write(6,*)'dctmp 6',dctmp
+<        endif
+< #endif
+3053,3063d2964
+< #ifdef CHECKCHEM
+<        if(rho2oh<0.0)then
+<          write(6,*)'rho2oh neg',rho2oh,'datmp',datmp,'dn10',dn(10),'dbtmp',dbtmp,'dctmp',dctmp
+<          write(6,*)'dens',dens
+<          do ii=1,inum
+<            if(dn(ii)<0.0)then
+<              write(6,*)'dn',ii,'neg rho2oh dn ii',dn(ii)
+<           endif
+<          end do
+<        endif
+< #endif
+3161,3166d3061
+< #ifdef CHECKCHEM
+<       if(dn(10)<0.0)then
+<         write(6,*)'dn10 neg rho2oh',rho2oh,'dn9',dn(9)
+<         call flush(6)
+<       endif
+< #endif
+3946,3950d3840
+< #ifdef CHECKCHEM
+<       if(dn(19)<0.0)then
+<         write(6,*)'dn19 tendr',dn(19)
+<       endif
+< #endif
+6324d6212
+< !       make default ajl 1/4/2023 all of the run scripts had it on
+6326,6328c6214
+<         if(cenv.eq.'NO')then
+<           donew=.false.
+<         else
+---
+>         if(cenv.eq.'YES')then
+6329a6216,6217
+>         else
+>           donew=.false.
+6493d6380
+<       real*8 ratiodt
+6500c6387
+<       integer ibin,iadj,ncount
+---
+>       integer ibin,iadj
+6525,6530d6411
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'before dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6533,6546d6413
+< #ifdef CHECKCHEM
+<         if(n>500)then 
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<           write(6,*)'dt',dt,'n',n,'t',t,'timinc',timinc,'xhbr',xhbr
+<           write(6,*)'xhobr',xhobr,'xbrcl',xbrcl,'xbr2',xbr2,'xbro',xbro,'xbr',xbr
+<           call flush(6)
+<         endif
+<         if(n>1000)then
+<           write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+<            write(6,*)'error n brintg',n,t,'dt',dt,'timinc',timinc
+<            call flush(6)
+<            call killit('brintg 10')
+<         endif
+< #endif
+6550,6555d6416
+< #ifdef CHECKCHEM
+<           if(dt==0.0)then
+<             write(6,*)'dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+<             call flush(6)
+<           endif
+< #endif
+6565,6596d6425
+<         if(xbr<0.0)then
+<           write(6,*)'input brintg xbr neg',xbr
+<           call flush(6)
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'input brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'input brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'input brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'input brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'input brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'input bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+<         endif 
+<         if(dn(19)<0.0)then
+<           write(6,*)'dn19 neg',dn(19)
+<         endif
+6605,6621d6433
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'top xbr neg',xbr,'n',n,'t',t
+<            call flush(6)
+<         endif
+<         if(dn(3)>1.d24)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'dn3 big',n,dn(3),'r99',r(99),'pbr',pbr,'dbr',dbr,'prod',r(99)*dn(3)
+<           call flush(6)
+<         endif
+<         if(pbr/dbr>1.e15)then
+<           write(6,*)'iat',iat,jat,kat,'tile',tile,'n',n,'t',t,'pbr',pbr,'dbr',dbr,'dn',dn(2),dn(3),dn(25)
+<           write(6,*)'xbro',xbro,'dn9',dn(9),'xhbr',xhbr
+<           write(6,*)'xvf2',xvf2,'xbrno3',xbrno3
+<           write(6,*)'phoj',phoj(32),phoj(31),phoj(34),phoj(35)
+<           call flush(6)
+<         endif
+< #endif
+6629,6635d6440
+< #ifdef CHECKCHEM
+<         if(phbr<0.0)then
+<           write(6,*)'phbr',phbr,'dn10',dn(10),'dn(19)',dn(19),'xbr',xbr,'r',r(95),r(96)
+<           call flush(6)
+<         endif
+< #endif
+< 
+6679,6684d6483
+< #ifdef CHECKCHEM
+<         if(xbr<0.0)then
+<            write(6,*)'xbrnegative',xbr,'dbr',dbr,'dt',dt,'prod',dbr*dt,'ratio',pbr/dbr,'old',xbrold
+<            call flush(6)
+<         endif
+< #endif
+6705,6711d6503
+< #ifdef CHECKCHEM
+<         if(xhbr<0.0)then
+<           write(6,*)'xhbr neg',xhbr,'phbr',phbr,dhbr,'dt',dt,exp(-dhbr*dt)
+<           write(6,*)'old',xhbrold
+<           call flush(6)
+<         endif
+< #endif
+6885,6888d6674
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/1.e-20/1.2
+<               else
+6890d6675
+<               endif
+6894,6900d6678
+<               ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+<               if(ratiodt<1.e-5)then
+<                 dt=ratiodt/dlimit/1.2
+< !                write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+< !                write(6,*)'znew',znew,'zold',zold,'permax',permax,'ibin',ibin,'zfin',zfin
+< !                call flush(6)
+<               else 
+6903d6680
+<             endif
+6919,6921d6695
+<         if(iadj/=0)then
+<            write(6,*)'iadj 10 day ',iadj
+<         endif
+6927d6700
+<         ncount=0
+6929,6936d6701
+<         ncount=ncount+1
+< #ifdef CHECKCHEM
+<         if(ncount>1000)then
+<             write(6,*)iatchem,jatchem,katchem,'ncount',ncouunt,'dt',dt,'t',t,'n',n
+<             call flush(6)
+<              call killit('bringg')
+<         endif
+< #endif
+7004,7006d6768
+<         if(xbr<0.0)then
+<             write(6,*)'xbr neg night',xbr,pbr,dbr
+<         endif
+7202,7206c6964
+<          write(6,*)'brintg 20 loop iadj',iadj
+<          call flush(6)
+<       endif
+<         if(xbr<0.0)then
+<           write(6,*)'output brintg xbr neg',xbr
+---
+>          write(6,*)'brintg iadj'
+7208,7232d6965
+<           xbr=0.0
+<         endif
+<         if(xhobr<0.0)then
+<           write(6,*)'output brintg xhobr neg',xhobr
+<           xhobr=0.0
+<         endif
+<         if(xhbr<0.0)then
+<           write(6,*)'output brintg xhbr neg',xhbr
+<           xhbr=0.0
+<         endif
+<         if(xbrcl<0.0)then
+<           write(6,*)'output brintg xbrcl neg',xbrcl
+<           xbrcl=0.0
+<         endif
+<         if(xbr2<0.0)then
+<           write(6,*)'output brintg xbr2 neg',xbr2
+<           xbr2=0.0
+<         endif
+<         if(xbro<0.0)then
+<           write(6,*)'output brintg xbro neg',xbro
+<           xbro=0.0
+<         endif
+<         if(xbrno3<0.0)then
+<           write(6,*)'output bring xbrno3 neg',xbrno3
+<           xbrno3=0.0
+diff -Bbw raqms/comm_3d_chem /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/comm_3d_chem
+25,26c25
+<       integer,parameter :: nlnairdim=19
+<       common /emgrid/ sairnox_p(nlnairdim),slnox_profile(nlnlgt,3)
+---
+>       common /emgrid/ sairnox_p(nlnair),slnox_profile(nlnlgt,3)
+Binary files raqms/computeaod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/computeaod.mod differ
+Only in raqms: diffchem_driver
+Only in raqms: diff.raqms.model
+Binary files raqms/exchange_o3vmr_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/exchange_o3vmr_mod.mod differ
+Binary files raqms/exchange_o3vmr_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/exchange_o3vmr_mod.o differ
+Binary files raqms/het_kenc.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/het_kenc.o differ
+Common subdirectories: raqms/keep and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/keep
+Binary files raqms/libraqms.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms.a differ
+Binary files raqms/libraqms_a-calcaodgsi.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-calcaodgsi.o differ
+Binary files raqms/libraqms_a-calcaod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-calcaod.o differ
+Only in raqms: libraqms_a-chemgsimod.o
+Binary files raqms/libraqms_a-computeaod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-computeaod.o differ
+Binary files raqms/libraqms_a-raq_dep_ctrans_grell_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raq_dep_ctrans_grell_mod.o differ
+Binary files raqms/libraqms_a-raq_dep_wet_ls_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raq_dep_wet_ls_mod.o differ
+Binary files raqms/libraqms_a-raqms_model_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raqms_model_mod.o differ
+Binary files raqms/libraqms_a-raqms_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-raqms_mod.o differ
+Binary files raqms/libraqms_a-seasalt_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-seasalt_mod.o differ
+Binary files raqms/libraqms_a-vertmx_driver_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-vertmx_driver_mod.o differ
+Binary files raqms/libraqms_a-vertmxv_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-vertmxv_mod.o differ
+Binary files raqms/libraqms_a-wetdep_alpha_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_alpha_mod.o differ
+Binary files raqms/libraqms_a-wetdep_fam_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_fam_mod.o differ
+Binary files raqms/libraqms_a-wetdep_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_mod.o differ
+Binary files raqms/libraqms_a-wetdep_prep_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/libraqms_a-wetdep_prep_mod.o differ
+diff -Bbw raqms/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/Makefile
+112,113c112
+< 	libraqms_a-raqms_mod.$(OBJEXT) chem_driver_3d_nmhc.$(OBJEXT) \
+< 	libraqms_a-chemgsimod.$(OBJEXT) \
+---
+> 	chem_driver_3d_nmhc.$(OBJEXT) \
+114a114
+> 	libraqms_a-raqms_mod.$(OBJEXT) \
+208c208
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+211,213c211,213
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+228c228
+< ESMFMKFILE = /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libg/Linux.intel.64.intelmpi.default/esmf.mk
+---
+> ESMFMKFILE = /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk
+230d229
+< #OPT = -C -g -ftrapuv -traceback -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+237,238c236,237
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -g -traceback -ftrapuv -check bounds,format,output_conversion,stack,uninit -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modg/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_g -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+< FCLIBS =    -m64 -mcmodel=small -threads -Wl,--no-as-needed -L/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libg/Linux.intel.64.intelmpi.default -L/opt/netcdf4/4.6.2-intel-18.0.3/lib  -Wl,-rpath,/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libg/Linux.intel.64.intelmpi.default  -Wl,-rpath,/opt/netcdf4/4.6.2-intel-18.0.3/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+> FCLIBS =    -m64 -mcmodel=small -threads -Wl,--no-as-needed -L/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default -L/opt/netcdf4/4.6.2-intel-18.0.3/lib  -Wl,-rpath,/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default  -Wl,-rpath,/opt/netcdf4/4.6.2-intel-18.0.3/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf
+250c249
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+267,270c266,269
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+283c282
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+291,292c290,291
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+300c299
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+316c315
+< OPT = -O2 -fp-model source -traceback -ftz -align array64byte -qno-opt-dynamic-align
+---
+> OPT = -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+321c320
+< 	raqms_mod.F90 chem_driver_3d_nmhc.F chemgsimod.F90 raqms_model_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+---
+> 	chem_driver_3d_nmhc.F raqms_model_mod.F90 raqms_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+421,432d419
+< libraqms_a-raqms_mod.o: raqms_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.o `test -f 'raqms_mod.F90' || echo '$(srcdir)/'`raqms_mod.F90
+< 
+< libraqms_a-raqms_mod.obj: raqms_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.obj `if test -f 'raqms_mod.F90'; then $(CYGPATH_W) 'raqms_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqms_mod.F90'; fi`
+< 
+< libraqms_a-chemgsimod.o: chemgsimod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-chemgsimod.o `test -f 'chemgsimod.F90' || echo '$(srcdir)/'`chemgsimod.F90
+< 
+< libraqms_a-chemgsimod.obj: chemgsimod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-chemgsimod.obj `if test -f 'chemgsimod.F90'; then $(CYGPATH_W) 'chemgsimod.F90'; else $(CYGPATH_W) '$(srcdir)/chemgsimod.F90'; fi`
+< 
+438a426,431
+> libraqms_a-raqms_mod.o: raqms_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.o `test -f 'raqms_mod.F90' || echo '$(srcdir)/'`raqms_mod.F90
+> 
+> libraqms_a-raqms_mod.obj: raqms_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.obj `if test -f 'raqms_mod.F90'; then $(CYGPATH_W) 'raqms_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqms_mod.F90'; fi`
+> 
+701d693
+< libraqms_a-chemgsimod.$(OBJEXT) : libraqms_a-chemgsimod.$(OBJEXT) libraqms_a-raqms_mod.$(OBJEXT)
+703c695
+< libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) libraqms_a-chemgsimod.$(OBJEXT)
+---
+> libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) 
+diff -Bbw raqms/Makefile.am /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/Makefile.am
+6,7c6
+< OPT = -O2 -fp-model source -traceback -ftz -align array64byte -qno-opt-dynamic-align
+< #OPT = -C -g -ftrapuv -traceback -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+---
+> OPT = -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+18c17
+< 	raqms_mod.F90 chem_driver_3d_nmhc.F chemgsimod.F90 raqms_model_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+---
+> 	chem_driver_3d_nmhc.F raqms_model_mod.F90 raqms_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+46d44
+< libraqms_a-chemgsimod.$(OBJEXT) : libraqms_a-chemgsimod.$(OBJEXT) libraqms_a-raqms_mod.$(OBJEXT)
+48c46
+< libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) libraqms_a-chemgsimod.$(OBJEXT)
+---
+> libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) 
+diff -Bbw raqms/Makefile.in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/Makefile.in
+112,113c112
+< 	libraqms_a-raqms_mod.$(OBJEXT) chem_driver_3d_nmhc.$(OBJEXT) \
+< 	libraqms_a-chemgsimod.$(OBJEXT) \
+---
+> 	chem_driver_3d_nmhc.$(OBJEXT) \
+114a114
+> 	libraqms_a-raqms_mod.$(OBJEXT) \
+230d229
+< #OPT = -C -g -ftrapuv -traceback -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+316c315
+< OPT = -O2 -fp-model source -traceback -ftz -align array64byte -qno-opt-dynamic-align
+---
+> OPT = -O2 -fp-model source -ftz -align array64byte -qno-opt-dynamic-align
+321c320
+< 	raqms_mod.F90 chem_driver_3d_nmhc.F chemgsimod.F90 raqms_model_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+---
+> 	chem_driver_3d_nmhc.F raqms_model_mod.F90 raqms_mod.F90 photcode_larc_47_nmhc_v0.7.F newcol.F \
+421,432d419
+< libraqms_a-raqms_mod.o: raqms_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.o `test -f 'raqms_mod.F90' || echo '$(srcdir)/'`raqms_mod.F90
+< 
+< libraqms_a-raqms_mod.obj: raqms_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.obj `if test -f 'raqms_mod.F90'; then $(CYGPATH_W) 'raqms_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqms_mod.F90'; fi`
+< 
+< libraqms_a-chemgsimod.o: chemgsimod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-chemgsimod.o `test -f 'chemgsimod.F90' || echo '$(srcdir)/'`chemgsimod.F90
+< 
+< libraqms_a-chemgsimod.obj: chemgsimod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-chemgsimod.obj `if test -f 'chemgsimod.F90'; then $(CYGPATH_W) 'chemgsimod.F90'; else $(CYGPATH_W) '$(srcdir)/chemgsimod.F90'; fi`
+< 
+438a426,431
+> libraqms_a-raqms_mod.o: raqms_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.o `test -f 'raqms_mod.F90' || echo '$(srcdir)/'`raqms_mod.F90
+> 
+> libraqms_a-raqms_mod.obj: raqms_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libraqms_a_FCFLAGS) $(FCFLAGS) -c -o libraqms_a-raqms_mod.obj `if test -f 'raqms_mod.F90'; then $(CYGPATH_W) 'raqms_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqms_mod.F90'; fi`
+> 
+701d693
+< libraqms_a-chemgsimod.$(OBJEXT) : libraqms_a-chemgsimod.$(OBJEXT) libraqms_a-raqms_mod.$(OBJEXT)
+703c695
+< libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) libraqms_a-chemgsimod.$(OBJEXT)
+---
+> libraqms_a-raqms_model_mod.$(OBJEXT) : libraqms_a-raqms_mod.$(OBJEXT) 
+diff -Bbw raqms/newcol.chem.jx.ccmopdepth.v200803a.7.zara.J /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/newcol.chem.jx.ccmopdepth.v200803a.7.zara.J
+915d914
+<       use raqmschem_pmgrid_mod, only : tile
+1079,1084d1077
+<          if(isnan(zj(i,j))then
+<            write(6,*)'jratet zjnan',i,j,'jind',jind(j),'valj',valj(jind(j)),
+<      *    'solf',solf,'jfacta',jfacta(j)
+<            write(6,*)'tile',tile
+<            call flush(6)
+<          endif
+diff -Bbw raqms/newcol.chem.jx.ccmopdepth.v200803a.fastjtype.J /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/newcol.chem.jx.ccmopdepth.v200803a.fastjtype.J
+304,307d303
+< !       aer_opd=0.0
+< !       dust_opd=0.0
+< !       odl=0.0
+< !       odi=0.0
+352,356d347
+< !           if(isnan(zpj(i+lpar-lbot,j)))then
+< !            write(6,*)'photoj zpj',i,lpar,lbot,j,zpj(i+lpar-lbot,j)
+< !            call flush(6)
+< !            stop
+< !          endif
+473,475d463
+< !      if(isnan(aer_opd(1,1)))then
+<          !write(6,*)'call cldsrf',aer_opd(1:4,1)
+< !      endif
+570,572d557
+< !        if(isnan(odcoll(i)).or.isnan(odcoli(i)))then
+< !          write(6,*)i,'odcoll',odcoll(i),odcoli(i)
+< !         endif
+577,579d561
+< !          if(isnan(dust_opd(ndum,i)))then
+<             !write(6,*)'dustopd',ndum,i
+< !           endif
+585,587d566
+< !          if(isnan(aer_opd(ndum,i)))then
+< !            !write(6,*)'aeropd',ndum,i,aer_opd(ndum,i)
+< !          endif
+1025,1027d1003
+< !         if(isnan(fastj%valj(1)))then
+< !            write(6,*)'k',k,nw1,nw2,'T',i,t(i),'qo2tot',QO2TOT,'FFF',fastj%FFF(K,I)
+<          !endif
+1148,1150d1123
+< !         if(isnan(fastj%zj(i,j)))then
+< !            write(6,*)'i',i,j,'valj',jind(j),'solf',solf,'jfacta',jfacta(j),'valj',fastj%VALJ(jind(j))
+< !          endif
+1671,1673d1643
+< !          if(isnan(fl(k)).or.isnan(avgf(j)))then
+< !              !!write(6,*)'fl',k,fl(k),'j',j,'avgf',avgf(j)
+< !          endif
+2003,2005d1972
+< !          if(isnan(xlaer(i)))then
+< !            write(6,*)'aer',i,j,fastj%aer(i,j),'qxmie',i,qxmie(i)
+< !          endif
+2009,2011d1975
+< !        if(isnan(dtaux(j)))then
+< !           write(6,*)j,'xlo',xlo3,xlo2,xlray
+< !        endif
+2030,2032d1993
+< !            if(isnan(xltau))then
+< !              write(6,*)'dtaux',i,dtaux(i),'amf',fastj%AMF(I,J)
+< !            endif
+2034,2036d1994
+< !          if(isnan(xltau))then
+< !             write(6,*)'xltau',xltau,'i',i,'j',j
+< !          endif
+2338,2340d2295
+< !          if(isnan(fz(lz)))then
+< !           write(6,*)'ftau',l2,ftau(l2),'lz',lz
+< !          endif
+2448,2451d2402
+< !          if(isnan(fmean(j)))then
+< !            write(6,*)'error opmie fmean j',j,'k',k,'fj',fj(k)
+< !            call flush(6)
+< !          endif
+2623,2626d2573
+< !        if(isnan(fj(id)))then
+< !          write(6,*)'at  2593 ',id,'fz',fz(id)
+< !        endif
+< 
+diff -Bbw raqms/newcol.F /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/newcol.F
+304,307d303
+< !       aer_opd=0.0
+< !       dust_opd=0.0
+< !       odl=0.0
+< !       odi=0.0
+352,356d347
+< !           if(isnan(zpj(i+lpar-lbot,j)))then
+< !            write(6,*)'photoj zpj',i,lpar,lbot,j,zpj(i+lpar-lbot,j)
+< !            call flush(6)
+< !            stop
+< !          endif
+473,475d463
+< !      if(isnan(aer_opd(1,1)))then
+<          !write(6,*)'call cldsrf',aer_opd(1:4,1)
+< !      endif
+570,572d557
+< !        if(isnan(odcoll(i)).or.isnan(odcoli(i)))then
+< !          write(6,*)i,'odcoll',odcoll(i),odcoli(i)
+< !         endif
+577,579d561
+< !          if(isnan(dust_opd(ndum,i)))then
+<             !write(6,*)'dustopd',ndum,i
+< !           endif
+585,587d566
+< !          if(isnan(aer_opd(ndum,i)))then
+< !            !write(6,*)'aeropd',ndum,i,aer_opd(ndum,i)
+< !          endif
+1025,1027d1003
+< !         if(isnan(fastj%valj(1)))then
+< !            write(6,*)'k',k,nw1,nw2,'T',i,t(i),'qo2tot',QO2TOT,'FFF',fastj%FFF(K,I)
+<          !endif
+1148,1150d1123
+< !         if(isnan(fastj%zj(i,j)))then
+< !            write(6,*)'i',i,j,'valj',jind(j),'solf',solf,'jfacta',jfacta(j),'valj',fastj%VALJ(jind(j))
+< !          endif
+1671,1673d1643
+< !          if(isnan(fl(k)).or.isnan(avgf(j)))then
+< !              !!write(6,*)'fl',k,fl(k),'j',j,'avgf',avgf(j)
+< !          endif
+2003,2005d1972
+< !          if(isnan(xlaer(i)))then
+< !            write(6,*)'aer',i,j,fastj%aer(i,j),'qxmie',i,qxmie(i)
+< !          endif
+2009,2011d1975
+< !        if(isnan(dtaux(j)))then
+< !           write(6,*)j,'xlo',xlo3,xlo2,xlray
+< !        endif
+2030,2032d1993
+< !            if(isnan(xltau))then
+< !              write(6,*)'dtaux',i,dtaux(i),'amf',fastj%AMF(I,J)
+< !            endif
+2034,2036d1994
+< !          if(isnan(xltau))then
+< !             write(6,*)'xltau',xltau,'i',i,'j',j
+< !          endif
+2338,2340d2295
+< !          if(isnan(fz(lz)))then
+< !           write(6,*)'ftau',l2,ftau(l2),'lz',lz
+< !          endif
+2448,2451d2402
+< !          if(isnan(fmean(j)))then
+< !            write(6,*)'error opmie fmean j',j,'k',k,'fj',fj(k)
+< !            call flush(6)
+< !          endif
+2623,2626d2573
+< !        if(isnan(fj(id)))then
+< !          write(6,*)'at  2593 ',id,'fz',fz(id)
+< !        endif
+< 
+Binary files raqms/newcol.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/newcol.o differ
+Only in raqms: outa
+Only in raqms: outdiffcombined
+diff -Bbw raqms/outpwd /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/outpwd
+1c1
+< /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+---
+> /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms
+Binary files raqms/photcode_larc_47_nmhc_v0.7.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/photcode_larc_47_nmhc_v0.7.o differ
+Only in raqms: printcedsair
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printerr
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printinc
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printold
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printomps
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printper
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printpl
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: printplume
+Only in raqms: printtest
+Binary files raqms/raq_dep_ctrans_grell_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_ctrans_grell_mod.mod differ
+diff -Bbw raqms/raq_dep_wet_ls_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_wet_ls_mod.F90
+75,76c75
+< !     make default al 1/4/2023 since always had it set in run scripts
+<       if(cenv==' '.or.cenv.eq.'YES')then
+---
+>       if(cenv.eq.'YES')then
+Binary files raqms/raq_dep_wet_ls_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raq_dep_wet_ls_mod.mod differ
+diff -Bbw raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+26d25
+<   use raqmschem_iodata_mod, only : raqmschem_chem_write_aodfcst
+37a37
+>   use raqmschemcomm_mod, only : ptrop,ktrop,ztrop
+40d39
+< !  use raqmschemcomm_mod, only : ztropraq,ptropraq,ktrop,ptropgsi,ztropgsi
+42,44c41,43
+< !  use raqmschemcomm_mod, only : gsiinc
+< !  use raqmschemcomm_mod, only : incMLS3d,incOMI3d
+< !  use raqmschemcomm_mod, only : incNUCAPSco3d,incTROPOMIco3d
+---
+>   use raqmschemcomm_mod, only : gsiinc
+>   use raqmschemcomm_mod, only : incMLS3d,incOMI3d
+>   use raqmschemcomm_mod, only : incNUCAPSco3d,incTROPOMIco3d
+46c45
+< !  use raqmschemcomm_mod, only : pergsiv,colgsiinc
+---
+>   use raqmschemcomm_mod, only : pergsiv,colgsiinc
+48c47
+<   use raqmschem_pmgrid_mod, only : tile,ibeg,iam,iprn,jprn,iamprn,iprnin,jprnin,pecount,kprnin,tileprn,cdateat
+---
+>   use raqmschem_pmgrid_mod, only : tile,ibeg,iam,iprn,jprn,iamprn,iprnin,jprnin,pecount,kprnin,tileprn
+51c50
+<   use raqmschem_pmgrid_mod, only : raqms_localIOflag,aerosol_ugpkg,ompsgsi,cdatestart
+---
+>   use raqmschem_pmgrid_mod, only : raqms_localIOflag,aerosol_ugpkg,ompsgsi
+56d54
+<   use chemgsimod
+76,78c74,77
+< !  real(CHEM_KIND_R4),allocatable,dimension(:,:,:,:) :: tempgsiinc
+< !  real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: tempincMLS,tempincOMI
+< !  real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: tempincNUCAPS,tempincTROPOMI
+---
+>   real(CHEM_KIND_R4),allocatable,dimension(:,:,:,:) :: tempgsiinc
+>   real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: tempincMLS,tempincOMI
+>   real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: tempincNUCAPS,tempincTROPOMI
+>   real(CHEM_KIND_R4),allocatable,dimension(:,:) :: tempincaodgsi
+80c79
+< !  real(CHEM_KIND_R8) :: gsinew,gsioxnew,hrout
+---
+>   real(CHEM_KIND_R8) :: gsinew,gsioxnew,hrout
+82,83c81,82
+<   character *256 gsiscratch,base_data_disk,pathdata
+<   character *10 ciat,cjat,ckat,ctileat,ctile*1
+---
+>   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+>   character *10 ciat,cjat,ckat,ctileat,cdatestart,ctile*1
+88c87
+<   save wallwritecum,rtimecum,rtimed1,wallstart,gsiremapsh,gsiscratch
+---
+>   save wallwritecum,rtimecum,rtimed1,wallstart,gsiremapsh,cdatestart,gsiscratch
+107,108c106,107
+<   logical first,useraqmso3vmr,exist,existt,existi,dogsiname,doaodfcst
+<   save first,useraqmso3vmr,dogsiname,doaodfcst
+---
+>   logical first,useraqmso3vmr,exist,existt,existi,dogsiname
+>   save first,useraqmso3vmr,dogsiname
+110c109
+<   data useraqmso3vmr/.false./,doaodfcst/.false./
+---
+>   data useraqmso3vmr/.false./
+113c112
+<   save nsecsave,nsecgsi,base_data_disk
+---
+>   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+144,148c143,145
+< !  if(mype.eq.0)then
+< !    write(6,*)'julday',julday,'tz',tz
+< !    call flush(6)
+< !    write(6,*)'raqmsclock get dd',dd,'h',h,'m',m,'s',s
+< 
+---
+>   if(mype.eq.0)then
+>     write(6,*)'julday',julday,'tz',tz
+>     call flush(6)
+152c149
+< !  endif
+---
+>   endif
+157,164d153
+<   cenv=' '
+<   call getenv('AODFCST',cenv)
+<   if(cenv=='YES')then
+<     doaodfcst=.true.
+<     if(iam==0)then
+<       write(6,*)'doaodfcst'
+<     endif
+<   endif
+171d159
+<     write(6,*)'CHEMGSI DIR'
+188a177
+>     base_data_disk_tropomico=' '
+189a179,183
+>     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+>     if(iam==0)then
+>      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+>      write(6,*)'VIIRS AOD DIR'
+>     endif
+203d196
+< #if 0
+250d242
+< #endif
+330,332d321
+<       if(iam==0)then
+<         write(6,*)'nsecgsi',nsecgsi,'DHRGSI',ctest
+<       endif
+470,472c459,462
+<     call trop(is,ie,js,je,nl,spgrd,pgrd,zgrd,tgrd)
+< !    write(200+iam,*)'did call trop'
+< !    call flush(200+iam)
+---
+>     if(.not.allocated(ztrop))then
+>       allocate(ztrop(is:ie,js:je),ptrop(is:ie,js:je),ktrop(is:ie,js:je))
+>     endif
+>     call trop(is,ie,js,je,nl,spgrd,pgrd,zgrd,tgrd,ztrop,ptrop,ktrop)
+643,646c633,636
+< !    if(mype.eq.0)then
+< !      write(6,*)'call advance 9.1 ','h',h,'m',m,'s',s,'icall',icall
+< !      call flush(6)
+< !    endif
+---
+>     if(mype.eq.0)then
+>       write(6,*)'call advance 9.0 ','h',h,'m',m,'s',s,'icall',icall
+>       call flush(6)
+>     endif
+791a782
+> !   call chemgsi(stateout,is,ie,js,je,nl
+807,810c798,1523
+<   Stateout%tr3d(:,:,:,p_so2)=chem_pass_state%tr3d(:,:,:,p_so2)*1.e-6 ! new ajl 6/30/2023
+<     if(gsiremapsh/=' ')then
+<       if(iam==0)then
+<         write(6,*)'call chemgsi',nsecgsi
+---
+> 
+> !    if(iam.eq.iamprn)then
+> !      write(6,*)'co 1 in',iprn,jprn,statein%tr3d(iprn,jprn,1,p_co)
+> !      write(6,*)'co 64 in',iprn,jprn,statein%tr3d(iprn,jprn,64,p_co)
+> !      write(6,*)'co out 1',stateout%tr3d(iprn,jprn,1,p_co),stateout%tr3d(iprn,jprn,1,p_co)-statein%tr3d(iprn,jprn,1,p_co)
+> !      write(6,*)'co out 64',stateout%tr3d(iprn,jprn,64,p_co),stateout%tr3d(iprn,jprn,64,p_co)-statein%tr3d(iprn,jprn,64,p_co)
+> !      call flush(6)
+> !    endif
+> !    if(maxval(statein%tr3d(:,:,:,p_olei))>0.0)then
+> !      write(6,*)'olei in',maxval(statein%tr3d(:,:,:,p_olei))
+> !    endif
+> !    if(maxval(stateout%tr3d(:,:,:,p_olei))>0.0)then
+> !      write(6,*)'olei out',maxval(stateout%tr3d(:,:,:,p_olei))
+> !    endif
+> !    write(6,*)'did call raqms_advance'
+> !    call flush(6)
+> !   ni should be second
+> !   put at hour
+>     write(cstep,'(i4.4)')icall
+>     filename='each'//trim(cstep)//'.nc'
+>     dims(1)=ie-is+1
+>     dims(2)=je-js+1
+>     dims(3)=nl
+>     dims2=dims(1:2)
+> !    write(6,*)'call calcaod',is,ie,js,je,nl,'de',de,'nchem',nchem
+> !    call flush(6)
+> !    write(6,*)'did calcaod'
+> !    call flush(6)
+>     cdateat=cdate
+>     if(GSIREMAPSH/=' ' )then
+> !      if(mod(nint(dts*float(icall)),nsecgsi).eq.0.or.icall<=1)then
+> !      call gsivar(numgsicem,gsicem,loccem)
+> !      write(6,*)'call gsivar'
+> !      call flush(6)
+>       call gsivar
+> !      if(iam.eq.0.and.tile.eq.1)then
+> !        write(6,*)'numgsicem',numgsicem
+> !        do n=1,numgsicem
+> !          write(6,*)n,gsicem(n),'loc',loccem(n)
+> !          call flush(6)
+> !        end do
+> !      endif
+>       if(iam.eq.0)then
+>         write(6,*)'ajl dts',dts,'icall',icall,'nsecgsi',nsecgsi
+>         call flush(6)
+>       endif
+>       if(mod(nint(dts*float(icall)),nsecgsi).eq.0)then
+>         cdateout=cdate
+>         if(iam.eq.0.and.tile.eq.1)then
+>           write(6,*)'findajl cdate',cdate
+>           write(6,*)'findajl icall',icall
+>           call flush(6)
+>           if(base_data_disk/=' ')then
+> !           check if OBSdir is there
+>             exist=.false.
+> !            write(6,*)'numgsicem',numgsicem
+> !            flush(6)
+>             if(numgsicem>=14)then
+> !              write(6,*)'gsicem',gsicem(1:numgsicem)
+> !              flush(6)
+>               if(gsicem(1).eq.'sulf')then
+>                 if(dogsiname)then
+>                   write(6,*)'set up data path aerosol',ibegdate,ienddate,len_trim(gsiname)
+>                   flush(6)
+>                   if(gsiname(1:ibegdate-1)=='viirs.aod.')then
+> !                   make sure multiple of 3 hrs
+>                     read(cdateout(1:10),'(i10)')idate
+>                     write(6,*)'idate',idate
+>                     ihr=mod(idate,100)
+>                     imod=mod(ihr,3)
+>                     write(6,*)'ihr',ihr,'imod',imod
+>                     if(imod==1)then
+>                       idtsec=-3600
+>                       call advcdatehr(idate,idtsec,idate,julday,hrout)
+>                       write(cdateout(1:10),'(i10)')idate
+>                       write(6,*)'idate',idate
+>                     elseif(imod==2)then
+>                       idtsec=3600
+>                       call advcdatehr(idate,idtsec,idate,julday,hrout)
+>                       write(cdateout(1:10),'(i10)')idate
+>                       write(6,*)'idate',idate
+>                     endif 
+>               
+>                     pathdata=trim(gsidatapath)//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+>                   else
+>                     pathdata=trim(gsidatapath)//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+>                   endif
+>                   write(6,*)'aerosols path',trim(pathdata)
+>                   flush(6)
+>                  inquire(file=pathdata,exist=existt)
+>                  if(existt)then
+>                    exist=.true.
+>                  else
+>                    exist=.false.
+>                  endif
+>                 endif
+>               endif
+>               write(6,*)'ajl gsi name',exist
+>               flush(6)
+>             else
+>               do n=1,numgsicem
+>                 if(dogsiname)then
+>                   write(6,*)'set up data path ',ibegdate,ienddate,len_trim(gsiname)
+>                   flush(6)
+>                   pathdata=trim(gsidatapath)//'/'//gsiname(1:ibegdate-1)//cdateout(1:10)//gsiname(ienddate+1:)
+>                   write(6,*)'path data',trim(pathdata)
+>                   flush(6)
+> !                 if(gsiinqscript/=' ')then
+> !                   call system('export CDATE='//cdateout(1:10)//'  )
+>                  !endif
+>                  inquire(file=pathdata,exist=existt)
+>                  write(6,*)'pathdata',pathdata,'exist',existt
+>                  if(existt)then
+>                    exist=.true.
+>                  else
+>                    exist=.false.
+>                  endif
+>                 else
+>                   if(gsicem(n).eq.'o3vmr')then
+>                     pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+>                     //cdateout(1:10)//'/'//'mlsbufr.'//cdateout(1:10)
+>                   else
+>                     pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+>                     //cdateout(1:10)//'/'//'tropomi.'//trim(gsicem(n))//'.bufr.'//cdateout(1:10)
+>                   endif
+>                 endif
+>                 write(6,*)'pathdata define ',trim(pathdata),'exist',exist
+>                 call flush(6)
+>                 inquire(file=pathdata,exist=existt)
+>                 if(existt)then
+>                   write(6,*)'exist',existt,' ',trim(pathdata)
+>                   exist=.true.
+> !                elseif(gsicem(m).eq.'o3vmr')then
+> !                fix 2/25/2021
+>                 elseif(gsicem(n).eq.'o3vmr')then
+>                   write(6,*)'check omi'
+>                 call flush(6)
+>                   pathdata=trim(base_data_disk)//'/'//cdateout(1:4)//'/'//cdateout(1:6)//'/' &
+>                   //cdateout(1:10)//'/'//'omibufr.'//cdateout(1:10)
+>                   write(6,*)'pathdata omi ',trim(pathdata)
+>                 call flush(6)
+>                   inquire(file=pathdata,exist=existt)
+>                   if(existt)then
+>                     write(6,*)'exist omi'
+>                     exist=.true.
+>                   endif
+>                 endif
+>                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+>                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+>                   exist=.true.
+>                 endif
+>                 if(gsicem(n).eq.'o3vmr')then
+>                   write(6,*)'mlsomi exist',exist
+>                   write(6,*)'pathdata',trim(pathdata)
+>                 endif
+>               end do
+>             endif
+>           else
+>             write(6,*)'base_data_disk blank'
+>             call flush(6)
+>             exist=.true.
+>           endif
+>         endif
+>         call raqmschem_comm_all_bcast(exist,rc=localrc)
+>         if(mype==0)then
+>         write(6,*)'exist',exist
+>         endif
+>       endif
+>       if(mod(nint(dts*float(icall)),nsecgsi).eq.0.and.exist)then
+>         if(.not.allocated(gsiinc))then
+>           if(mype==0)then
+>             write(6,*)'numgsicem',numgsicem
+>           endif
+>           allocate(gsiinc(is:ie,js:je,nl,numgsicem))
+>           gsiinc=0.0
+>         endif
+> #ifdef PERGSIV
+>         if(.not.allocated(pergsiv))then
+> !          allocate(percov(is:ie,js:je,nl),intco(is:ie,js:je,nl))
+>           allocate(pergsiv(is:ie,js:je,nl,numgsicem))
+>           allocate(colgsiinc(is:ie,js:je,nl,numgsicem))
+>         endif
+> #endif
+>         cdateout=cdate
+>           isave=1
+>           dims(1)=ie-is+1
+>           dims(2)=je-js+1
+>           dims(3)=nl
+>           dims2=dims(1:2)
+> !       write(cdateout(1:2),'(i2.2)')icall
+>         call raqmschem_model_get(modelcomm=modelcomm,rc=rc)
+> !        if(iam.eq.0.and.tile.eq.1)then
+> !        cmd='export SLURM_JOB_ID='//trim(slurm_job_id)//' ; env > /home/lenzen/testmpi/env.model.run ; /home/lenzen/testmpi/runinside.sh > /home/lenzen/testmpi/outruninside.model'
+> !        write(6,*)'call system',trim(cmd)
+> !        call flush(6)
+>         
+> !        call system(cmd)
+> !        write(6,*)'did system'
+> !        write(0,*)'did system'
+> !        call flush(6)
+> !        call flush(0)
+> !        else
+> !          call system('sleep 60')
+> !        endif
+> !        write(0,*)'did first system'
+> !        call flush(0)
+>         if(iam.eq.0.and.tile.eq.1)then
+>            write(6,*)'gsi_write',cdateout
+>            call flush(6)
+>         endif
+>         call raqmschem_gsi_write(stateout%tr3d,data,statein,dims,itime=isave,cdate=cdateout,rc=rc) 
+> !        ajl force some time for lustre
+>         call system('sleep 5')
+> !        call mpi_barrier(modelcomm,rc)
+>         if(iam.eq.0.and.tile.eq.1)then
+>           write(6,*)'done with raqmschem_gsi_write ',cdateout
+>           call flush(6)
+>         endif
+> !        datascratch='/scratch/users/lenzen/GSISCRATCH/'//trim(expname)//'/'//cdatestart//'/'
+>         datascratch='../../GSISCRATCH/'
+>  
+>         if(iam.eq.0.and.tile.eq.1)then
+>           write(6,*)'datascratch',trim(datascratch)
+>           write(6,*)'cdatestart',cdatestart
+>           call flush(6)
+> !          call system('mkdir -p ../../GSISCRATCH/'//trim(cdateout))
+>           call system('mkdir -p '//trim(datascratch))
+> !          open(40,file='../../GSISCRATCH/'//trim(cdateout)//'/cdate.inc',form='formatted')
+> !          call system('ls -l '//trim(datascratch)//'gsi.done')
+>           call system('/bin/rm -f '//trim(datascratch)//'gsi.done')
+>           call system('/bin/rm -f '//trim(datascratch)//'input.ready')
+>           call system('/bin/rm -f '//trim(datascratch)//'cdate.inc')
+>           write(6,*)'open cdate.inc',trim(datascratch)//'cdate.inc'
+>           call flush(6)
+>           write(6,*)'findajl cdatestart',cdatestart,'cdateout',cdateout
+>           call flush(6)
+>           open(40,file=trim(datascratch)//'/cdate.inc',form='formatted')
+>           write(40,'("export CDATE0=",a10)')trim(cdatestart)
+>           write(40,'("export CDATE=",a10)')trim(cdateout)
+>           forecast_hr=dts*float(icall)/3600.
+>           write(6,*)'forecast_hr',forecast_hr,'fhmax',fhmax
+>           call flush(6)
+> !          if(forecast_hr+.00001>fhmax)then
+>           if(cdateout(9:10).eq.'12')then
+>             write(6,*)'can end GSI part'
+>             call flush(6)
+>             write(40,'("export DONE=true")')
+>           else
+>             write(6,*)'keep running GSI'
+>             call flush(6)
+>             write(40,'("export DONE=false")')
+>           endif
+> !          write(40,'("export FHR=",i3)')nint(forecast_hr)
+> !          write(40,'("export FHMAX=",i1)')nint(fhmax)
+>           close(40)
+> !          open(40,file='../../GSISCRATCH/'//trim(cdateout)//'/input.ready',form='formatted') 
+>           write(6,*)'open input.ready ',trim(datascratch)//'input.ready'
+>           call flush(6)
+>           call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+>           call system('sleep 10')
+>           open(40,file=trim(datascratch)//'/input.ready',form='formatted')
+>           write(40,'(a10)')trim(cdateout)
+>           close(40)
+>           write(6,*)'input.ready'
+>           call flush(6)
+>           call system('date')
+>         endif
+> 1        call mpi_barrier(modelcomm,rc)
+> !        write(6,*)'did barrier'
+> !        call flush(6)
+> !        if(iam.eq.0.and.tile.eq.1)then
+> !          cmd='export CDATE0='//trim(cdatestart)//' ; '//'export CDATE='//cdateout//' ; '// trim(GSIREMAPSH)//' >& outgsiremap'
+> !          write(6,*)'cmd',trim(cmd)
+> !          call flush(6)
+> !          call system(cmd)
+> !          write(6,*)mype,'did cmd for gsi'
+> !          call flush(6)
+> !        else
+> !          write(6,*)mype,'sleep 300'
+> !          call flush(6)
+> !          call system('sleep 300')
+> !          write(6,*)mype,'didsleep 300'
+> !          call flush(6)
+> !        endif
+> !        inquire(file='../../GSISCRATCH/'//trim(cdateout)//'/gsi.done',exist=exist)
+>         countsleep=0
+>         exist=.false.
+>         do while (countsleep<100.and..not.exist)
+>           if(iam.eq.0.and.tile.eq.1)then
+>             write(6,*)'countsleep',countsleep
+>             write(6,*)'check gsi.done ',trim(datascratch)//'/gsi.done.'//trim(cdateout)
+>             call flush(6)
+>             inquire(file=trim(datascratch)//'/gsi.done.'//trim(cdateout),exist=exist)
+> !            if(exist)then
+> !              call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+> !            endif
+>           endif
+>           call raqmschem_comm_all_bcast(exist,rc=localrc)
+>           if(exist)then
+>             if(iam.eq.0.and.tile.eq.1)then
+>               write(6,*)'gsidone'  ,countsleep
+>             endif
+>           else
+>             !write(6,*)'gsi not done'
+>             call system('sleep 30')
+>             countsleep=countsleep+1
+>           endif
+>         end do
+>         call mpi_barrier(modelcomm,rc)
+>         if(iam.eq.0.and.tile.eq.1)then
+>           if(exist)then
+>             call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+>           endif
+>           write(6,*)'gsi done exist',exist,'countsleep',countsleep
+>           call flush(6)
+>           call system('date')
+>         endif
+>         call system('sleep 10')
+> !       now check for inc file
+> !        stop
+> !        write(6,*)'call gsivar'
+> !        call flush(6)
+> !        call gsivar(numgsicem,gsicem,loccem)
+> !        call gsivar
+> !        if(mype.eq.0)then
+> !          write(6,*)'numgsicem',numgsicem,gsicem(1:numgsicem)
+> !          call flush(6)
+> !        endif
+>         allocate (tempgsiinc(is:ie,js:je,nl,numgsicem))
+> !        write(6,*)'coinc',shape(coinc)
+> !        call flush(6)
+>         if(iam.eq.0.and.tile.eq.1)then
+> !         make sure don't goof up next time period
+>           call system('rm -f '//trim(datascratch)//'/gsi.done.'//trim(cdateout))
+>         endif
+>         write(ctile,'(i1.1)')tile
+>         if(iam.eq.0.and.tile.eq.1)then
+>           call system('date')
+>  
+>           write(6,*)'read from ../../GSIINC/'//trim(cdatestart)//'/inc.' &
+>           //trim(cdateout)//'.tile'//ctile//'.nc'
+>           call flush(6)
+>         endif
+>         if(base_path/=' ')then
+>           call system(' sleep 5')
+>           inquire(file=trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+>           if(iam.eq.0)then
+>              write(6,*)'GSIINC',trim(base_path)//'/GSIINC/'//trim(cdatestart)// &
+>              '/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+>           endif
+>           if(.not.exist)then
+> !           try to wait longer
+>             call system(' sleep 10')
+>             inquire(file=trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+>             if(.not.exist)then
+>               call system(' data ; ls -l '//trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc') 
+>             endif
+>           endif
+>           if(exist)then
+>             GSIINC_PATH=trim(base_path)//'/GSIINC/'
+>           endif
+>         else
+>           call system(' sleep 5')
+>           inquire(file='../../GSIINC/'//trim(cdatestart)//'/'//'inc.'// &
+>            trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+>           if(.not.exist)then
+> !           try to wait longer
+>             call system(' sleep 10')
+>             inquire(file='../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+>             if(.not.exist)then
+>               call system(' data ; ls -l '//'../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc')
+>             endif
+>           endif
+>           if(exist)then
+>             GSIINC_PATH='../../GSIINC/'
+>           endif
+>          endif
+> !        if(exist)then
+> !          call getfsize('../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',fsize)
+> !          write(200+iam,*)'inc file exist','GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+> !          write(200+iam,*)'fsize ',fsize
+> !          call date_and_time(date,time,zone,ivalues)
+> !          write(200+iam,*)'time ',time
+> !          call flush(200+iam)
+> !        endif
+>         if(.not.exist)then
+>           write(6,*)'missing ',mype,'../../GSIINC/'//trim(cdatestart)//  &
+>            '/inc.'//trim(cdateout)//'.tile'//ctile//'.nc'
+>           call flush(6)
+>         endif
+> !        write(6,*)'numgsicem',numgsicem
+> !        call flush(6)
+>         if(gsicem(1).eq.'o3vmr')then
+>           allocate (tempincMLS(is:ie,js:je,nl),tempincOMI(is:ie,js:je,nl))
+>           if(.not.allocated(incMLS3d))then
+>              allocate(incMLS3d(is:ie,js:je,nl),incOMI3d(is:ie,js:je,nl))
+>              incMLS3d=0.0
+>              incOMI3d=0.0
+>           endif
+>           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incMLS', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincMLS, &
+> !            '../../GSIINC/'//trim(cdatestart)//'/', &
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='incMLS',rc=localrc)
+>           elseif(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','inco3lp', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>            call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincMLS, &
+> !           '../../GSIINC/'//trim(cdatestart)//'/', &
+>            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='inco3lp',rc=localrc)
+>             ompsgsi=.true.
+>           endif
+>           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incOMI', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincOMI, &
+> !            '../../GSIINC/'//trim(cdatestart)//'/', &
+>            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='incOMI',rc=localrc)
+>           elseif(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','inco3nm', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincOMI, &
+> !            '../../GSIINC/'//trim(cdatestart)//'/', &
+>            trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='inco3nm',rc=localrc)
+>             ompsgsi=.true.
+>           endif
+>           write(6,*)'temp LP',maxval(tempincMLS),' NM ',maxval(tempincOMI)
+>         endif
+>         if(gsicem(1).eq.'co')then
+>           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incco_NU', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>             allocate (tempincNUCAPS(is:ie,js:je,nl))
+>             tempincNUCAPS=0.0
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincNUCAPS, &
+> !            '../../GSIINC/'//trim(cdatestart)//'/', &
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='incco_NU',rc=localrc)
+>             if(.not.allocated(incNUCAPSco3d))then
+>               allocate(incNUCAPSco3d(is:ie,js:je,nl))
+>               incNUCAPSco3d=0.0
+>             endif
+>             write(6,*)'temp NUCAPS',maxval(tempincNUCAPS)
+>           endif
+>           if(inquire_file_var('inc.'//trim(cdateout)//'.tile1.nc','incco_TR', &
+> !            '../../GSIINC/'//trim(cdatestart)//'/' ))then
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/' ))then
+>             allocate (tempincTROPOMI(is:ie,js:je,nl))
+>             tempincTROPOMI=0.0
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincTROPOMI, &
+> !            '../../GSIINC/'//trim(cdatestart)//'/', &
+>             trim(GSIINC_PATH)//trim(cdatestart)//'/', &
+>             de=de,varname='incco_TR',rc=localrc)
+>             if(.not.allocated(incTROPOMIco3d))then
+>               allocate(incTROPOMIco3d(is:ie,js:je,nl))
+>               incTROPOMIco3d=0.0
+>             endif
+>             write(6,*)' temp TROMI ',maxval(tempincTROPOMI)
+>           endif
+>           call flush(6)
+>         endif
+>         if(numgsicem>=14)then
+> !         doing aod assimilation
+>           if(base_path/=' ')then
+>             if(.not.allocated(data%aodgsi))then
+>               allocate(data%aodgsi(is:ie,js:je),data%aodincgsi(is:ie,js:je))
+>               data%aodincgsi=0.0
+>             endif
+>             if(.not.allocated(tempincaodgsi))then
+>               allocate(tempincaodgsi(is:ie,js:je))
+>             endif
+>             if(.not.allocated(data%aodgsibcoc))then
+>               allocate(data%aodgsibcoc(is:ie,js:je))
+>             endif
+>             if(.not.allocated(data%aodgsidust))then
+>               allocate(data%aodgsidust(is:ie,js:je))
+>             endif
+>             if(.not.allocated(data%aodgsissalt))then
+>               allocate(data%aodgsissalt(is:ie,js:je))
+>             endif
+>             if(.not.allocated(data%aodgsisulf))then
+>               allocate(data%aodgsisulf(is:ie,js:je))
+>             endif
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsi, &
+>               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>               de=de,varname='aod',rc=localrc)
+>             if(localrc/=0)then
+>               write(6,*)'error reading aodgsi'
+>               deallocate(data%aodgsi)
+>             endif
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsibcoc, &
+>               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>               de=de,varname='aodbcoc',rc=localrc)
+>             if(localrc/=0)then
+>               write(6,*)'error reading aodgsibcoc'
+>               deallocate(data%aodgsibcoc)
+>             endif
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsidust, &
+>               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>               de=de,varname='aoddust',rc=localrc)
+>             if(localrc/=0)then
+>               write(6,*)'error reading aodgsidust'
+>               deallocate(data%aodgsidust)
+>             endif
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsissalt, &
+>               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>               de=de,varname='aodssalt',rc=localrc)
+>             if(localrc/=0)then
+>               write(6,*)'error reading aodgsissalt'
+>               deallocate(data%aodgsissalt)
+>             endif
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodgsisulf, &
+>               trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>               de=de,varname='aodsulf',rc=localrc)
+>             if(localrc/=0)then
+>               write(6,*)'error reading aodgsisulf'
+>               deallocate(data%aodgsisulf)
+>             endif
+> !            call chem_io_read('inc.'//trim(cdateout)//'.nc',data%aodincgsi, &
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempincaodgsi, &
+>             trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>             de=de,varname='incaod',rc=localrc)
+>             data%aodincgsi=data%aodincgsi+tempincaodgsi
+>             if(tile==5)then
+>               write(6,*)'increment aodincgsi',maxval(data%aodincgsi),minval(data%aodincgsi)
+>             endif
+>             deallocate(tempincaodgsi)
+>             if(localrc/=0)then
+>                write(6,*)'error reading incaodgsi'
+>                deallocate(data%aodincgsi)
+>             endif
+>           endif
+>         endif
+>         do n=1,numgsicem
+>           if(iam.eq.0.and.tile.eq.1)then
+>             write(6,*)'read ',trim(gsicem(n))//'inc',n
+>             call flush(6)
+>             write(6,*)'read inc.'//trim(cdateout)//'.nc'
+>             if(base_path/=' ')then
+>               write(6,*)'path '//trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'
+>               call flush(6)
+>             else
+>               write(6,*)'path ../../GSIINC/'//trim(cdatestart)//'/'
+>               call flush(6)
+>             endif
+>           endif
+>           if(base_path/=' ')then
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempgsiinc(:,:,:,n), &
+>            trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/', &
+>           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+>           else
+>             call chem_io_read('inc.'//trim(cdateout)//'.nc',tempgsiinc(:,:,:,n),'../../GSIINC/'//trim(cdatestart)//'/', &
+>           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+>           endif
+>           if(localrc/=0.0)then
+>             write(6,*)'localrc error',localrc
+>             flush(6)
+>           endif
+> #ifdef PERGSIV
+>           pergsiv(:,:,:,n)=0.0
+> #endif
+> !          numneg=0
+> !          negno2=1.e10
+>           do k=1,nl
+>             do j=js,je
+>               jj=j-js+1
+>               do i=is,ie
+>                 ii=i-is+1
+>                 if(tempgsiinc(i,j,k,n)==0.0)then
+>                 elseif(tempgsiinc(i,j,k,n)<0.0)then
+>                   if(gsicem(n).eq.'co')then
+>                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+>                     if(gsinew<1.e-10)then
+> !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-10-gsinew)
+>                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-10)
+>                       gsinew=1.e-10
+>                     endif
+>                     if(allocated(tempincNUCAPS))then
+>                       incNUCAPSco3d(i,j,k)=incNUCAPSco3d(i,j,k)+tempincNUCAPS(i,j,k)
+>                     endif
+>                     if(allocated(tempincTROPOMI))then
+>                       incTROPOMIco3d(i,j,k)=incTROPOMIco3d(i,j,k)+tempincTROPOMI(i,j,k)
+>                     endif
+>                   elseif(gsicem(n).eq.'no2')then
+>                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+>                     if(gsinew<1.e-15)then
+> !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-15-gsinew)
+> !                      if(gsinew<negno2)then
+> !                        negno2=gsinew
+> !  real*4 latnegno2,lonnegno2,no2bef,no2inc
+> !                        latnegno2=lat(ii,jj)
+> !                        lonnegno2=lon(ii,jj)
+> !                        no2bef=stateout%tr3d(ii,jj,k,loccem(n))
+> !                        no2inc=tempgsiinc(i,j,k,n)
+> !                      endif
+>                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+>                       gsinew=1.e-15
+> !                      numneg=numneg+1
+>                     endif
+>                   elseif(gsicem(n).eq.'o3vmr')then
+>                     gsinew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+>                     if(gsinew<1.e-11)then
+> !                     don't want to be lower than 1.e-11 unless input ozone is
+> !                     less than 1.e-11 but greater than zero
+> !                     gsinew2=max (1.e-15,min(1.e-11,input ozone))
+> !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-11-gsinew)
+>                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,p_ox)-1.e-11)
+>                       gsinew=1.e-11
+>                     endif
+> !                   need to update ox also
+> !                    gsioxnew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+> !                    stateout%tr3d(ii,jj,k,p_ox)=gsioxnew
+>                     incMLS3d(i,j,k)=incMLS3d(i,j,k)+tempincMLS(i,j,k)
+>                     incOMI3d(i,j,k)=incOMI3d(i,j,k)+tempincOMI(i,j,k)
+>                   elseif(gsicem(n).eq.'ch2o')then
+>                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+>                     if(gsinew<1.e-15)then
+> !                      tempgsiinc(i,j,k,n)=tempgsiinc(i,j,k,n)+(1.e-15-gsinew)
+>                       tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+>                       gsinew=1.e-15
+>                     endif
+>                   elseif(numgsicem>=14)then
+>                     gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+>                     if(aerosol_ugpkg)then
+>                       if(gsinew<1.e-6)then
+>                         tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-6)
+>                         gsinew=1.e-6
+>                       endif
+>                     else
+>                       if(gsinew<1.e-15)then
+>                         tempgsiinc(i,j,k,n)=-(stateout%tr3d(ii,jj,k,loccem(n))-1.e-15)
+>                         gsinew=1.e-15
+>                       endif
+>                     endif
+>                   endif
+> #ifdef PERGSIV
+>                   pergsiv(i,j,k,n)=tempgsiinc(i,j,k,n)/max(1.e-15,stateout%tr3d(ii,jj,k,loccem(n)))*100.
+> #endif
+> !                  if(abs(pergsiv(i,j,k,n))>200.)then
+> !                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+> !                    write(6,*)'p_ox',p_ox,'gsinew',gsinew
+> !                    write(6,*)'pergsiv',pergsiv(i,j,k,n),'temp',tempgsiinc(i,j,k,n),'orig', &
+> !                    stateout%tr3d(ii,jj,k,loccem(n)),stateout%tr3d(ii,jj,k,p_ox)
+> !                  endif
+>                   stateout%tr3d(ii,jj,k,loccem(n))=gsinew
+>                   gsiinc(i,j,k,n)=gsiinc(i,j,k,n)+tempgsiinc(i,j,k,n)
+>                 else
+>                   gsinew=stateout%tr3d(ii,jj,k,loccem(n))+tempgsiinc(i,j,k,n)
+>                   gsiinc(i,j,k,n)=gsiinc(i,j,k,n)+tempgsiinc(i,j,k,n)
+>                   stateout%tr3d(ii,jj,k,loccem(n))=gsinew
+> #ifdef PERGSIV
+>                   pergsiv(i,j,k,n)=tempgsiinc(i,j,k,n)/max(1.e-15,stateout%tr3d(ii,jj,k,loccem(n)))*100.
+> #endif
+> !                  if(gsicem(n).eq.'o3vmr')then
+> !!                   need to update ox also
+> !                    gsioxnew=stateout%tr3d(ii,jj,k,p_ox)+tempgsiinc(i,j,k,n)
+> !                    stateout%tr3d(ii,jj,k,p_ox)=gsioxnew
+> !                  refix 2/26/2021 ajl
+>                    if(gsicem(n).eq.'o3vmr')then
+>                      incMLS3d(i,j,k)=incMLS3d(i,j,k)+tempincMLS(i,j,k)
+>                      incOMI3d(i,j,k)=incOMI3d(i,j,k)+tempincOMI(i,j,k)
+>                    endif
+>                    if(gsicem(n).eq.'co')then
+>                      if(allocated(tempincNUCAPS))then
+>                        incNUCAPSco3d(i,j,k)=incNUCAPSco3d(i,j,k)+tempincNUCAPS(i,j,k)
+>                      endif
+>                      if(allocated(tempincTROPOMI))then
+>                        incTROPOMIco3d(i,j,k)=incTROPOMIco3d(i,j,k)+tempincTROPOMI(i,j,k)
+>                      endif
+>                    endif
+> !                  write(6,*)'missing positve',tempgsiinc(i,j,k,n),i,j,k,n
+>              
+> !                  if(stateout%tr3d(ii,jj,k,loccem(n))<1.e-16)then
+> !                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+> !                    if(k.lt.nl-1)then
+> !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+> !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+> !                    endif
+> !                  endif
+>                 endif
+> #ifdef PERGSIV
+>                 if(k.eq.1)then
+>  !                intco(i,j,k)=stateout%tr3d(ii,jj,k,p_co)*dpmgrd(ii,j,k)
+>                   colgsiinc(i,j,k,n)=stateout%tr3d(ii,jj,k,loccem(n))*dpmgrd(ii,j,k)
+>                 else
+> !                 intco(i,j,k)=intco(i,j,k-1)+stateout%tr3d(ii,jj,k,p_co)*dpmgrd(ii,j,k)
+>                   colgsiinc(i,j,k,n)=colgsiinc(i,j,k-1,n)+stateout%tr3d(ii,jj,k,loccem(n))*dpmgrd(ii,j,k)
+>                 endif
+> #endif
+>               end do ! i
+>             end do ! j
+>           end do ! k
+> !         write(6,*)'gsiinc',maxval(gsiinc(:,:,:,1))
+> !         write(6,*)'co after gsi ',maxval(stateout%tr3d(:,:,:,p_co)),minval(stateout%tr3d(:,:,:,p_co))
+> !         call flush(6)
+>         end do ! n
+> !        if(numneg/=0)then
+> !           write(6,*)mype,'numneg',numneg,'negno2',negno2
+> !  real*4 latnegno2,lonnegno2,no2bef,no2inc
+> !           write(6,*)'lat',latnegno2,lonnegno2,'bef',no2bef,'no2inc',no2inc
+> !           call flush(6)
+> !        endif
+>       endif
+> !     if aerosols
+>       if(numgsicem>=14)then
+> !       return aerosol back to gdshcem tr3dout
+>         chem_pass_state%tr3d(:,:,:,p_bc1)=stateout%tr3d(:,:,:,p_bc1)
+>         chem_pass_state%tr3d(:,:,:,p_bc2)=stateout%tr3d(:,:,:,p_bc2)
+>         chem_pass_state%tr3d(:,:,:,p_oc1)=stateout%tr3d(:,:,:,p_oc1)
+>         chem_pass_state%tr3d(:,:,:,p_oc2)=stateout%tr3d(:,:,:,p_oc2)
+>         chem_pass_state%tr3d(:,:,:,p_sulf)=stateout%tr3d(:,:,:,p_sulf)
+>         chem_pass_state%tr3d(:,:,:,p_dust1)=stateout%tr3d(:,:,:,p_dust1)
+>         chem_pass_state%tr3d(:,:,:,p_dust2)=stateout%tr3d(:,:,:,p_dust2)
+>         chem_pass_state%tr3d(:,:,:,p_dust3)=stateout%tr3d(:,:,:,p_dust3)
+>         chem_pass_state%tr3d(:,:,:,p_dust4)=stateout%tr3d(:,:,:,p_dust4)
+>         chem_pass_state%tr3d(:,:,:,p_dust5)=stateout%tr3d(:,:,:,p_dust5)
+>         chem_pass_state%tr3d(:,:,:,p_seas1)=stateout%tr3d(:,:,:,p_seas1)
+>         chem_pass_state%tr3d(:,:,:,p_seas2)=stateout%tr3d(:,:,:,p_seas2)
+>         chem_pass_state%tr3d(:,:,:,p_seas3)=stateout%tr3d(:,:,:,p_seas3)
+>         chem_pass_state%tr3d(:,:,:,p_seas4)=stateout%tr3d(:,:,:,p_seas4)
+>         chem_pass_state%tr3d(:,:,:,p_seas5)=stateout%tr3d(:,:,:,p_seas5)
+812d1524
+<       call chemgsi(stateout,statein,is,ie,js,je,nl,de,icall,dts,nsecgsi,modelcomm,data)
+848d1559
+<       cdateat=cdate
+852,866d1562
+<       if(iam==0)then
+<          write(6,*)'doaodfcst',doaodfcst
+<       endif
+<       if(doaodfcst)then
+<         if(iam==0)then
+<           write(6,*)'write_aodfcst ok ',doaodfcst,icall
+<           call flush(6)
+<         endif
+<         call raqmschem_chem_write_aodfcst(stateout%tr3d,data,statein,dims,itime=isave,cdate=cdateout,rc=rc)
+<       else
+<         if(iam==0)then
+<         write(6,*)'write_full bad  ',doaodfcst,icall
+<         call flush(6)
+<         endif
+< 
+869d1564
+<       endif
+954,961c1649,1654
+<       subroutine trop(is,ie,js,je,nl,psfc,prl,zm,tm)
+<       use raqmschem_pmgrid_mod, only : tile,ibeg,iam,rsearch
+<       use raqmschemcomm_mod, only : ztropraq,ptropraq,ktrop,ptropgsi,ztropgsi
+<       implicit none
+<       integer i,j,k,ktopbot,is,ie,js,je,nl,kbot,ktop,ktropbot
+<       real*4,dimension(is:ie,js:je,nl) :: prl,zm,tm
+<       real*4,dimension(is:ie,js:je) :: psfc
+<       real*4 :: dz,gam,gamctrl,dzlay,p(nl),hphd(nl)
+---
+>       subroutine trop(is,ie,js,je,nl,psfc,prl,zm,tm,ztrop,ptrop,ktrop)
+>       integer i,j,k,ktopbot,is,ie,js,je,nl
+>       real*4,dimension(is:ie,js:je,nl) :: pri,prl,zm,tm
+>       real*4,dimension(is:ie,js:je) :: psfc,ztrop,ptrop
+>       integer,dimension(is:ie,js:je) :: ktrop
+>       real :: dz,gam,gamctrl
+963,977d1655
+<       real*4,parameter :: ptplim(2)=(/500.,50./),hd=2000.,gamtp=2.e-3,one=1.0,half=0.5
+<       real*4 gamu,gamd,gami,td,wtp,ttrop,htp,ptp,rd_over_g,grav,rd,gamk(nl)
+<       integer kmm2,klim(2),ktp,kd(1)
+< !      write(200+iam,*)'top trop'
+< !      call flush(200+iam)
+<     if(.not.allocated(ztropraq))then
+<       allocate(ztropraq(is:ie,js:je),ptropraq(is:ie,js:je),ktrop(is:ie,js:je))
+<       allocate(ztropgsi(is:ie,js:je),ptropgsi(is:ie,js:je))
+<     endif
+< !    write(200+iam,*)'call trop',shape(ztropgsi),shape(ptropgsi)
+< !    call flush(200+iam)
+<       grav   = 9.80665
+<       rd     = 2.8705e+2
+<       rd_over_g  = rd/grav
+<       kmm2=nl-2
+979,991c1657,1660
+<       do j=js,je
+<         do i=is,ie
+<           p=prl(i,j,:)
+<           call rsearch(1,kmm2,1,1,p(2:),2,1,1,ptplim,1,1,klim)
+< !          if(i==is.and.j==js)then
+<             !write(200+iam,*)'klim',klim
+< !            call flush(200+iam)
+< !          endif
+<           klim(1)=klim(1)+1
+<           klim(2)=min(kmm2,klim(2))
+<           hphd=zm(i,j,:)+hd
+<           ptropraq(i,j)=-9999.
+<           ztropraq(i,j)=-9999.
+---
+>       do j=1,nrl
+>         do i=1,ncl
+>           ptrop(i,j)=-9999.
+>           ztrop(i,j)=-9999.
+992a1662
+> !            if(prl(i,j,k)<pri(i,j,1)-300.)then
+1004,1007d1673
+< !          if(i==is.and.j==js)then
+< !            write(200+iam,*)'klim',klim,'ktop',ktop,kbot
+< !            call flush(200+iam)
+< !          endif
+1009,1010d1674
+< !          write(200+iam,*)i,j,'kbot',kbot,ktop,psfc(i,j),'prl1',prl(i,j,1),tm(i,j,1),zm(i,j,1)
+<           
+1014,1018d1677
+<             gamk(k)=gam
+< !            write(200+iam,*)'gam',gam,'gamctrl',gamctrl
+< !            write(200+iam,*)i,j,k,'raqgam',gam,'dz',dz
+< !            write(200+iam,*)i,j,'pm',prl(i,j,k),'tm',k,tm(i,j,k:k+1)
+<             !write(200+iam,*)'zm',k,zm(i,j,k:k+1)
+1024,1027c1683,1684
+<                 ptropraq(i,j)=prl(i,j,k)
+<                 ztropraq(i,j)=zm(i,j,k)
+<                 ktrop(i,j)=k
+< !                write(200+iam,*)i,j,'ktrop raq',k,'p',prl(i,j,k),zm(i,j,k)
+---
+>                 ptrop(i,j)=prl(i,j,k)
+>                 ztrop(i,j)=am(i,j,k)
+1031d1687
+< !                  write(200+iam,*)i,j,'dzlay',dzlay,k
+1039,1041c1695,1696
+<                   ptropraq(i,j)=-9999.
+<                   ztropraq(i,j)=-9999.
+<                   ktrop(i,j)=-100
+---
+>                   ptrop(i,j)=-9999.
+>                   ztrop(i,j)=-9999.
+1047,1102c1702,1704
+<           end do
+<           if(ptropraq(i,j)<50.0)then
+<             ptropraq(i,j)=50.
+<           endif
+<           gamd=1.e9
+<           ktp=klim(2)
+<           wtp=0.0
+<           do k=klim(1),klim(2)
+<             dz=zm(i,j,k+1)-zm(i,j,k)
+<             gamu=-(tm(i,j,k+1)-tm(i,j,k))/dz
+<             if(gamu<=gamtp)then
+<               call rsearch(1,nl-k-1,1,1,zm(i,j,k+1:),1,1,1,hphd(k:),1,1,kd)
+< !              write(200+iam,*)i,j,'kd',kd,'gamu',gamu,'dz',dz
+<               if(k+kd(1)>nl.or.k+kd(1)+1>nl)then
+<                write(200+iam,*)'error k',k,'kd',kd(1),'sum',k+kd(1),'nl',nl
+<                call flush(200+iam)
+<                td=tm(i,j,k)
+<               else
+<                 td=tm(i,j,k+kd(1))+(hphd(k)-zm(i,j,k+kd(1)))/(zm(i,j,k+kd(1)+1)-zm(i,j,k+kd(1)))* &
+<                 (tm(i,j,k+kd(1)+1)-tm(i,j,k+kd(1)))
+<               endif
+<               gami=(tm(i,j,k)-td)/hd
+< !              write(200+iam,*)i,j,'gami',k,gami,'tm',tm(i,j,k),'td',td,'hd',hd
+< !              call flush(200+iam)
+<               if(gami<=gamtp)then
+<                 ktp=k
+<                 wtp=(gamtp-gamu)/(max(gamd,gamtp+0.1e-3)-gamu)
+< !                write(200+iam,*)i,j,'ktp',ktp,'wtp',wtp,'gamu',gamu,'gamd',gamd
+< !                if(ktrop(i,j)/=ktp)then
+< !                  write(200+iam,*)'finddiff',i,j,ktrop(i,j),'ktp',ktp
+< !                  call flush(200+iam)
+< !                endif
+<                 exit
+<               endif
+<             endif
+<             gamd=gamu
+<           end do
+<           if(ktp>0)then
+<             ttrop=tm(i,j,ktp)-wtp*(tm(i,j,ktp)-tm(i,j,ktp-1))
+<             htp=zm(i,j,ktp)-wtp*(zm(i,j,ktp)-zm(i,j,ktp-1))
+<             ptp=p(ktp)*exp((zm(i,j,ktp)-htp)*(one-half*(ttrop/tm(i,j,ktp)-one))/(rd_over_g*tm(i,j,ktp)))
+< !            write(200+iam,*)'ttrop',ttrop,'htp',htp,'ptp',ptp
+< !            call flush(200+iam)
+<             ptropgsi(i,j)=ptp*100. ! Pa
+<             ztropgsi(i,j)=htp
+< !          if(ktp==klim(2).and.wtp==0.0)then
+< !           write(200+iam,*)'ptropraq',ptropraq(i,j),ztropraq(i,j)
+< !           write(200+iam,*)'ptropgsi',ptp,htp
+< !           write(200+iam,*)'errorktp',ktp,'i',i,j,'kbot',kbot,ktop
+< !           call flush(200+iam)
+< !           do k=kbot,ktop
+< !             write(200+iam,*)'gamk',k,gamk(k),'tm',p(k),tm(i,j,k)
+< !           end do
+< !           write(200+iam,*)'ktopp1',ktop+1,p(ktop+1),tm(i,j,ktop+1)
+< !           call flush(200+iam)
+< !          endif
+---
+>           end do ! k
+>           if(ptrop(i,j)<0.0)then
+>             write(6,*)'trop missing at',i,j
+Binary files raqms/raqms_model_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.mod differ
+diff -Bbw raqms/raqms_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_mod.F90
+36d35
+< use raqmschem_iodata_mod,only : dofirehr
+43d41
+<   use raqmschemcomm_mod, only : lcedsair,numcedsair
+57,58c55
+< integer,save :: idate(4),ihrplumeold
+< data ihrplumeold/0/
+---
+>   integer,save :: idate(4)
+76c73
+<         real(CHEM_KIND_R8) :: fhour,curr_secs
+---
+>   real(CHEM_KIND_R8) :: fhour
+99c96
+<         integer mpi_comm_chem,ihrplume
+---
+>   integer mpi_comm_chem
+124d120
+<         curr_secs=float(nstepat)*dts
+318,320d313
+<         tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) ! ajl add 6/16/2023
+<         tr3d_inout4(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms)
+<         tr3d_inout4(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) ! ajl end add 6/16/2023
+366,368d358
+<     tr3d_inout4(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl add 6/16/2023
+<     tr3d_inout4(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+<     tr3d_inout4(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,p_msa) ! ajl end add 6/16/2023
+403,417c393
+< ! so2 now ppm makd ppv for raqms
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 inputfrom gsdchem ',gsdchem_tr3d_inout8(ii,jj,k,p_so2),'tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+---
+> ! so2 now ppm
+421,434d396
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 input converted tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+512,515d473
+<     if(dofirehr)then
+<       plumestep=(mod(nstepat, max(1, int(60*plumerisefire_frq/dts))) == 1) & 
+<                         .or. (nstepat<= 1) 
+<     else
+518d475
+<     endif
+525,551c482,484
+<       if(allocated(data%bbco_hr))then
+<          ihrplume=h+1
+< !        read(cdate(9:10),*)ihrplume
+< !        ihrplume=ihrplume+1
+<         if(ihrplume/=ihrplumeold)then
+<           ihrplumeold=ihrplume
+<           if(iam.eq.0)then
+<             write(6,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+<             write(6,*)'raqmsuse plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+<             write(800,*)'raqms curr_secs',curr_secs,'nstepat',nstepat
+<             write(800,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+<             write(800,*)'raqms use plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+<             write(800,*)'path',cdate(1:4)//'/'//cdate(1:8)
+<             write(800,*)'raqms advancecount',advancecount,'nstepat',nstepat
+<             if(allocated(data%bbco_hr))then
+<               write(6,*)'allocated bbco_hr',shape(data%bbco_hr)
+<             endif
+<           endif
+<           bbco_d=data%bbco_hr(:,:,ihrplume)
+<           data%plume(:,:,1)=data%plume_hr(:,:,ihrplume)
+<         else
+<           if(iam.eq.0)then
+<           write(6,*)'call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+<           write(800,*)'raqms call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+<           endif
+<         endif
+<       endif
+---
+> !      if(iam.eq.0)then
+> !        write(6,*)'call plumerise ',nstepat
+> !      endif
+557,564d489
+<       if(.not.allocated(emisco3dave))then
+<         navgfire=0
+<         allocate (emisco3dave(ie-is+1,js:je,nl))
+<         emisco3dave=0.0
+<       endif
+<       emisco3dave=emisco3dave+emisco3d
+<       navgfire=navgfire+1
+< !      write(200+iam,*)'emisco3dave',maxval(emisco3dave),navgfire
+629,638d553
+< #ifdef DIAGCEDS
+<   if(iam==11)then
+<     write(6,*)'find ajl js',js,je
+<     flush(6)
+<   endif
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<     write(6,*)'on node ',js,je,'is',is,ie
+<     flush(6)
+<   endif
+< #endif
+673,678d587
+< #ifdef DIAGCEDS
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<       write(6,*)'ajl call maptochem',j
+<       flush(6)
+<    endif
+< #endif
+691,705c600
+< !     end#if
+< #ifdef DIAGCEDS
+<         if(tile==1.and.iam==11.and.j==31)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2grdbefore doloop ',chemlocal%so2grd(ii,k)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+---
+> !     endif
+707,720d601
+< #ifdef DIAGCEDS
+<         if(tile==1.aNd.iam==1.and.j==31)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2grdafter doloop ',chemlocal%so2grd(ii,k)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+727,734d607
+< #ifdef DIAGCEDS
+<   if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+<       write(6,*)'ajl call mapfromchem',j,'js',js,je,'is',is,ie
+<       write(6,*)'lbound ',lbound(gsdchem_tr3d_inout8),'ub',ubound(gsdchem_tr3d_inout8)
+<       write(6,*)'lboundtr3d',lbound(tr3d_out),'ub',ubound(tr3d_out)
+<       flush(6)
+<    endif
+< #endif
+736,751d608
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<                 write(6,*)k,'so2 new after from',tr3d_out(ii,jj,k,p_so2) *1.e6
+<                 write(6,*)k,'diff so2',tr3d_out(ii,jj,k,p_so2) *1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+795,801d651
+<       if(lcedsair)then
+<         if(mchem==p_bc1.or.mchem==p_bc2.or.mchem==p_oc1.or.mchem==p_oc2) cycle
+<         if(mchem==p_so2) cycle
+<       endif
+< !      if(mchem==p_bc1.or.mchem==p_oc1.or.mchem==p_so2.and.iam==11)then
+<         !write(6,*)'mchem error ',mchem,p_bc1,p_oc1,p_so2
+< !      endif
+808,809d657
+<       if(.not.lcedsair)then
+<       endif
+984,1029d831
+<   if(lcedsair)then
+<     do j=1,numcedsair
+<       select case(ccedsair(j))
+<       case ('BC')
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'bc1 old ',gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+<                 write(6,*)k,'bc new ',tr3d_out(ii,jj,k,p_bc1) 
+<                 write(6,*)k,'diff bc',tr3d_out(ii,jj,k,p_bc1) -gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+<         gsdchem_tr3d_inout8(:,:,:,p_bc1)=tr3d_out(:,:,:,p_bc1)
+<         gsdchem_tr3d_inout8(:,:,:,p_bc2)=tr3d_out(:,:,:,p_bc2)
+<       caSe ('OC')
+<         gsdchem_tr3d_inout8(:,:,:,p_oc1)=tr3d_out(:,:,:,p_oc1)
+<         gsdchem_tr3d_inout8(:,:,:,p_oc2)=tr3d_out(:,:,:,p_oc2)
+<       caSe ('SO2')
+< #ifdef DIAGCEDS
+<         if(tile==1)then
+<           if(is<=178.and.ie>=178)then
+<             if(js<=31.and.je>=31)then
+<               ii=178-is+1
+<               jj=31-js+1
+<               do k=1,64
+<                 write(6,*)k,'bottom return so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<                 write(6,*)k,'bottom return so2 new ',tr3d_out(ii,jj,k,p_so2)*1.e6
+<                 write(6,*)k,'bottom return diff so2',tr3d_out(ii,jj,k,p_so2)*1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+<               end do
+<               flush(6)
+<             endif
+<           endif
+<         endif
+< #endif
+<         gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_out(:,:,:,p_so2) *1.e6 ! ajl 6/16/2023 back toppm
+<       end select
+<     end do
+<   endif
+1055,1057d856
+<       gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) *1.e6 ajl 6/16/2023 back toppm
+<       gsdchem_tr3d_inout8(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms) *1.e6
+<       gsdchem_tr3d_inout8(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) *1.e6 end ajl 6/16/20203
+1074,1076d872
+<       tr3d_out(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl 6/16/2023
+<       tr3d_out(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+<       tr3d_out(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,msa) ! end ajl 6/16.2023
+1135,1146d930
+< 
+<  do j=js,je
+<    jj=j-js+1
+<    do i=is,ie
+<      ii=i-is+1
+<      do k=1,nl
+<        if(abs(tr3d_inout4(i,j,k,p_sulf)-gsdchem_tr3d_inout8(ii,jj,k,p_sulf))>1.e-22)then
+<          write(6,*)'diffsulf',i,j,k,p_sulf,tr3d_inout4(i,j,k,p_sulf),gsdchem_tr3d_inout8(ii,jj,k,p_sulf)
+<        endif
+<      enddo
+<     end do
+<   end do
+Binary files raqms/raqms_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_mod.mod differ
+Binary files raqms/seasalt_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/seasalt_mod.mod differ
+Binary files raqms/vertmx_driver_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/vertmx_driver_mod.mod differ
+Binary files raqms/vertmxv_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/vertmxv_mod.mod differ
+Binary files raqms/wetdep_alpha_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_alpha_mod.mod differ
+Binary files raqms/wetdep_fam_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_fam_mod.mod differ
+Binary files raqms/wetdep_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_mod.mod differ
+Binary files raqms/wetdep_prep_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/wetdep_prep_mod.mod differ

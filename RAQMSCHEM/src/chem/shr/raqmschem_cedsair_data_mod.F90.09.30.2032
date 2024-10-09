@@ -1,0 +1,229 @@
+module raqmschem_cedsair_data_mod
+use raqmschem_cedsair_mod
+contains
+  subroutine cedsair_init_data(m,ids,ide,jds,jde,tile,pathin,cmonth)
+  use raqmschem_config_mod, only : cedsairemis_opt
+  use raqmschem_cedsair_mod, only : lcedsair,cedsairstep,numcedsair
+  use raqmschem_cedsair_mod, only : p_ceds_co,p_ceds_nox,p_ceds_so2,p_ceds_bc
+  use raqmschem_cedsair_mod, only : p_ceds_oc,p_ceds_n2o
+  use raqmschem_pmgrid_mod, only : iam,strip
+  implicit none 
+  character *256 file,ctile*1,ccedsairin*50
+  character *(*) pathin,cmonth
+  integer m,nlevin,k,i,j,ids,ide,jds,jde,igot
+  integer is(10),ie(10),tile,n,ii
+  real*4,allocatable :: air3d(:,:,:)
+  integer,parameter :: nlnairceds=25
+  real*4 :: altair(nlnairceds)
+
+  if(cedsairemis_opt==1)then
+      ccedsairin='CO NOx N2O' 
+      numcedsair=3
+      lcedsair=.true.
+!    else 
+!      call getenv('CCEDSAIR',ccedsairin)
+    call strip(ccedsairin,is,ie,9,igot)
+!    numcedsair=igot
+    do k=1,numcedsair
+      ccedsair(k)=ccedsairin(is(k):ie(k))
+      select caSe (ccedsair(k))
+      case ('CO')
+        p_ceds_co=k
+      case ('NOx')
+        p_ceds_nox=k
+      case ('SO2')
+        p_ceds_so2=k
+      case ('BC')
+        p_ceds_bc=k
+      case ('OC')
+        p_ceds_oc=k
+      case ('N2O')
+        p_ceds_n2o=k
+      case default
+        write(6,*)'bad ceds cehm',ccedsair(k)
+        call killit('stop cedsin')
+      end select
+    end do
+    endif
+    if(iam==0)then
+      write(6,*)'numcedsair',numcedsair
+      write(6,*)'P_ceds_co',p_ceds_co,'nox',p_ceds_nox,'n2o',p_ceds_n2o
+      do k=1,numcedsair
+        write(6,*)'cedsair',k,ccedsair(k)
+      end do
+    endif
+    write(ctile,'(i1.1)')tile
+!          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+        file='tile'//ctile//'/emi_CO-AIR_molpercm2persec.dat'
+        open(10,file=trim(pathin)//trim(cmonth)//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+!        if(iam==0.and.tile==1)then
+!        write(6,*)'nlevin',nlevin
+!        call flush(6)
+!        endif
+        read(10)altair
+!        if(iam==0.and.tile==1)then
+!        write(6,*)'altair',altair
+!        call flush(6)
+!        endif
+        if(.not.allocated(intaltair))then
+          allocate (intaltair(0:nlnairceds))
+        endif
+        intaltair(0)=0
+        intaltair(1)=2.*altair(1)
+        do k=2,nlnairceds
+          intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+        end do
+!        if(iam==0)then
+!          do k=1,nlnair
+            !write(6,*)k,altair(k),intaltair(k)
+!          end do
+!        endif
+        allocate(air3d(192,192,nlnairceds))
+        read(10)air3d
+!        do j=jds,jde
+!          do i=ids,ide
+            !srccoair(i-ids+1,j,:)=air3d(i,j,:)
+!          end do
+        !end do
+!        if(iam==0.and.tile==1)then
+!        write(6,*)'srccoair',maxval(srccoair),minval(srccoair)
+!        call flush(6)
+!        endif
+        close(10)
+        file='tile'//ctile//'/emi_NOx-AIR_molpercm2persec.dat'
+        open(10,file=trim(pathin)//trim(cmonth)//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        read(10)altair
+!        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+!        do j=jds,jde
+!          do i=ids,ide
+!            srcnair(i-ids+1,j,:)=air3d(i,j,:)
+!          end do
+        !end do
+!        if(iam==0)then
+!        write(6,*)'srccoair',maxval(srcnair),minval(srcnair)
+!        call flush(6)
+!        endif
+
+        close(10)
+        if(.not.allocated(intcedsair).and.numcedsair/=0)then
+!          if(tile==1.and.ids<=190.and.190<=ide)then
+!            write(6,*)'ids',ids,ide,'jds',jds,jde
+!          endif
+          allocate(intcedsair(ide-ids+1,jds:jde,0:nlnairceds,numcedsair))
+          intcedsair=0.0
+          allocate(ktopcedsair(ide-ids+1,jds:jde,numcedsair))
+          allocate(kbotcedsair(ide-ids+1,jds:jde,numcedsair))
+          ktopcedsair=0
+          kbotcedsair=0
+          do n=1,numcedsair
+            file='tile'//ctile//'/emi_'//trim(ccedsair(n))//'-AIR_molpercm2persec.dat'
+            open(10,file=trim(pathin)//trim(cmonth)//'/'//trim(file), &
+            convert='big_endian',form='unformatted')
+            read(10)nlevin
+            if(iam==75.and.n==1)then
+              write(6,*)'nlevin',nlevin
+              call flush(6)
+            endif
+            read(10)altair
+            if(iam==75.and.n==1)then
+              write(6,*)'altair',altair
+              call flush(6)
+            endif
+            if(n==1)then
+              intaltair(0)=0
+              intaltair(1)=2.*altair(1)
+              do k=2,nlnairceds
+                intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+              end do
+              if(iam==75)then
+                do k=1,nlnair
+                  write(6,*)k,altair(k),intaltair(k)
+                end do
+              endif
+              if(.not.allocated(air3d))then
+              allocate(air3d(192,192,nlnairceds))
+              endif
+            endif
+            read(10)air3d
+!           need to handle fact that bc and oc are ug/kg not ppv
+!           mult molec * mwbc/airmw
+!           fix 18:23 8/12/2023
+            if(ccedsair(n)=='BC')then
+              air3d=air3d*tcmw(1)/airmw
+            elseif(ccedsair(n)=='OC')then
+              air3d=air3d*tcmw(2)/airmw
+            endif
+            do j=jds,jde
+             do i=ids,ide
+               ii=i-ids+1
+               do k=1,nlnairceds
+                 intcedsair(i-ids+1,j,k,n)=intcedsair(i-ids+1,j,k-1,n)+air3d(i,j,k)
+                 if(kbotcedsair(ii,j,n)==0.and.air3d(i,j,k)/=0.)then
+                   kbotcedsair(ii,j,n)=k
+                 endif
+!                 if(i==190.and.j==47.and.n==3.and.tile==1)then
+!                   write(6,*)'kbotcedsair',ii,'kbot',kbotcedsair(ii,j,n),'air3d',air3d(i,j,k)
+                 !endif
+                 if(air3d(i,j,k)/=0.0)then
+                   ktopcedsair(ii,j,n)=k
+                 endif
+!                 if(i==141.and.j==192.and.tile==1.and.ccedsair(n)=='SO2')then
+!                   write(6,*)'so2air3d',k,air3d(i,j,k),'intcedsair',intcedsair(i-ids+1,j,k,n)
+!                   write(6,*)'kbot',kbotcedsair(ii,j,n),'ktop',ktopcedsair(ii,j,n)
+!                 endif
+#ifdef DIAGCEDSAIR
+!              if(iam==75.and.n==1.and.i==1.and.j==25)then
+              if(tile==5)then
+                if(air3d(i,j,k)/=0.0)then
+                   write(6,*)trim(ccedsair(n)),i,j,'k',k,'intcedsair','iloc',i-ids+1,intcedsair(i-ids+1,j,k,n),'air3d',air3d(i,j,k)
+                   flush(6)
+                endif
+              endif
+#endif
+               end do
+             end do
+            end do
+#ifdef DIAGCEDSAIR
+!            if(iam==75.or.iam==11)then
+             if(tile==5)then
+               write(6,*)'srccedsair',n,trim(ccedsair(n)),maxval(intcedsair(:,:,:,n))
+               call flush(6)
+            endif
+#endif
+            close(10)
+          end do ! n
+!          if(tile==1.and.ids<=190.and.190<=ide.and.jds<=47.and.47<=jde)then
+!             write(6,*)'kbotcedsair',kbotcedsair(190-ids+1,47,:)
+!          endif
+#ifdef DIAGCEDSAIR
+          if(iam==75.and.jds<=25.and.jde>=25)then
+!          if(tile==5)then
+            do k=1,maxval(ktopcedsair(:,:,1))
+              write(6,*)'75 intcedsair',k,maxval(intcedsair(:,:,k,1)),minval(intcedsair(:,:,k,1))
+            end do
+            write(6,*)'751,24 kbot',kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+            do k=kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+              write(6,*)'75 intcedsair',k,intcedsair(1,25,k,1)
+            end do
+            
+          endif
+#endif
+ 
+        endif
+!        if(.not.allocated(intcoair))then
+!          allocate(intcoair(ide-ids+1,jds:jde,0:nlnair))
+!          allocate(intnoxair(ide-ids+1,jds:jde,0:nlnair))
+!          intcoair(:,:,0)=0.0
+!          intnoxair(:,:,0)=0.0
+!          do k=1,nlnair
+!            intcoair(:,:,k)=intcoair(:,:,k-1)+srccoair(:,:,k)
+!            intnoxair(:,:,k)=intnoxair(:,:,k-1)+srcnair(:,:,k)
+          !end do
+!        endif
+  end subroutine cedsair_init_data
+end module raqmschem_cedsair_data_mod

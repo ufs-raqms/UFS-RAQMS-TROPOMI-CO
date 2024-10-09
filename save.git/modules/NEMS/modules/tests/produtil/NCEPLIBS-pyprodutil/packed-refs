@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+ed353c68d23d4d4f5f7ba7de5b070b34f02ea46e refs/remotes/origin/HAFS
+e12cfbb35d8f5f87f8c2962817d86866bf4acb3d refs/remotes/origin/dell-produtil
+27bded2d0bf7c75231e271033e0030b2b014be9e refs/remotes/origin/develop
+6b9c1751af4313a89dad69a4bf1fa382d8e0eb26 refs/remotes/origin/hwrfv12.1
+ed353c68d23d4d4f5f7ba7de5b070b34f02ea46e refs/remotes/origin/master
+3a6b7f26b7be3cafc9fd2d8261d1efc6737d839e refs/remotes/origin/metplus-python2
+0335fbabed4f6f1fa0201b4b74a3b52bcfdcf1a0 refs/remotes/origin/metplus-python3
+01690f0fdc3cc2751d2bf03da667c2921d0d9b2d refs/remotes/origin/multi-prog-resurrection
+962cbd5ab44c6bccdcda21776d9e4297ce443d6d refs/remotes/origin/port-2-hera
+f3c86ff6e9d9a45772870052dad06beb77cbee9e refs/remotes/origin/slurm
+d376a923a1dc3434d8d772019cce7a5e48120988 refs/remotes/origin/slurm-v2
+ed353c68d23d4d4f5f7ba7de5b070b34f02ea46e refs/remotes/origin/slurm_old_and_new
+2e5352da9f9c1873b00b1800d6f216f7ad2f849c refs/remotes/origin/slurm_totaltasks

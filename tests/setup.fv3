@@ -1,0 +1,5 @@
+#!/bin/bash 
+export RUNDIR=$PWD/rundir
+#export PATHRT=/home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM//tests/
+export NEW_BASELINE=here
+export FV3X=fv3gfs.x

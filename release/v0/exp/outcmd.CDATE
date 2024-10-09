@@ -1,0 +1,1 @@
+sed -i s/CDATEIN/$CDATE/ runjob.submit.o3.CONTROL.SAMFCHEM.v91.fv3.esrl.nstf.20.scr

@@ -1,0 +1,56 @@
+Common subdirectories: chem/aero and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/aero
+Common subdirectories: chem/cedsair and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/cedsair
+Binary files chem/chem_methods.mod and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/chem_methods.mod differ
+Binary files chem/chm.mod and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/chm.mod differ
+Common subdirectories: chem/dep and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dep
+Common subdirectories: chem/dust and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/dust
+Common subdirectories: chem/gocart and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/gocart
+Binary files chem/libgsdchem.a and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/libgsdchem.a differ
+Binary files chem/libgsdchem_a-chemCap.o and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/libgsdchem_a-chemCap.o differ
+Binary files chem/libgsdchem_a-chem_methods.o and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/libgsdchem_a-chem_methods.o differ
+diff -Bbw chem/Makefile /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/Makefile
+242c242
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing aclocal-1.15
+246,248c246,248
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing automake-1.15
+279c279
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/missing makeinfo
+296,299c296,299
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM
+---
+> abs_builddir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem
+> abs_srcdir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem
+> abs_top_builddir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM
+> abs_top_srcdir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM
+313c313
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+321,322c321,322
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/build-aux/install-sh
+> libdir = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+330c330
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+---
+> prefix = /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/GSDCHEM_INSTALL
+Common subdirectories: chem/opt and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/opt
+Common subdirectories: chem/plume and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/plume
+Common subdirectories: chem/seas and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/seas
+Common subdirectories: chem/shr and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/shr
+Common subdirectories: chem/vash and /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/GSDCHEM/src/chem/vash

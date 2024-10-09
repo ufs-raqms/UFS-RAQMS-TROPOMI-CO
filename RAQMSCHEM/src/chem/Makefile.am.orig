@@ -1,0 +1,20 @@
+SUBDIRS = shr raqms .
+
+lib_LIBRARIES = libraqmschem.a
+
+include $(ESMFMKFILE)
+
+libraqmschem_a_LIBADD  = shr/*.$(OBJEXT) raqms/*.$(OBJEXT)
+
+
+libraqmschem_a_FCFLAGS  = -nowarn -I . -I shr -I../../../FV3/gfsphysics -I../../../GSDCHEM/src/chem/shr -I raqms
+libraqmschem_a_FFFLAGS  = -nowarn -I . -I shr -I../../../FV3/gfsphysics -I../../../GSDCHEM/src/chem/shr -I raqms
+libraqmschem_a_FCFLAGS += $(ESMF_F90COMPILEOPTS) $(ESMF_F90COMPILEPATHS) $(ESMF_F90COMPILEFREECPP) $(ESMF_F90COMPILECPPFLAGS)
+
+libraqmschem_a_SOURCES = raqmschemCap.F90 raqmschem_methods.F90
+
+clean-local:
+	-rm -f *.mod *.o *.a
+
+libraqmschem_a-raqmschemCap.$(OBJEXT): libraqmschem_a-raqmschem_methods.$(OBJEXT)
+libraqmschem_a-raqmschem_methods.$(OBJEXT): $(builddir)/shr/libshr.a $(builddir)/raqms/libraqms.a 

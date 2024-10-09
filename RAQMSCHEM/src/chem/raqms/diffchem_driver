@@ -1,0 +1,16 @@
+89d88
+<       use raqmschemcomm_mod, only : bbco_hr
+1029d1027
+<       use raqmschemcomm_mod, only : bbco_hr
+3552,3553d3549
+< !        write(6,*)'call do_chem',ibeg+i-1,j,l
+< !        call flush(6)
+3689,3696d3684
+< #endif
+< #ifdef DIAGCO
+<         coften_save(i,j,ip) = coften_save(i,j,ip)+coprodloss(1)/dens
+<         codten_save(i,j,ip) = codten_save(i,j,ip)+coprodloss(2)/dens
+<         coresidual=(cotend-(coprodloss(1)-coprodloss(2)-coprodloss(3)))/dens
+<         if(abs(coresidual)>1.e20)then
+<           write(6,*)'coresidual',i,j,ip,coresidual
+<         endif

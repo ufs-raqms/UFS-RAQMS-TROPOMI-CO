@@ -1,0 +1,1331 @@
+module raqms_mod
+use chem_rc_mod
+use chem_types_mod,only : CHEM_KIND_R8,CHEM_KIND_R4
+contains
+subroutine raqms_advance(de,dts,advancecount, &
+                pr3d, &
+                prl3d, &
+                tk3d, &
+                u3d, &
+                v3d, &
+                ws3d, &
+                ph3d, &
+                phl3d, &
+                rn2d, &
+                rc2d, &
+                tr3d_in8, &
+                gsdchem_tr3d_inout8, &
+                vtype2d, &
+                exch, &
+                dqdt, &
+                tr3d_out, &
+                ntra, &
+                nbegin, &
+                numgas, &
+                num_moist, &
+nchem, &
+deg_lon,deg_lat, &
+yy,mm,dd,h,m,s,tz,juldayin, &
+is, ie, js, je, nbin, nl, &
+iso, ieo, jso, jeo, nbo, ni, &
+data,doaod, &
+rc)
+use mpi
+use chem_comm_mod, only : chem_comm_get
+use raqmschem_data_mod, only : chem_data_type
+use raqmschem_iodata_mod,only : dofirehr
+use field_manager_mod, only : find_field_index
+use raqmschem_species_mod
+use raqmschem_pmgrid_mod, only : initraqmschem_pmgrid,iam,masterproc,begj,endj,nc,nstepat,iprn,jprn, &
+iprnin,jprnin,kprnin,iamprn,tile,nhtuw,juldayat,aerosol_ugpkg,aerosol_in_old
+!  use raqmschemcomm_mod, only : allocatechemcommperm,allocatechemcommtemp,deallocatechemcommtemp
+!  use raqmschemcomm_mod, only : deallocatechemcommperm
+!  use raqmschemcomm_mod, only : lcedsair,numcedsair,cedsairstep
+  use raqmschem_cedsair_mod, only : lcedsair,numcedsair,cedsairstep
+use raqmschemcomm_mod
+use raqmschemlocaltype_mod
+use raqmschem_map_mod
+use raqmschem_model_mod, only : chem_model_get => raqmschem_model_get
+use raqmschem_const_mod, only : mw_so4_aer,epsilc2
+use chem_const_mod, only : grvity
+use wetdep_mod
+use raqms_plume_mod, only : raqms_plumerise_driver
+use raqmschem_config_mod, only : cedsairemis_frq
+implicit none
+include 'comtim.H'
+#include <comcdate.h>
+integer localrec,is,ie,js,je,nl,yy,mm,dd,h,m,ntra,numgas,nbin,s,nbegin
+        integer iso,ieo,jso,jeo,nbo,ni,tz,npts,de,numi,numj,num_moist
+integer,save :: idate(4),ihrplumeold
+data ihrplumeold/0/
+        integer advancecount,mype,iprint,ndate
+        integer,optional :: rc
+        real(CHEM_KIND_R8), intent(in) :: dts
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: pr3d,exch,dqdt
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: prl3d
+        real(CHEM_KIND_R8), dimension(:, :, :), intent(in)  :: tk3d,u3d,v3d,ph3d,phl3d,ws3d
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in8
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(inout)  :: gsdchem_tr3d_inout8
+        real(CHEM_KIND_R4), dimension(is:ie,js:je,nl,nchem) :: tr3d_inout4
+        real(CHEM_KIND_R8), dimension(:,:), intent(in) :: rn2d,rc2d,vtype2d
+        real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
+        real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
+        real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
+        !  real(CHEM_KIND_R8), dimension(is:ie,js:je,nl) :: delp,diffozone
+        real(CHEM_KIND_R8), dimension(is:ie,js:je,nl) :: diffozone
+        integer jindx1(is:ie,js:je),jindx2(is:ie,js:je),i,j,k,n
+        real(CHEM_KIND_R8), dimension(is:ie,js:je) :: ddy
+        real(CHEM_KIND_R8) :: fhour,curr_secs
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: dens,difftrace
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: difftrace
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je) :: sorcpar
+        !  real(CHEM_KIND_R4),dimension(is:ie,js:je) :: dz ! cm
+        real(CHEM_KIND_R8),dimension(is:ie) :: draw2d
+        real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: dzaod
+        real(CHEM_KIND_R4),dimension(is:ie,js:je,nl) :: rv3d
+        real caldayfv
+        logical  :: first=.true.
+        logical  :: ldiag3d=.false.
+        logical :: doaod
+        character *20 setall
+        real*8 latat,lonat
+        real(CHEM_KIND_R8) :: chemutc,hrchemutc,hrout
+
+        type(chem_data_type) :: data
+        integer ip,jp,mchem,nchem,juldayin,ii,jj,ierr
+        type(chemlocaltype) :: chemlocal
+        integer mbcurfv,mscurfv,mcdatefv,mcsecfv,localrc
+        character *10 cwetdep,cenv
+        logical dowetdep,plumestep
+        real(CHEM_KIND_R8) :: wallchem,wallchemcum,rtime1
+        integer mpi_comm_chem,ihrplume
+        data dowetdep/.true./
+        save dowetdep,wallchemcum
+!        REAL,    PARAMETER :: airmw    = 28.97
+        real,    parameter :: mwo3=47.98
+        save first
+
+
+        !  if(first)then
+        !    if(mype.eq.0)then
+        !      write(6,*)'p_co',p_co,' p_no2 ',p_no2
+!      call flush(6)
+        !      write(6,*)'raqmsustar',maxval(ustar),minval(ustar)
+        !     write(6,*)'raqms cmdrag',maxval(cmdrag),minval(cmdrag)
+        !     write(6,*)'raqms slmsk2d',maxval(slmsk2d),minval(slmsk2d)
+        !     endif
+        !  endif
+        !  write(6,*)'exch',shape(exch)
+        !  do k=1,nl
+        !    write(6,*)k,'exhc',maxval(exch(:,:,k)),minval(exch(:,:,k))
+        !  end do
+        julday=juldayin
+        !  write(6,*)'correct juldayin',juldayin
+!  call flush(6)
+        nstepat=advancecount
+        curr_secs=float(nstepat)*dts
+        call chem_comm_get(localpe=mype)
+        call chem_model_get(modelcomm=mpi_comm_chem,rc=ierr)
+npts=(je-js+1)*(ie-is+1)
+        ! note 1 is at sfc in FV3 GFS
+        !  do k=1,nl
+        !    write(6,*)'pr3d',k,maxval(pr3d(:,:,k))
+        !  end do
+!  call flush(6)
+        !  do k=1,nl
+        !    do j=js,je
+        !      jp=j-js+1
+        !      do i=is,ie
+        !        ip=i-is+1
+        !        delp(i,j,k)=pr3d(ip,jp,k)-pr3d(ip,jp,k+1)
+!        dens(i,j,k)=7.2431122e+18*prl3d(ip,jp,k)/tk3d(ip,jp,k)
+        !      end do
+        !    end do
+        !  end do
+        !  numi=ie-is+1
+        !  numj=je-js+1
+!  call initraqmschem_pmgrid(numi,numj,nl,js,je,12,mype)
+        !  call allocatechemcommperm
+        !  call allocatechemcommtemp
+        idate(1)=h
+        idate(2)=mm
+        idate(3)=dd
+        idate(4)=yy
+        !  write(6,*)'shape4',shape4
+        !  write(6,*)'ntra',ntra,'nchem',nchem
+!  call flush(6)
+        write(cdate,'(i4.4,3i2.2)')yy,mm,dd,h
+        !  if(mype.eq.0)then
+        !  write(6,*)'cdate fv3 ',cdate
+!  call flush(6)
+        !  endif
+        ! first step might be after timestep
+        !  fhour=float(advancecount+1)*dts/3600.
+        fhour=float(advancecount)*dts/3600. ! since inc advancecount 4/6/2022
+        if(mype.eq.0)then
+        write(6,*)'fhour',fhour,'idate',idate
+call flush(6)
+        endif
+        !  nstep=advancecount+1
+        nstep=advancecount ! since inc advancecount 4/6/2022
+        dtime=dts
+        if(first)then
+        if(iam.eq.150)then
+        write(6,*)'is',is,ie,'js',js,je
+call flush(6)
+        endif
+        wallchemcum=0.0
+        cwetdep=' '
+        call getenv('WETDEP',cwetdep)
+        if(cwetdep.ne.' ')then
+        if(cwetdep.eq.'NO')then
+        write(6,*)'turn off wetdep'
+call flush(6)
+        dowetdep=.false.
+        endif
+        endif
+        nnbdat=(mod(yy,100)*100+mm)*100+dd
+        !    nnbsec=fhour*3600.
+        nnbsec=h*3600.+m*60.
+
+
+        mbdate=(yy*100+mm)*100+dd
+        !  write(6,*)'mbdate ',mbdate,' yy ',yy,mm,dd,'julday',julday
+!  call flush(6)
+        mbsec=0
+        endif
+        ! ajl try caldyi here to get date we need since ours is one dts greater than
+        ! input
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+        write(6,*)'nnbdat',nnbdat,'nnbsec',nnbsec,'mbdate',mbdate,'mbsec',mbsec
+        endif
+call advdatehr(yy,mm,dd,h,m,s,dts,ndate,julday,hrout)
+        chemutc=hrout
+        gmt=hrout
+        write(cdate,'(i10.10)')ndate
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+        write(6,*)'cdate new',cdate
+        endif
+#ifdef OLDCAL
+        call caldyi(nstep,dtime,nnbdat,nnbsec,mbdate,mbsec, &
+                        mbcurfv,mscurfv,mcdatefv,mcsecfv,caldayfv)
+        ! caldayfv does not have julian feb while fv3gfs does
+        !  write(200+iam,*)nstep,'nnbdat',nnbdat,'sec',nnbsec
+        !  write(200+iam,*)'mbdate',mbdate,mbsec
+        !  write(200+iam,*)'mbcurfv',mbcurfv,mscurfv
+        !write(200+iam,*)'mcdatefv',mcdatefv,'mcsecfv',mcsecfv
+        !  write(200+iam,*)'caldayfv',caldayfv
+!  call flush(200+iam)
+        if(mype.eq.0)then
+        write(6,*)'mcdatefv',mcdatefv,'mcsecfv',mcsecfv,'caldayfv',caldayfv
+        write(6,*)'hour',mcsecfv/3600.,'julday',julday
+        !  endif
+        !   had only for mype.eq.0 error 3/25/2019
+        !      julday=int(caldayfv)+1
+        !  if(mype.eq.0)then
+        !      write(6,*)'julday error chem',julday
+        endif
+        write(cdate,'(i8.8,i2.2)')mcdatefv,int(mcsecfv/3600.)
+        if(mype.eq.0)then
+        write(6,*)'cdatenew ',cdate,'mcsecfv',mcsecfv,'mscurfv',mscurfv
+        write(6,*)'caldayfv',caldayfv
+        endif
+        ! we assumed that were dts later in raqms
+        !  chemutc=float(h)+float(m)/60.+float(s)/3600.
+        !  caldayfv wont match julday if leap year since ccm3 did not do leap year so
+        !  don't use it for julday
+        chemutc=float(mcsecfv)/3600.
+        if(chemutc>=24.0)then
+        julday=julday+1
+        chemutc=chemutc-24.0
+        endif
+        gmt=chemutc
+#endif
+
+        dy_jdgmt=float(julday)+chemutc/24.0
+        juldayat=dy_jdgmt
+        if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+          write(6,*)'chemutc',chemutc,'dtime',dtime,'gmt',gmt,'dy_jdgmt',dy_jdgmt
+        endif
+        !  write(6,*)'call chem_driver ',julday
+!  call flush(6)
+        !  write(300+iam,*)'before chem_driver',nstepat,'dy_jdgmt',dy_jdgmt
+!  call flush(300+iam)
+        !  write(200+iam,*)'call chem_driver julday',julday
+        !  call flush(200+iam)
+        !  call mpi_barrier(mpi_comm_chem,rc)
+call chem_driver(julday)
+        !  write(200+iam,*)'did call chem_driver julday',julday
+        !  call flush(200+iam)
+!  call mpi_barrier(mpi_comm_chem,rc)
+        !  write(300+iam,*)'after chem_driver',nstepat
+        !  call flush(300+iam)
+!  call mpi_barrier(mpi_comm_chem,rc)
+        !  write(6,*)'after chem_drive ',mbdate
+!  call flush(6)
+        !  write(200+iam,*)'lbound prl3d',lbound(prl3d),ubound(prl3d),'js',js,je,'begj',begj,endj
+!  call flush(200+iam)
+        !  write(6,*)'js',js,je
+!  call flush(6)
+        !  write(6,*)'rn2d',maxval(rn2d),' rc2d ',maxval(rc2d)
+!  call flush(6)
+        tr3d_inout4=tr3d_in8
+#if 0
+        do n=1,nchem
+        do j=js,je
+        do i=is,ie
+        do k=1,nl
+        if(isnan(tr3d_inout4(i,j,k,n)))then
+        write(6,*)'chem NaN ',i,j,k,n
+        endif
+        end do
+        end do
+        end do
+        end do
+#endif
+
+        do j=js,je
+        do i=is,ie
+        do k=1,nl
+        if(tr3d_inout4(i,j,k,P_co)<-1.e-20)then
+          write(200+iam,*)nstepat,'co neg input ',i,j,k,tr3d_inout4(i,j,k,p_co),'tile',tile
+          call flush(200+iam)
+        endif
+        end do
+        end do
+        end do
+        o3mr=tr3d_inout4(:,:,:,p_atm_o3mr)
+        ! need to convert from wrf units to what raqms wants for aerosols
+        !  if(iam.eq.iamprn)then
+        !     write(6,*)'dustin',tr3d_inout4(iprnin,jprnin,1,p_dust1)
+        !  endif
+        ! copy is gschem aerosol values
+        ! new 10/14/2021 gsdchem_tr3d instead of tr3d to get updated aerosols
+#if 0
+ if(aerosol_in_old)then
+   if(aerosol_ugpkg)then
+        tr3d_inout4(:,:,:,p_bc1)=tr3d_in8(:,:,:,p_bc1)
+        tr3d_inout4(:,:,:,p_bc2)=tr3d_in8(:,:,:,p_bc2)
+        tr3d_inout4(:,:,:,p_oc1)=tr3d_in8(:,:,:,p_oc1)
+        tr3d_inout4(:,:,:,p_oc2)=tr3d_in8(:,:,:,p_oc2)
+        tr3d_inout4(:,:,:,p_dust1)=tr3d_in8(:,:,:,p_dust1)
+        tr3d_inout4(:,:,:,p_dust2)=tr3d_in8(:,:,:,p_dust2)
+        tr3d_inout4(:,:,:,p_dust3)=tr3d_in8(:,:,:,p_dust3)
+        tr3d_inout4(:,:,:,p_dust4)=tr3d_in8(:,:,:,p_dust4)
+        tr3d_inout4(:,:,:,p_dust5)=tr3d_in8(:,:,:,p_dust5)
+        tr3d_inout4(:,:,:,p_seas1)=tr3d_in8(:,:,:,p_seas1)
+        tr3d_inout4(:,:,:,p_seas2)=tr3d_in8(:,:,:,p_seas2)
+        tr3d_inout4(:,:,:,p_seas3)=tr3d_in8(:,:,:,p_seas3)
+        tr3d_inout4(:,:,:,p_seas4)=tr3d_in8(:,:,:,p_seas4)
+        tr3d_inout4(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)
+        tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) ! ajl add 6/16/2023
+        tr3d_inout4(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms)
+        tr3d_inout4(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) ! ajl end add 6/16/2023
+        if(tile==5)then
+          write(6,*)'bc1',is,ie,js,je,maxval(tr3d_inout4(:,:,:,p_bc1))
+          write(6,*)'so2',is,ie,js,je,maxval(tr3d_inout4(:,:,:,p_so2))
+        endif
+    else
+     tr3d_inout4(:,:,:,p_bc1)=tr3d_in8(:,:,:,p_bc1)*1.e-9*airmw/tcmw(idbc1)
+    tr3d_inout4(:,:,:,p_bc2)=tr3d_in8(:,:,:,p_bc2)*1.e-9*airmw/tcmw(idbc2)
+    tr3d_inout4(:,:,:,p_oc1)=tr3d_in8(:,:,:,p_oc1)*1.e-9*airmw/tcmw(idoc1)
+    tr3d_inout4(:,:,:,p_oc2)=tr3d_in8(:,:,:,p_oc2)*1.e-9*airmw/tcmw(idoc2)
+    tr3d_inout4(:,:,:,p_dust1)=tr3d_in8(:,:,:,p_dust1)*1.e-9
+    tr3d_inout4(:,:,:,p_dust2)=tr3d_in8(:,:,:,p_dust2)*1.e-9
+    tr3d_inout4(:,:,:,p_dust3)=tr3d_in8(:,:,:,p_dust3)*1.e-9
+    tr3d_inout4(:,:,:,p_dust4)=tr3d_in8(:,:,:,p_dust4)*1.e-9
+    tr3d_inout4(:,:,:,p_dust5)=tr3d_in8(:,:,:,p_dust5)*1.e-9
+    tr3d_inout4(:,:,:,p_seas1)=tr3d_in8(:,:,:,p_seas1)*1.e-9
+    tr3d_inout4(:,:,:,p_seas2)=tr3d_in8(:,:,:,p_seas2)*1.e-9
+    tr3d_inout4(:,:,:,p_seas3)=tr3d_in8(:,:,:,p_seas3)*1.e-9
+    tr3d_inout4(:,:,:,p_seas4)=tr3d_in8(:,:,:,p_seas4)*1.e-9
+!   now sulf is ug/kg covert back to ppv for raqms
+       tr3d_inout4(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)*1.e-9*airmw/mw_so4_aer
+     endif
+  else
+#endif
+!  if(iam<20)then 
+!    write(500+iam,*)'bc1',p_bc1,maxval(gsdchem_tr3d_inout8(:,:,:,p_bc1))
+!    write(500+iam,*)'bc2',p_bc2,maxval(gsdchem_tr3d_inout8(:,:,:,p_bc2))
+!    write(500+iam,*)'oc1',p_oc1,maxval(gsdchem_tr3d_inout8(:,:,:,p_oc1))
+!    write(500+iam,*)'oc2',p_oc2,maxval(gsdchem_tr3d_inout8(:,:,:,p_oc2))
+!    flush(500+iam)
+!  endif
+!  if(iam.eq.iamprn)then
+!    write(6,*)'sulf in',gsdchem_tr3d_inout8(iprn,jprn,1,p_sulf)
+!    write(6,*)'aerosol_ugpkg',aerosol_ugpkg
+!    flush(6)
+!  endif
+!  if(aerosol_ugpkg)then
+    tr3d_inout4(:,:,:,p_bc1)=gsdchem_tr3d_inout8(:,:,:,p_bc1)
+    tr3d_inout4(:,:,:,p_bc2)=gsdchem_tr3d_inout8(:,:,:,p_bc2)
+    tr3d_inout4(:,:,:,p_oc1)=gsdchem_tr3d_inout8(:,:,:,p_oc1)
+    tr3d_inout4(:,:,:,p_oc2)=gsdchem_tr3d_inout8(:,:,:,p_oc2)
+    tr3d_inout4(:,:,:,p_dust1)=gsdchem_tr3d_inout8(:,:,:,p_dust1)
+    tr3d_inout4(:,:,:,p_dust2)=gsdchem_tr3d_inout8(:,:,:,p_dust2)
+    tr3d_inout4(:,:,:,p_dust3)=gsdchem_tr3d_inout8(:,:,:,p_dust3)
+    tr3d_inout4(:,:,:,p_dust4)=gsdchem_tr3d_inout8(:,:,:,p_dust4)
+    tr3d_inout4(:,:,:,p_dust5)=gsdchem_tr3d_inout8(:,:,:,p_dust5)
+    tr3d_inout4(:,:,:,p_seas1)=gsdchem_tr3d_inout8(:,:,:,p_seas1)
+    tr3d_inout4(:,:,:,p_seas2)=gsdchem_tr3d_inout8(:,:,:,p_seas2)
+    tr3d_inout4(:,:,:,p_seas3)=gsdchem_tr3d_inout8(:,:,:,p_seas3)
+    tr3d_inout4(:,:,:,p_seas4)=gsdchem_tr3d_inout8(:,:,:,p_seas4)
+    tr3d_inout4(:,:,:,p_sulf)=gsdchem_tr3d_inout8(:,:,:,p_sulf)
+    tr3d_inout4(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl add 6/16/2023
+    tr3d_inout4(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+    tr3d_inout4(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,p_msa) ! ajl end add 6/16/2023
+!        if(tile==5)then
+!          write(6,*)'bc1',is,ie,js,je,maxval(tr3d_inout4(:,:,:,p_bc1))
+!          write(6,*)'so2',is,ie,js,je,maxval(tr3d_inout4(:,:,:,p_so2))
+!        endif
+!    if(iam.eq.iamprn)then
+!      write(6,*)'aerosol_ugpkg',tr3d_inout4(iprnin,jprnin,1,p_sulf),p_sulf
+!    endif
+#if 0
+  else
+    tr3d_inout4(:,:,:,p_bc1)=gsdchem_tr3d_inout8(:,:,:,p_bc1)*1.e-9*airmw/tcmw(idbc1)
+    tr3d_inout4(:,:,:,p_bc2)=gsdchem_tr3d_inout8(:,:,:,p_bc2)*1.e-9*airmw/tcmw(idbc2)
+    tr3d_inout4(:,:,:,p_oc1)=gsdchem_tr3d_inout8(:,:,:,p_oc1)*1.e-9*airmw/tcmw(idoc1)
+    tr3d_inout4(:,:,:,p_oc2)=gsdchem_tr3d_inout8(:,:,:,p_oc2)*1.e-9*airmw/tcmw(idoc2)
+    tr3d_inout4(:,:,:,p_dust1)=gsdchem_tr3d_inout8(:,:,:,p_dust1)*1.e-9
+    tr3d_inout4(:,:,:,p_dust2)=gsdchem_tr3d_inout8(:,:,:,p_dust2)*1.e-9
+    tr3d_inout4(:,:,:,p_dust3)=gsdchem_tr3d_inout8(:,:,:,p_dust3)*1.e-9
+    tr3d_inout4(:,:,:,p_dust4)=gsdchem_tr3d_inout8(:,:,:,p_dust4)*1.e-9
+    tr3d_inout4(:,:,:,p_dust5)=gsdchem_tr3d_inout8(:,:,:,p_dust5)*1.e-9
+    tr3d_inout4(:,:,:,p_seas1)=gsdchem_tr3d_inout8(:,:,:,p_seas1)*1.e-9
+    tr3d_inout4(:,:,:,p_seas2)=gsdchem_tr3d_inout8(:,:,:,p_seas2)*1.e-9
+    tr3d_inout4(:,:,:,p_seas3)=gsdchem_tr3d_inout8(:,:,:,p_seas3)*1.e-9
+    tr3d_inout4(:,:,:,p_seas4)=gsdchem_tr3d_inout8(:,:,:,p_seas4)*1.e-9
+    tr3d_inout4(:,:,:,p_sulf)=gsdchem_tr3d_inout8(:,:,:,p_sulf)*1.e-9*airmw/mw_so4_aer
+!    if(iam.eq.iamprn)then
+!      write(6,*)'aerosol_not ugpkg',tr3d_inout4(iprnin,jprnin,1,p_sulf),p_sulf
+!    endif
+  endif
+#endif
+!  if(iam.eq.iamprn)then
+!    write(6,*)'sulf conv',tr3d_inout4(iprnin,jprnin,1,p_sulf),'airmw',airmw,'mwso4aer',mw_so4_aer
+!    flush(6)
+!  endif
+!  endif
+!  if(iam.eq.iamprn)then
+!     write(6,*)'dustin conv ',tr3d_inout4(iprnin,jprnin,1,p_dust1)
+!  endif
+! dont do seas5 since is really a br and not used in gsdchem
+!  write(6,*)'seas5',maxval(tr3d_inout4(:,:,:,p_seas5)),minval(tr3d_inout4(:,:,:,p_seas5))
+!  tr3d_inout4(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)*1.e-9
+!  tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2)*1.e-9
+! so2 now ppm makd ppv for raqms
+#ifdef DIAGCEDS
+        if(tile==1)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'so2 inputfrom gsdchem ',gsdchem_tr3d_inout8(ii,jj,k,p_so2),'tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+  tr3d_inout4(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2)*1.e-6
+  tr3d_inout4(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms)*1.e-6
+  tr3d_inout4(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa)*1.e-6
+!  if(tile==4)then
+!    if(is<=90.and.ie>=90)then
+!      if(js<=70.and.je>=70)then
+        !ii=90-is+1
+!        write(6,*)'so2 in top',tr3d_inout4(90,70,64,p_so2),'sfc',tr3d_inout4(90,70,1,p_so2)
+!      endif
+!    endif
+!  endif
+#ifdef DIAGCEDS
+        if(tile==1)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'so2 input converted tr3d_inout4',tr3d_inout4(178,31,k,p_so2)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+! don't need to to pp25 and pp10 since raqms does not use
+!  if(tile.eq.3)then
+!    write(6,*)'dust1 ',maxval(tr3d_inout4(:,:,:,p_dust1)),'seas1',maxval(tr3d_inout4(:,:,:,p_seas1))
+!    call flush(6)
+!  endif
+!#define DIAGTILE
+!   if(iam.eq.iamprn)then
+!     do k=1,20
+!       write(300+iam,*)'tracer ',idwetd(13),' k ',k,tr3d_inout4(iprnin,jprnin,k,idwetd(13))
+!       write(300+iam,*)'ox ',idwetd(13),' k ',k,tr3d_inout4(iprnin,jprnin,k,p_ox),o3vmr_inst(iprnin,jprnin,k)
+!       call flush(300+iam)
+!     end do
+!   endif
+#if 0
+   do m=1,nchem
+     do k=1,nl
+       do j=js,je
+         do i=is,ie
+           if(isnan(tr3d_inout4(i,j,k,m)))then
+             write(6,*)'tr3d_inout4 ',i,j,k,m,tr3d_inout4(i,j,k,m)
+             call flush(6)
+           endif
+         end do
+       end do
+     end do
+   end do
+#endif
+
+#ifdef DIAGTILE
+  if(iamprn>0)then
+  write(899,*)'nstepat',nstepat
+  call flush(899)
+  do m=1,nchem
+    write(899,*)m,'tr3d_inout4 top ',tr3d_inout4(iprnin,jprnin,kprnin,m)
+    write(300+iam,*)m,'tr3d_inout4 top ',tr3d_inout4(iprnin,jprnin,kprnin,m)
+    call flush(300+iam)
+!   do k=1,nl
+!     do j=js,je-1
+!       do i=is,ie-1
+!         if(i.eq.iprnin.and.j.eq.jprnin.and.k.eq.kprnin)then
+!           write(300+iam,*)m,'tr3d_inout4 top ',tr3d_inout4(i,j,k,m)
+!           call flush(300+iam)
+!         endif
+!!         if(isnan(tr3d_in8(i-is+1,j-js+1,k,m)))then
+!!           write(6,*)'tr3din8 nan ',i,j,k,m,tr3d_in8(i-is+1,j-js+1,k,m)
+!!           call flush(6)
+!!         elseif(isnan(tr3d_inout4(i,j,k,m)))then
+!!           write(6,*)'tr3din4 nan ',i,j,k,m,tr3d_inout4(i,j,k,m)
+!!           call flush(6)
+!!         endif
+!       end do
+!     end do
+!   end do
+  end do
+  call flush(899)
+  endif
+#endif
+! can update in in4 in wetdep
+! rn2d and rc2d are cumulative precip even though dictionary says  instantantaneous
+! could do wetdep separate or in j loop and before chemistry or after chemistry
+#ifdef DIAGTILE
+  if(iprn>0)then
+    write(300+iam,*)'before wet brcl',nstepat,kprnin,tr3d_inout4(iprnin,jprnin,kprnin,p_brcl), &
+    64-kprnin,tr3d_inout4(iprnin,jprnin,64-kprnin,p_bry)
+    write(300+iam,*)'beforer wet bry',tr3d_inout4(iprnin,jprnin,kprnin,p_brcl), &
+    tr3d_inout4(iprnin,jprnin,64-kprnin,p_bry)
+    call flush(300+iam)
+  endif
+#endif
+  w10=sqrt(u3d(:,:,1)**2.+v3d(:,:,1)**2.)
+  rv3d=tr3d_inout4(:,:,:,1)
+#ifdef DIAGSAMF
+  if(tile.eq.2.and.is<=83.and.83<=ie.and.js<=134.and.134<=je)then
+    write(6,*)'doplume',doplumerise
+  endif
+#endif
+  if(lcedsair)then
+!    if(97>=is.and.97<=ie.and.js<=145.and.145<=je.and.tile==5)then
+!      write(6,*)'nstepat',nstepat,'cedsairemis_frq',cedsairemis_frq,'dts',dts
+    !endif
+    cedsairstep=(mod(nstepat, max(1, int(60*cedsairemis_frq/dts))) == 1) & 
+                        .or. (nstepat<= 1) 
+    if(cedsairemis_frq<=1)then
+      cedsairstep=.true.
+    endif
+!    if(cedsairstep)then
+!    if(97>=is.and.97<=ie.and.js<=145.and.145<=je.and.tile==5)then
+!       write(6,*)'cedsairstep',cedsairstep,'nstepat',nstepat,'cedsairemis_frq',cedsairemis_frq
+    !endif
+!    endif
+  endif
+  if(doplumerise)then
+    if(dofirehr)then
+      plumestep=(mod(nstepat, max(1, int(60*plumerisefire_frq/dts))) == 1) & 
+                        .or. (nstepat<= 1) 
+    else
+      plumestep=(mod(nstepat, max(1, int(60*plumerisefire_frq/dts))) == 0) & 
+                        .or. (nstepat<= 1) 
+    endif
+#ifdef DIAGSAMF
+    if(tile.eq.2.and.is<=83.and.83<=ie.and.js<=134.and.134<=je)then
+      write(6,*)'plumestep',plumestep
+    endif
+#endif
+    if(plumestep)then
+      if(allocated(data%bbco_hr))then
+         ihrplume=h+1
+!        read(cdate(9:10),*)ihrplume
+!        ihrplume=ihrplume+1
+        if(ihrplume/=ihrplumeold)then
+          ihrplumeold=ihrplume
+          if(iam.eq.0)then
+            write(6,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+            write(6,*)'raqmsuse plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+            write(800,*)'raqms curr_secs',curr_secs,'nstepat',nstepat
+            write(800,*)'raqms call plumerise ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+            write(800,*)'raqms use plume ',cdate(1:8),' ihrplume ',ihrplume,' fhour ',fhour
+            write(800,*)'path',cdate(1:4)//'/'//cdate(1:8)
+            write(800,*)'raqms advancecount',advancecount,'nstepat',nstepat
+            if(allocated(data%bbco_hr))then
+              write(6,*)'allocated bbco_hr',shape(data%bbco_hr)
+            endif
+          endif
+          bbco_d=data%bbco_hr(:,:,ihrplume)
+          data%plume(:,:,1)=data%plume_hr(:,:,ihrplume)
+        else
+          if(iam.eq.0)then
+          write(6,*)'call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+          write(800,*)'raqms call plumerise same hour ',nstepat,'cdate',cdate,'h',h,'m',m,'ndate',ndate
+          endif
+        endif
+      endif
+!      write(6,*)'pr3d',shape(pr3d),'prl3d',shape(prl3d)
+      
+!      call raqms_plumerise_driver(tk3d,rv3d,ws3d,u3d,v3d,pr3d,ph3d,vtype2d, &
+      call raqms_plumerise_driver(tk3d,rv3d,ws3d,u3d,v3d,prl3d,ph3d,vtype2d, &
+      data%num_plume_data,data%plume,is,ie,js,je,nl) 
+      if(.not.allocated(emisco3dave))then
+        navgfire=0
+        allocate (emisco3dave(ie-is+1,js:je,nl))
+        emisco3dave=0.0
+      endif
+      emisco3dave=emisco3dave+emisco3d
+      navgfire=navgfire+1
+!      write(200+iam,*)'emisco3dave',maxval(emisco3dave),navgfire
+    endif
+  endif
+  
+  if(dowetdep)then
+!    write(6,*)'ajl call wetdepadvance'
+!    call flush(6)
+!    write(200+mype,*)'wetdep'
+!    call flush(200+mype)
+!    if(iam.eq.iamprn)then
+!      write(6,*)'is',is,ie,'js',js,je,'i p',iprn+is-1
+!      write(6,*)'shape',shape(tr3d_inout4)
+!      write(6,*)'bef wetdep 1',iprn,jprn,p_co,tr3d_inout4(iprnin,jprnin,1,p_co)
+!      write(6,*)'bef wetdep 64',iprn,jprn,p_co,tr3d_inout4(iprnin,jprnin,64,p_co)
+!    endif
+!    write(6,*)'bbcod25 ',maxval(tr3d_inout4(:,:,:,p_bbcod25)),minval(tr3d_inout4(:,:,:,p_bbcod25))
+!    write(6,*)'coanth25 ',maxval(tr3d_inout4(:,:,:,p_coanth25)),minval(tr3d_inout4(:,:,:,p_coanth25))
+    call wetdep_advance(advancecount,dts,rc2d,rn2d,ph3d,phl3d,pr3d,prl3d,tk3d,u3d,v3d,ws3d,exch,dqdt,tr3d_inout4, &
+    nchem,num_moist,ntra,is, ie, js, je, 1, nl, &
+    is, ie, js, je, 1, ni, &
+    rc=localrc)
+!    if(iam.eq.iamprn)then
+!      write(6,*)'aft wetdep ',iprn,jprn,tr3d_inout4(iprnin,jprnin,1,p_co)
+!      write(6,*)'aft wetdep 64',iprn,jprn,tr3d_inout4(iprnin,jprnin,64,p_co)
+!    endif
+!    write(6,*)'did ajl call wetdepadvance',localrc
+!    call flush(6)
+!   second shoujld be ni
+  endif
+#ifdef DIAGTILE
+  if(iprn>0)then
+    write(300+iam,*)'after wet brcl',kprnin,tr3d_inout4(iprnin,jprnin,kprnin,p_brcl), &
+    64-kprnin,tr3d_inout4(iprnin,jprnin,64-kprnin,p_bry)
+    write(300+iam,*)'after wet bry',tr3d_inout4(iprnin,jprnin,kprnin,p_brcl), &
+    tr3d_inout4(iprnin,jprnin,64-kprnin,p_bry)
+    call flush(300+iam)
+  endif
+  if(iamprn>0)then
+  do m=1,nchem
+    write(300+iam,*)m,' nstep ',nstepat,'before chem ',kprnin,tr3d_inout4(iprnin,jprnin,kprnin,m)
+!   do k=1,nl
+!     do j=js,je-1
+!       do i=is,ie-1
+!         if(i.eq.iprnin.and.j.eq.jprnin.and.k.eq.kprnin)then
+!           write(300+iam,*)m,nstepat,'before chem ',tr3d_inout4(i,j,k,m)
+!           call flush(300+iam)
+!         endif
+!!         if(isnan(tr3d_in8(i-is+1,j-js+1,k,m)))then
+!!           write(6,*)'tr3din8 nan ',i,j,k,m,tr3d_in8(i-is+1,j-js+1,k,m)
+!!           call flush(6)
+!!         elseif(isnan(tr3d_inout4(i,j,k,m)))then
+!!           write(6,*)'tr3din4 nan ',i,j,k,m,tr3d_inout4(i,j,k,m)
+!!           call flush(6)
+!!         endif
+!       end do
+!     end do
+!   end do
+  end do
+  endif
+#endif
+  rtime1=mpi_wtime()
+!  write(200+iam,*)'do j doloop',nstepat,' js ',js,je
+!  call flush(200+iam)
+!$OMP parallel do default(none) shared(js,je,dy_jdgmt,tr3d_inout4,nchem,pr3d,prl3d,tk3d,u3d,v3d,ph3d,phl3d,tr3d_out,nstepat,iam,tile,deg_lon,deg_lat) &
+!$OMP private(chemlocal,jj,ii)
+#ifdef DIAGCEDS
+  if(iam==11)then
+    write(6,*)'find ajl js',js,je
+    flush(6)
+  endif
+  if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+    write(6,*)'on node ',js,je,'is',is,ie
+    flush(6)
+  endif
+#endif
+  do j=js,je
+!     if(nstepat.eq.84)then
+!       write(200+iam,*)'do j',j,' nstepat  ',nstepat
+!       call flush(200+iam)
+!     endif
+!    call maptochem(j,chemlocal,tr3d_in4,is,ie,nl,nchem)
+!    write(6,*)'call maptochem ',j,'js',js,je
+!    call flush(6)
+!    write(200+iam,*)'call maptochem',j,'prl3d ',maxval(prl3d(:,j-js+1,:))
+!    call flush(200+iam)
+!    write(200+iam,*)'lbound',lbound(prl3d),ubound(prl3d)
+!    call flush(200+iam)
+!    write(6,*)'call maptochem ',j
+!    call flush(6)
+#ifdef DIAGSAMF
+    if(tile.eq.2)then
+      jj=j-js+1
+        do i=is,ie
+          ii=i-is+1
+          if(i.eq.83.and.j.eq.134)then
+             write(6,*)'lat at point',i,j,deg_lat(ii,jj),deg_lon(ii,jj)
+            do k=1,64
+               write(6,*)'co in',k,tr3d_inout4(i,j,k,43)
+            end do
+          endif
+          if(abs(deg_lat(ii,jj)-18.9898)<.01.and.abs(deg_lon(ii,jj)-73.004)<.01)then
+            write(6,*)'lat at2 point',i,j,deg_lat(ii,jj),deg_lon(ii,jj)
+            do k=1,64
+               write(6,*)'co in2 ',k,tr3d_inout4(i,j,k,43)
+            end do
+          endif
+      end do
+    endif
+#endif
+#ifdef DIAGCEDS
+  if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+      write(6,*)'ajl call maptochem',j
+      flush(6)
+   endif
+#endif
+    call maptochem(j,chemlocal,tr3d_inout4,nchem,pr3d,prl3d,tk3d,u3d,v3d,ph3d,phl3d)
+!    call mapfromchem(j,chemlocal,tr3d_out,is,ie,nl,nchem)
+!    write(6,*)j,'shape',shape(draw2d),'ie-is+1',ie-is+1,'is',is,'ie',ie
+!    call flush(6)
+!    write(6,*)'call chemdraw',j
+    !call flush(6)
+!    call chemdraw(j,draw2d)
+!    write(6,*)'call doloop',j,'dy_jdgmt',dy_jdgmt,'kind',kind(dy_jdgmt)
+!    call flush(6)
+!     if(nstepat.eq.84)then
+!       write(200+iam,*)'do doloop',j
+!       call flush(200+iam)
+!     end#if
+#ifdef DIAGCEDS
+        if(tile==1.and.iam==11.and.j==31)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'so2grdbefore doloop ',chemlocal%so2grd(ii,k)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+    call doloop(j,chemlocal)
+#ifdef DIAGCEDS
+        if(tile==1.aNd.iam==1.and.j==31)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'so2grdafter doloop ',chemlocal%so2grd(ii,k)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+!    write(6,*)'call mapfrom',j
+!    call flush(6)
+!     if(nstepat.eq.84)then
+!       write(200+iam,*)'ddid doloop',j
+!       call flush(200+iam)
+!     endif
+#ifdef DIAGCEDS
+  if(tile==1.and.js<=31.and.je>=31.and.is<178.and.ie>178)then
+      write(6,*)'ajl call mapfromchem',j,'js',js,je,'is',is,ie
+      write(6,*)'lbound ',lbound(gsdchem_tr3d_inout8),'ub',ubound(gsdchem_tr3d_inout8)
+      write(6,*)'lboundtr3d',lbound(tr3d_out),'ub',ubound(tr3d_out)
+      flush(6)
+   endif
+#endif
+    call mapfromchem(j,chemlocal,tr3d_out,nchem)
+#ifdef DIAGCEDS
+        if(tile==1)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+                write(6,*)k,'so2 new after from',tr3d_out(ii,jj,k,p_so2) *1.e6
+                write(6,*)k,'diff so2',tr3d_out(ii,jj,k,p_so2) *1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+!     if(nstepat.eq.84)then
+!       write(200+iam,*)'ddid mapfromp',j
+!       call flush(200+iam)
+!     endif
+!    write(6,*)'ajl did call wetdepadvance'
+!    call flush(6)
+    call deallocatechemlocal(chemlocal)
+    call deallocatechemlocal2(chemlocal)
+  end do
+#ifdef DIAGSAMF
+    if(tile.eq.2)then
+      do j=js,je
+        jj=j-js+1
+        do i=is,ie
+          ii=i-is+1
+          if(i.eq.83.and.j.eq.134)then
+             write(6,*)'lat out point',i,j,'ii',ii,jj,deg_lat(ii,jj),deg_lon(ii,jj)
+            do k=1,64
+               write(6,*)'co out',k,tr3d_out(ii,jj,k,43),'diff',tr3d_out(ii,jj,k,43)-tr3d_inout4(i,j,k,43)
+            end do
+          endif
+          if(abs(deg_lat(ii,jj)-18.9898)<.01.and.abs(deg_lon(ii,jj)-73.004)<.01)then
+            write(6,*)'lat out2 point',i,j,'ii',ii,jj,deg_lat(ii,jj),deg_lon(ii,jj)
+            do k=1,64
+               write(6,*)'co out',k,tr3d_out(ii,jj,k,43)
+            end do
+          endif
+        end do
+      end do
+    endif
+#endif
+!  write(300+iam,*)'did j doloop',nstepat
+!  call flush(300+iam)
+  wallchem=mpi_wtime()-rtime1
+  wallchemcum=wallchemcum+wallchem
+  if(iam.eq.0.and.mod(nstepat,nhtuw).eq.0)then
+    write(6,*)'wallchem ',wallchem,' cum ',wallchemcum/60.,' min'
+    call flush(6)
+  endif
+  call chem_diagnostics
+  do mchem=p_atm_o3mr+1,nchem
+!    if(.not.ischemfull(mchem))then
+    if(.not.lraqmschem(mchem))then
+      if(lcedsair)then
+        if(mchem==p_bc1.or.mchem==p_bc2.or.mchem==p_oc1.or.mchem==p_oc2) cycle
+        if(mchem==p_so2) cycle
+      endif
+!      if(mchem==p_bc1.or.mchem==p_oc1.or.mchem==p_so2.and.iam==11)then
+        !write(6,*)'mchem error ',mchem,p_bc1,p_oc1,p_so2
+!      endif
+#ifdef DIAGTILE
+      if(iamprn>0)then
+        write(300+iam,*)'mchem',mchem,' fill in old ',tr3d_in8(iprn,jprn,kprnin,mchem)
+      endif
+#endif
+      tr3d_out(:,:,:,mchem)=tr3d_in8(:,:,:,mchem)
+      if(.not.lcedsair)then
+      endif
+    else
+!      write(6,*)'chem ',mchem,cheminputlist(mchem),maxval(tr3d_out(:,:,:,mchem)),minval(tr3d_out(:,:,:,mchem))
+!      call flush(6)
+!      write(6,*)'mchem',mchem
+!      call flush(6)
+      do k=1,nl
+        do j=js,je
+          jj=j-js+1
+          do i=is,ie
+            ii=i-is+1
+            if(tr3d_out(ii,jj,k,mchem)<epsilc2)then
+              tr3d_out(ii,jj,k,mchem)=epsilc2
+            endif
+          end do
+        end do
+      enddo
+!      write(6,*)'did mchem',mchem
+!      call flush(6)
+#if 0
+      do k=1,nl
+        do j=js,je
+          jj=j-js+1
+          do i=is,ie
+            ii=i-is+1
+            if(isnan(tr3d_out(ii,jj,k,mchem)))then
+              write(6,*)'tr3d_out',i,j,k,mchem
+              call flush(6)
+            endif
+          end do
+        end do
+      enddo
+#endif
+    endif
+  end do
+  tr3d_out(:,:,:,1)=tr3d_in8(:,:,:,1)
+!  write(6,*)'tr3d_out seas5',maxval(tr3d_out(:,:,:,p_seas5)),minval(tr3d_out(:,:,:,p_seas5))
+!  call flush(6)
+#ifdef DIAGTILE
+  if(iamprn>0)then
+  do m=p_atm_o3mr+1,nchem
+    write(300+iam,*)m,'tr3d_out ',tr3d_out(iprn,jprn,kprnin,m),tr3d_in8(iprn,jprn,kprnin,mchem)
+    call flush(300+iam)
+!   do k=1,nl
+!     do j=js,je-1
+!       do i=is,ie-1
+!         if(iam.eq.iamprn)then
+!         if(i.eq.iprnin.and.j.eq.jprnin.and.k.eq.kprnin)then
+!           write(300+iam,*)m,'tr3d_out',tr3d_out(iprn,jprn,k,m)
+!           call flush(300+iam)
+!         endif
+!         endif
+!!         if(isnan(tr3d_in8(i-is+1,j-js+1,k,m)))then
+!!           write(6,*)'tr3din8 nan ',i,j,k,m,tr3d_in8(i-is+1,j-js+1,k,m)
+!!           call flush(6)
+!!         elseif(isnan(tr3d_inout4(i,j,k,m)))then
+!!           write(6,*)'tr3din4 nan ',i,j,k,m,tr3d_inout4(i,j,k,m)
+!!           call flush(6)
+!!         endif
+!       end do
+!     end do
+!   end do
+  end do
+  endif
+!  do mchem=1,ninput
+!    write(6,*)'trace ',mchem,icheminputpt(mchem),maxval(tr3d_out(:,:,:,icheminputpt(mchem)))
+!  end do
+!    difftrace=tr3d_out(:,:,:,icheminputpt(mchem))-tr3d_in(:,:,:,icheminputpt(mchem))
+!    write(6,*)'diff trace ',mchem,icheminputpt(mchem),cheminput(mchem),maxval(difftrace),minval(difftrace)
+  !end do
+#endif
+!  if(first)then
+!    do mchem=1,ninput
+!      tr3d_out(:,:,:,icheminputpt(mchem))=tr3d_in(:,:,:,icheminputpt(mchem))
+!    end do
+!    if(p_co>0)then
+!       if(mype.eq.0)then
+!         write(6,*)'lbound ',lbound(tr3d_out),lbound(data%srcco_totl),lbound(dens)
+!         write(6,*)'co begin 11 20 ',tr3d_out(11,20,1,p_co),' inc ',data%srcco_totl(11,20)*dts/dens(11,20,1)/dz(11,20)
+!       endif
+!      tr3d_out(:,:,1,p_co)=tr3d_out(:,:,1,p_co)+data%srcco_totl(:,:)*dts/dens(:,:,1)/dz(:,:)
+!      tr3d_out(:,:,1,p_co)=tr3d_out(:,:,1,p_co)+srcco_totl(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!      write(6,*)'lbound ',lbound(tr3d_out), 'src',lbound(srcco_totl)
+!      call flush(6)
+!    endif
+!    if(mype.eq.0)then
+!        write(6,*)'srcco',data%srcco_totl(11,20),'dts',dts,'dz',dz(11,20),'dens',dens(11,20,1)
+!    endif
+!    if(p_no2>0)then
+!      tr3d_out(:,:,1,p_no2)=tr3d_out(:,:,1,p_no2)+data%srcnind(:,:)*dts/dens(:,:,1)/dz(:,:)
+!      tr3d_out(:,:,1,p_no2)=tr3d_out(:,:,1,p_no2)+srcnind(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!    endif
+!  else
+    
+!    do mchem=1,ninput
+!      tr3d_out(:,:,:,icheminputpt(mchem))=tr3d_in(:,:,:,icheminputpt(mchem))
+!    end do
+!    if(p_co>0)then
+!       if(mype.eq.0)then
+!         write(6,*)'lbound ',lbound(tr3d_out),lbound(data%srcco_totl),lbound(dens)
+!         write(6,*)'co begin ',tr3d_out(11,20,1,p_co),' inc ',data%srcco_totl(11,20)*dts/dens(11,20,1)/dz(11,20)
+!       endif
+!      tr3d_out(:,:,1,p_co)=tr3d_out(:,:,1,p_co)+data%srcco_totl(:,:)*dts/dens(:,:,1)/dz(:,:)
+!      tr3d_out(:,:,1,p_co)=tr3d_out(:,:,1,p_co)+srcco_totl(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!    endif
+!    if(p_no2>0)then
+
+!      tr3d_out(:,:,1,p_no2)=tr3d_out(:,:,1,p_no2)+data%srcnind(:,:)*dts/dens(:,:,1)/dz(:,:)
+      !tr3d_out(:,:,1,p_no2)=tr3d_out(:,:,1,p_no2)+srcnind(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!    endif
+!  endif
+!  if(p_par>0)then
+!    sorcpar=(data%srcbutane(:,:)+5.*data%srcpentane(:,:)+6.*data%srchexane(:,:)+data%srcpropene(:,:))*dts/dens(:,:,1)
+!    sorcpar=(srcbutane(:,:,mm)+5.*srcpentane(:,:,mm)+6.*srchexane(:,:,mm)+srcpropene(:,:,mm))*dts/dens(:,:,1)
+!    tr3d_out(:,:,1,p_par)=tr3d_out(:,:,1,p_par)+sorcpar/dz(:,:)
+!  endif
+!  if(p_eth>0)then
+!     tr3d_out(:,:,1,p_eth)=tr3d_out(:,:,1,p_eth)+srcethene(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!  endif
+!  if(p_olet>0)then
+!     tr3d_out(:,:,1,p_olet)=tr3d_out(:,:,1,p_olet)+srcpropene(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!     tr3d_out(:,:,1,p_olet)=tr3d_out(:,:,1,p_olet)+srcpropene(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!  endif 
+!if(p_isop>0)then 
+!  tr3d_out(:,:,1,p_isop)=tr3d_out(:,:,1,p_isop)+srcisop(:,:,mm)*dts/dens(:,:,1)/dz(:,:) endif
+!  if(p_propar>0)then
+!     tr3d_out(:,:,1,p_propar)=tr3d_out(:,:,1,p_propar)+srcpropane(:,:,mm)*dts/dens(:,:,1)/dz(:,:)
+!  endif
+    first=.false.
+!  call deallocatechemcommperm
+!  call deallocatechemcommtemp
+!  write(6,*)'bottom raqms_advance'
+!  call flush(6)
+!  write(200+iam,*)'bottom raqms_advance'
+!  call flush(200+iam)
+!  calculate aod if needed
+!    if(tile.eq.2)then
+!    write(6,*)'p_co',p_co
+!    endif
+    do j=js,je
+      jj=j-js+1
+      do i=is,ie
+        ii=i-is+1
+        do k=1,nl
+          if(tr3d_inout4(i,j,k,P_co)<-1.e-20)then
+            write(200+iam,*)'co neg output ',i,j,k,tr3d_inout4(i,j,k,p_co)
+            call flush(200+iam)
+          endif
+#ifdef DIAGSAMF
+          if(i.eq.83.and.j.eq.134.and.tile.eq.2)then
+            write(6,*)'ii',ii,jj,'i',i,j
+            write(6,*)'tr3din',k,tr3d_in8(ii,jj,k,p_co),' out ',tr3d_out(ii,jj,k,p_co),'diff',tr3d_out(ii,jj,k,p_co)-tr3d_in8(ii,jj,k,p_co)
+          endif
+#endif
+        end do
+      end do
+    end do
+!    if(aerosol_ugpkg)then
+!   if(doaod.or.aerosol_ugpkg.or.aerosol_in_old)then
+!    write(200+iam,*)'bottom raqms-advance'
+!    call flush(200+iam)
+!    now try mapping aerosols back to gsdchem_tr3d
+!  tr3d_inout4(:,:,:,p_bc1)=gsdchem_tr3d_inout8(:,:,:,p_bc1)*1.e-9*airmw/tcmw(idbc1)
+!  tr3d_inout4(:,:,:,p_bc2)=gsdchem_tr3d_inout8(:,:,:,p_bc2)*1.e-9*airmw/tcmw(idbc2)
+!  tr3d_inout4(:,:,:,p_oc1)=gsdchem_tr3d_inout8(:,:,:,p_oc1)*1.e-9*airmw/tcmw(idoc1)
+!  tr3d_inout4(:,:,:,p_oc2)=gsdchem_tr3d_inout8(:,:,:,p_oc2)*1.e-9*airmw/tcmw(idoc2)
+!  tr3d_inout4(:,:,:,p_dust1)=gsdchem_tr3d_inout8(:,:,:,p_dust1)*1.e-9
+!  tr3d_inout4(:,:,:,p_dust2)=gsdchem_tr3d_inout8(:,:,:,p_dust2)*1.e-9
+!  tr3d_inout4(:,:,:,p_dust3)=gsdchem_tr3d_inout8(:,:,:,p_dust3)*1.e-9
+!  tr3d_inout4(:,:,:,p_dust4)=gsdchem_tr3d_inout8(:,:,:,p_dust4)*1.e-9
+!  tr3d_inout4(:,:,:,p_dust5)=gsdchem_tr3d_inout8(:,:,:,p_dust5)*1.e-9
+!  tr3d_inout4(:,:,:,p_seas1)=gsdchem_tr3d_inout8(:,:,:,p_seas1)*1.e-9
+!  tr3d_inout4(:,:,:,p_seas2)=gsdchem_tr3d_inout8(:,:,:,p_seas2)*1.e-9
+!  tr3d_inout4(:,:,:,p_seas3)=gsdchem_tr3d_inout8(:,:,:,p_seas3)*1.e-9
+!  tr3d_inout4(:,:,:,p_seas4)=gsdchem_tr3d_inout8(:,:,:,p_seas4)*1.e-9
+#if 0
+# ajl dont need to send back since lcedsair is gone in GSDCHEM
+  if(lcedsair)then
+    do j=1,numcedsair
+      select case(ccedsair(j))
+      case ('BC')
+#ifdef DIAGCEDS
+        if(tile==1)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'bc1 old ',gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+                write(6,*)k,'bc new ',tr3d_out(ii,jj,k,p_bc1) 
+                write(6,*)k,'diff bc',tr3d_out(ii,jj,k,p_bc1) -gsdchem_tr3d_inout8(ii,jj,k,p_bc1)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+        gsdchem_tr3d_inout8(:,:,:,p_bc1)=tr3d_out(:,:,:,p_bc1)
+        gsdchem_tr3d_inout8(:,:,:,p_bc2)=tr3d_out(:,:,:,p_bc2)
+      caSe ('OC')
+        gsdchem_tr3d_inout8(:,:,:,p_oc1)=tr3d_out(:,:,:,p_oc1)
+        gsdchem_tr3d_inout8(:,:,:,p_oc2)=tr3d_out(:,:,:,p_oc2)
+      caSe ('SO2')
+#ifdef DIAGCEDS
+        if(tile==1)then
+          if(is<=178.and.ie>=178)then
+            if(js<=31.and.je>=31)then
+              ii=178-is+1
+              jj=31-js+1
+              do k=1,64
+                write(6,*)k,'bottom return so2 old ',gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+                write(6,*)k,'bottom return so2 new ',tr3d_out(ii,jj,k,p_so2)*1.e6
+                write(6,*)k,'bottom return diff so2',tr3d_out(ii,jj,k,p_so2)*1.e6-gsdchem_tr3d_inout8(ii,jj,k,p_so2)
+              end do
+              flush(6)
+            endif
+          endif
+        endif
+#endif
+        gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_out(:,:,:,p_so2) *1.e6 ! ajl 6/16/2023 back toppm
+      end select
+    end do
+  endif
+#endif
+#if 0
+  if(aerosol_in_old)then
+
+  else
+!    if(iam.eq.iamprn)then
+!      write(6,*)'sulf after tr3d',tr3d_inout4(iprnin,jprnin,1,p_sulf)
+!      flush(6)
+!    endif
+!   problem none of these should have been changed since gsi is done after this
+!   step
+    if(aerosol_ugpkg)then
+      gsdchem_tr3d_inout8(:,:,:,p_bc1)=tr3d_inout4(:,:,:,p_bc1)
+      gsdchem_tr3d_inout8(:,:,:,p_bc2)=tr3d_inout4(:,:,:,p_bc2)
+      gsdchem_tr3d_inout8(:,:,:,p_oc1)=tr3d_inout4(:,:,:,p_oc1)
+      gsdchem_tr3d_inout8(:,:,:,p_oc2)=tr3d_inout4(:,:,:,p_oc2)
+      gsdchem_tr3d_inout8(:,:,:,p_dust1)=tr3d_inout4(:,:,:,p_dust1)
+      gsdchem_tr3d_inout8(:,:,:,p_dust2)=tr3d_inout4(:,:,:,p_dust2)
+      gsdchem_tr3d_inout8(:,:,:,p_dust3)=tr3d_inout4(:,:,:,p_dust3)
+      gsdchem_tr3d_inout8(:,:,:,p_dust4)=tr3d_inout4(:,:,:,p_dust4)
+      gsdchem_tr3d_inout8(:,:,:,p_dust5)=tr3d_inout4(:,:,:,p_dust5)
+      gsdchem_tr3d_inout8(:,:,:,p_seas1)=tr3d_inout4(:,:,:,p_seas1)
+      gsdchem_tr3d_inout8(:,:,:,p_seas2)=tr3d_inout4(:,:,:,p_seas2)
+      gsdchem_tr3d_inout8(:,:,:,p_seas3)=tr3d_inout4(:,:,:,p_seas3)
+      gsdchem_tr3d_inout8(:,:,:,p_seas4)=tr3d_inout4(:,:,:,p_seas4)
+      gsdchem_tr3d_inout8(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)
+      gsdchem_tr3d_inout8(:,:,:,p_so2)=tr3d_inout4(:,:,:,p_so2) *1.e6 ajl 6/16/2023 back toppm
+      gsdchem_tr3d_inout8(:,:,:,p_dms)=tr3d_inout4(:,:,:,p_dms) *1.e6
+      gsdchem_tr3d_inout8(:,:,:,p_msa)=tr3d_inout4(:,:,:,p_msa) *1.e6 end ajl 6/16/20203
+!     need to map to stateout%tr3d also since that is used to writet out for gsi
+!     and tracer files
+      tr3d_out(:,:,:,p_bc1)=tr3d_inout4(:,:,:,p_bc1)
+      tr3d_out(:,:,:,p_bc2)=tr3d_inout4(:,:,:,p_bc2)
+      tr3d_out(:,:,:,p_oc1)=tr3d_inout4(:,:,:,p_oc1)
+      tr3d_out(:,:,:,p_oc2)=tr3d_inout4(:,:,:,p_oc2)
+      tr3d_out(:,:,:,p_dust1)=tr3d_inout4(:,:,:,p_dust1)
+      tr3d_out(:,:,:,p_dust2)=tr3d_inout4(:,:,:,p_dust2)
+      tr3d_out(:,:,:,p_dust3)=tr3d_inout4(:,:,:,p_dust3)
+      tr3d_out(:,:,:,p_dust4)=tr3d_inout4(:,:,:,p_dust4)
+      tr3d_out(:,:,:,p_dust5)=tr3d_inout4(:,:,:,p_dust5)
+      tr3d_out(:,:,:,p_seas1)=tr3d_inout4(:,:,:,p_seas1)
+      tr3d_out(:,:,:,p_seas2)=tr3d_inout4(:,:,:,p_seas2)
+      tr3d_out(:,:,:,p_seas3)=tr3d_inout4(:,:,:,p_seas3)
+      tr3d_out(:,:,:,p_seas4)=tr3d_inout4(:,:,:,p_seas4)
+      tr3d_out(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)
+      tr3d_out(:,:,:,p_so2)=gsdchem_tr3d_inout8(:,:,:,p_so2) ! ajl 6/16/2023
+      tr3d_out(:,:,:,p_dms)=gsdchem_tr3d_inout8(:,:,:,p_dms)
+      tr3d_out(:,:,:,p_msa)=gsdchem_tr3d_inout8(:,:,:,msa) ! end ajl 6/16.2023
+    else
+      gsdchem_tr3d_inout8(:,:,:,p_bc1)=tr3d_inout4(:,:,:,p_bc1)*1.e9*tcmw(idbc1)/airmw
+      gsdchem_tr3d_inout8(:,:,:,p_bc2)=tr3d_inout4(:,:,:,p_bc2)*1.e9*tcmw(idbc2)/airmw
+      gsdchem_tr3d_inout8(:,:,:,p_oc1)=tr3d_inout4(:,:,:,p_oc1)*1.e9*tcmw(idoc1)/airmw
+      gsdchem_tr3d_inout8(:,:,:,p_oc2)=tr3d_inout4(:,:,:,p_oc2)*1.e9*tcmw(idoc2)/airmw
+      gsdchem_tr3d_inout8(:,:,:,p_dust1)=tr3d_inout4(:,:,:,p_dust1)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_dust2)=tr3d_inout4(:,:,:,p_dust2)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_dust3)=tr3d_inout4(:,:,:,p_dust3)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_dust4)=tr3d_inout4(:,:,:,p_dust4)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_dust5)=tr3d_inout4(:,:,:,p_dust5)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_seas1)=tr3d_inout4(:,:,:,p_seas1)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_seas2)=tr3d_inout4(:,:,:,p_seas2)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_seas3)=tr3d_inout4(:,:,:,p_seas3)*1.e9
+      gsdchem_tr3d_inout8(:,:,:,p_seas4)=tr3d_inout4(:,:,:,p_seas4)*1.e9
+!    tr3d_inout4(:,:,:,p_sulf)=gsdchem_tr3d_inout8(:,:,:,p_sulf)*1.e-9*airmw/mw_so4_aer
+      gsdchem_tr3d_inout8(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)*1.e9*mw_so4_aer/airmw
+
+      tr3d_out(:,:,:,p_bc1)=tr3d_inout4(:,:,:,p_bc1)*1.e9*tcmw(idbc1)/airmw
+      tr3d_out(:,:,:,p_bc2)=tr3d_inout4(:,:,:,p_bc2)*1.e9*tcmw(idbc2)/airmw
+      tr3d_out(:,:,:,p_oc1)=tr3d_inout4(:,:,:,p_oc1)*1.e9*tcmw(idoc1)/airmw
+      tr3d_out(:,:,:,p_oc2)=tr3d_inout4(:,:,:,p_oc2)*1.e9*tcmw(idoc2)/airmw
+      tr3d_out(:,:,:,p_dust1)=tr3d_inout4(:,:,:,p_dust1)*1.e9
+      tr3d_out(:,:,:,p_dust2)=tr3d_inout4(:,:,:,p_dust2)*1.e9
+      tr3d_out(:,:,:,p_dust3)=tr3d_inout4(:,:,:,p_dust3)*1.e9
+      tr3d_out(:,:,:,p_dust4)=tr3d_inout4(:,:,:,p_dust4)*1.e9
+      tr3d_out(:,:,:,p_dust5)=tr3d_inout4(:,:,:,p_dust5)*1.e9
+      tr3d_out(:,:,:,p_seas1)=tr3d_inout4(:,:,:,p_seas1)*1.e9
+      tr3d_out(:,:,:,p_seas2)=tr3d_inout4(:,:,:,p_seas2)*1.e9
+      tr3d_out(:,:,:,p_seas3)=tr3d_inout4(:,:,:,p_seas3)*1.e9
+      tr3d_out(:,:,:,p_seas4)=tr3d_inout4(:,:,:,p_seas4)*1.e9
+      tr3d_out(:,:,:,p_sulf)=tr3d_inout4(:,:,:,p_sulf)*1.e9*mw_so4_aer/airmw
+    endif
+!    if(iam.eq.iamprn)then
+!      write(6,*)'sulf after gsdchem out',gsdchem_tr3d_inout8(iprn,jprn,1,p_sulf)
+!      flush(6)
+!    endif
+!    if(iam==iamprn)then 
+!      write(300+iam,*)'bc1 end of raqms',p_bc1,maxval(gsdchem_tr3d_inout8(:,:,:,p_bc1))
+!      write(300+iam,*)'bc2',p_bc2,maxval(gsdchem_tr3d_inout8(:,:,:,p_bc2))
+!      write(300+iam,*)'oc1',p_oc1,maxval(gsdchem_tr3d_inout8(:,:,:,p_oc1))
+!      write(300+iam,*)'oc2',p_oc2,maxval(gsdchem_tr3d_inout8(:,:,:,p_oc2))
+      !flush(300+iam)
+!    endif
+  endif
+!   if(doaod)then
+!     do k=1,nl
+!       dzaod(:,:,k)=(ph3d(:,:,k+1)-ph3d(:,:,k))/grvity ! make m
+!     end do
+!     if(iam.eq.0)then
+!       write(6,*)'call calcaod'
+!     endif
+!     call calcaod(tr3d_inout4,dzaod,data,nchem,is,ie,js,je,nl,prl3d,tk3d,de)
+!     write(6,*)'aod',maxval(data%aod)
+!     do k=1,14
+!       write(6,*)'ext',k,maxval(data%ext_3d(:,:,:,k))
+!     end do
+!    endif
+#endif
+
+ do j=js,je
+   jj=j-js+1
+   do i=is,ie
+     ii=i-is+1
+     do k=1,nl
+       if(abs(tr3d_inout4(i,j,k,p_sulf)-gsdchem_tr3d_inout8(ii,jj,k,p_sulf))>1.e-22)then
+         write(6,*)'diffsulf',i,j,k,p_sulf,tr3d_inout4(i,j,k,p_sulf),gsdchem_tr3d_inout8(ii,jj,k,p_sulf)
+       endif
+     enddo
+    end do
+  end do
+  end subroutine raqms_advance
+  subroutine advdatehr(yyin,monin,ddin,hrin,minin,secin,dts,ndate,julday,hrout)
+  implicit none
+  integer, intent(in) :: yyin,monin,ddin,hrin,minin,secin
+  real(CHEM_KIND_R8), intent(in) :: dts
+  real(CHEM_KIND_R8), intent(out) :: hrout
+  integer min,sec,minadd,julday
+  integer, intent(out) :: ndate
+  integer yy,mm,dd,hr,mdh,dh,dhr
+  integer daysmon(12,2),il,ileap,hradd
+  data daysmon/31,28,31,30,31,30,31,31,30,31,30,31, &
+               31,29,31,30,31,30,31,31,30,31,30,31/ 
+  yy=yyin
+  il=mod(yy,4)
+  ileap=1
+  if(il.eq.0)ileap=2
+  mm=monin
+  dd=ddin
+  hr=hrin
+  min=minin
+  sec=secin
+  sec=sec+dts
+  if(sec>=60.0)then
+    minadd=sec/60
+    min=min+minadd
+    sec=sec-minadd*60
+  elseif(sec<0)then
+    min=min-1
+    sec=sec+60.
+  endif
+  if(min>=60.)then
+    hradd=min/60.
+    hr=hr+hradd
+    min=min-hradd*60
+  elseif(min<0)then
+    hr=hr-1
+    min=min+60.
+  endif
+  if(hr>23)then
+    hr=hr-24
+    dd=dd+1
+    julday=julday+1
+    if(dd>daysmon(mm,ileap))then
+      dd=dd-daysmon(mm,ileap)
+      mm=mm+1
+      if(mm>12)then
+        mm=1
+        yy=yy+1
+      endif
+    endif
+  elseif(hr<0)then
+    hr=hr+24
+    dd=dd-1
+    if(dd<1)then
+      mm=mm-1
+      if(mm<1)then
+        mm=12
+        yy=yy-1
+      endif
+     ileap=1
+     if(il.eq.0)ileap=2
+      dd=daysmon(mm,ileap)
+    endif
+  endif
+  ndate=(((yy*100+mm)*100+dd)*100)+hr
+  hrout=float(hr)+float(min)/60.+float(sec)/3600.
+  return
+   end 
+  subroutine advcdatehr(ndatein,dts,ndate,julday,hrout)
+  implicit none
+  integer, intent(in) :: ndatein
+  integer  :: yyin,monin,ddin,hrin,minin,secin,dts
+  real(CHEM_KIND_R8), intent(out) :: hrout
+  integer min,sec,minadd,julday
+  integer, intent(out) :: ndate
+  integer yy,mm,dd,hr,mdh,dh,dhr
+  integer daysmon(12,2),il,ileap,hradd
+  data daysmon/31,28,31,30,31,30,31,31,30,31,30,31, &
+               31,29,31,30,31,30,31,31,30,31,30,31/ 
+  yyin=ndatein/1000000
+  mdh=ndatein-1000000*yyin
+  yy=yyin
+  il=mod(yy,4)
+  ileap=1
+  if(il.eq.0)ileap=2
+  monin=mdh/10000
+  dh=mdh-monin*10000
+  mm=monin
+  ddin=dh/100
+  hrin=dh-100*ddin
+  dd=ddin
+  hr=hrin
+  min=minin
+  secin=0
+  sec=secin
+  sec=sec+dts
+  if(sec>=60.0)then
+    minadd=sec/60
+    min=min+minadd
+    sec=sec-minadd*60
+  elseif(sec<0)then
+    min=min-1
+    sec=sec+60.
+  endif
+  if(min>=60.)then
+    hradd=min/60.
+    hr=hr+hradd
+    min=min-hradd*60
+  elseif(min<0)then
+    hr=hr-1
+    min=min+60.
+  endif
+  if(hr>23)then
+    hr=hr-24
+    dd=dd+1
+    julday=julday+1
+    if(dd>daysmon(mm,ileap))then
+      dd=dd-daysmon(mm,ileap)
+      mm=mm+1
+      if(mm>12)then
+        mm=1
+        yy=yy+1
+      endif
+    endif
+  elseif(hr<0)then
+    hr=hr+24
+    dd=dd-1
+    if(dd<1)then
+      mm=mm-1
+      if(mm<1)then
+        mm=12
+        yy=yy-1
+      endif
+     ileap=1
+     if(il.eq.0)ileap=2
+      dd=daysmon(mm,ileap)
+    endif
+  endif
+  ndate=(((yy*100+mm)*100+dd)*100)+hr
+  hrout=float(hr)+float(min)/60.+float(sec)/3600.
+  return
+   end subroutine advcdatehr
+  
+
+end module raqms_mod

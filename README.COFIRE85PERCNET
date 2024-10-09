@@ -1,0 +1,23 @@
+to do co fire 85 percent
+export COFIRE85PERCENT=YES
+this setx docofire85percent to .true.
+in chem driver code
+             bbc = xbbco*bbefac(i,j,2)
+             bbno = xbbco*bbefac(i,j,1)
+             if(docofire85percent)then
+                sorcco = sorcco+.85*xbbco
+#ifdef COTRACERS
+                 sorcbbcod5025=.85*xbbco
+#endif
+                 sorcbbcod25=.85*xbbco
+             else 
+               sorcco = sorcco+xbbco
+
+#ifdef COTRACERS
+               sorcbbcod5025=xbbco
+#endif
+               sorcbbcod25=xbbco
+             endif
+
+it changes fire contribution for co to 85percent but does not change bbc or bbno
+

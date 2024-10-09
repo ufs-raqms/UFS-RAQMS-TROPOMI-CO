@@ -1,0 +1,58 @@
+    subrtoutine chem_reducetile_pushwithhalo_2dr4(datain,datawithhalo,de,rc)
+    use chem_kind_mod,only :CHEM_KIND_R4
+    real(CHEM_KIND_R4),dimension(:,:),intent(in) :: datain
+    real(CHEM_KIND_R4),dimension(:,:),intent(out) :: datawithhalo
+    ! -- local variables
+    integer :: localrc
+    integer :: de,  localpe, tile 
+    integer ids,its,jds,jde,ihs,ihe,jhs,jhe,its,ies,jts,jes
+    type(chem_data_type),   pointer :: data => null()
+    type(chem_config_type), pointer :: config => null()
+    real(),allocatable,dimensin(:,:) :: recvbuf
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_get(de=de, tile=tile, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!   need to get domain limits and define limits with haloe
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+    ihs=max(ids-1,its)
+    ihe=min(ide+1,ite)
+    jhs=max(jds-1,jts)
+    jhe=min(jde+1,jte)
+!   allocate sendbufr
+    ! -- check size consistency
+    if (chem_rc_test((size(datain) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+    buf2d = 0._CHEM_KIND_R4
+
+    buf2d(ids:ide, jds:jde) = datain
+!   allocate reduce bufr
+    allocate(recvbuf(its:ite,jts:jte), stat=localrc)
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+!   do reduction
+    call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!   now need to bcast and then put out data with tile inside halo included
+    call chem_comm_bcast(buf2d, comm=tileComm, rc=localrc)
+    datawithhalo=buf2d(ihs:ihe,jhs:jhe)
+    return
+    end subrtoutine chem_reducetile_pushwithhalo_2dr4
+

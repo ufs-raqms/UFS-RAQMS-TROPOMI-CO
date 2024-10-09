@@ -1,0 +1,268 @@
+module calcvort_mod
+contains
+  subroutine calcvort(u3d,v3d,area,griddx4,griddy4,lat,ids,ide,jds,jde,nl,ihs,ihe,jhs,jhe,vort,de,mype)
+  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+  implicit none
+  integer ids,ide,jds,jde,nl,ihs,ihe,jhs,jhe,mype,de
+  integer i,j,rc,k
+  real(CHEM_KIND_R8),dimension(ids:ide,jds:jde,nl),intent(in) :: u3d,v3d
+  real(chEM_KIND_R8),dimension(ids:ide,jds:jde),intent(in) :: area
+  real(CHEM_KIND_R4),dimension(ids:ide,jds:jde) :: rarea
+  real(CHEM_KIND_R4),dimension(ids:ide,jds:jde),intent(in) :: griddx4,griddy4
+  real(CHEM_KIND_R8),dimension(ids:ide,jds:jde) :: griddx,griddy
+  real(CHEM_KIND_R4),dimension(ihs:ihe,jhs:jhe) :: dx,dy
+  real(CHEM_KIND_R8),dimension(jds:jde),intent(in) :: lat
+  real(CHEM_KIND_R4),allocatable,dimension(:,:,:),intent(out) :: vort
+  real(CHEM_KIND_R8),dimension(ihs:ihe,jhs:jhe,nl) :: u3dwithhalo,v3dwithhalo
+  real(CHEM_KIND_R8),dimension(ihs:ihe,jhs:jhe) :: dxwithhalo,dywithhalo
+  real(CHEM_KIND_R8),dimension(ihs:ihe,jhs:jhe) :: utmp,vtmp
+  integer imax,imin,jmax,jmin,jbar,ibar
+#if 0
+  if(mype.eq.1)then
+    write(6,*)'u3d',maxval(u3d),minval(u3d)
+    write(6,*)'v3d',maxval(v3d),minval(v3d)
+    write(6,*)'area',maxval(area),minval(area)
+    write(6,*)'griddx',maxval(griddx),minval(griddx)
+    write(6,*)'griddy',maxval(griddy),minval(griddy)
+    write(6,*)'lat',maxval(lat),minval(lat)
+    write(6,*)'ids',ids,ide,'jds',jds,jde
+  endif
+  jbar=(jds+jde+1)/2
+  jbar=10
+  ibar=48
+#endif
+  do j=jds,jde
+    do i=ids,ide
+      rarea(i,j)=1./area(i,j)
+!     need to be half till do on average box instead
+      rarea(i,j)=.5*rarea(i,j)
+#if 0
+      if(j.eq.jbar.and.abs(i-ibar)<3)then
+        if(mype<=1)then
+          write(6,*)'rarea',i,j,rarea(i,j)
+          write(80+mype,*)'rarea',i,j,rarea(i,j)
+        endif
+      endif
+#endif
+    end do
+  end do
+!  write(6,*)'rarea',maxval(rarea),minval(rarea)
+  if(.not.allocated(vort))then
+    allocate(vort(ids:ide,jds:jde,nl))
+  endif
+  griddx=griddx4
+  griddy=griddy4
+  call chem_reducetile_pushwithhalo_3dr8(u3d,ids,ide,jds,jde,nl,u3dwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_3dr8(v3d,ids,ide,jds,jde,nl,v3dwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_2dr8(griddx,ids,ide,jds,jde,dxwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_2dr8(griddy,ids,ide,jds,jde,dywithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+#if 0
+  if(mype<=1)then
+    write(6,*)'shape v3dwithhalo',shape(v3dwithhalo)
+    do i=ihs,ihe
+      write(6,*)'calcvort vtmp63 ',i,v3dwithhalo(i,48,63),'u',u3dwithhalo(i,48,65)
+    end do
+  endif
+  if(mype.eq.1)then
+  
+    write(6,*)'u3dwithalo',maxval(u3dwithhalo),minval(u3dwithhalo)
+    write(6,*)'v3dwithalo',maxval(u3dwithhalo),minval(u3dwithhalo)
+  endif
+#endif
+!  vort=1000.
+! calculate vorticity
+! determine where have 2dx and 2dy
+  dx=dxwithhalo
+  dy=dywithhalo
+#if 0
+  imin=min(ihs+1,ids)
+  jmin=min(jhs+1,jds)
+  imax=max(ihe-1,ide)
+  jmax=max(jhe-1,jde)
+  if(mype.eq.1)then
+     write(6,*)'imin',imin,imax,'jmin',jmin,jmax,'ids',ids,ide,'j',jds,jde
+  endif
+! move to calc
+!  do j=jmin,jmax
+!    do i=imin,imax
+!      dx(i,j)=.5*dx(i,j)
+!      dy(i,j)=.5*dy(i,j)
+!    end do
+!  end do
+  if(mype.eq.1)then
+      write(6,*)'dx',maxval(dx),minval(dx)
+      write(6,*)'dy',maxval(dy),minval(dy)
+  endif
+#endif
+  if(mype<=1)then
+    write(80+mype,*)'top vort ids',ids,ide,' jds ',jds,jde
+    write(80+mype,*)'top vort ihs',ihs,ihe,' jhs ',jhs,jhe
+      call flush(80+mype)
+  endif
+  do k=1,nl
+    do j=jhs,jhe
+      do i=ihs,ihe
+!       these should be at dx/2 and dy/2 off center will do later so multiply by
+!       .5 for now
+        utmp(i,j)=u3dwithhalo(i,j,k)*dx(i,j)
+        vtmp(i,j)=v3dwithhalo(i,j,k)*dy(i,j)
+        utmp(i,j)=.5*utmp(i,j)
+        vtmp(i,j)=.5*vtmp(i,j)
+        if(mype<=1.and.k.eq.63.and.i<=3.and.j.ge.2.and.j.lt.5)then
+          write(90+mype,*)'dx',i,j-1,dx(i,j-1),i,j+1,dx(i,j+1)
+          write(90+mype,*)' dy ',i,j,dy(i,j),i+1,j,dy(i+1,j)
+       
+          if(i.eq.1)then
+            write(90+mype,*)'sum out',i,j,dx(i,j-1)+dx(i,j+1)+dy(i,j)+dy(i+1,j),'rarea',rarea(i,j)
+            write(90+mype,*)'sum out2',i,j,.5*(dx(i,j-1)+dx(i,j+1))+dy(i,j)+dy(i+1,j),'rarea',rarea(i,j)
+          else
+            write(90+mype,*)'sum out',i,j,dx(i,j-1)+dx(i,j+1)+dy(i-1,j)+dy(i+1,j),'rarea',rarea(i,j)
+          endif
+          call flush(90+mype)
+           
+        endif
+#if 0
+        if(mype<=1)then
+        if(j.eq.jbar.and.abs(i-ibar)<3.and.k.eq.63)then
+          if(mype<=1)then
+            write(6,*)'vtmp',vtmp(i,j),'v3dwithhalo',i,v3dwithhalo(i,j,k),'dy',dy(i,j)
+            write(6,*)'utmp',utmp(i,j),'u3dwithhalo',i,u3dwithhalo(i,j,k),'dx',dx(i,j)
+            write(80+mype,*)'vtmp',vtmp(i,j),'v3dwithhalo',i,v3dwithhalo(i,j,k),'dy',dy(i,j)
+            write(80+mype,*)'utmp',utmp(i,j),'u3dwithhalo',i,u3dwithhalo(i,j,k),'dx',dx(i,j)
+          endif
+        endif
+        endif
+#endif
+      end do
+    end do
+    do j=jhs+1,jhe-1
+      do i=ihs+1,ihe-1
+        vort(i,j,k)=rarea(i,j)*(utmp(i,j-1)-utmp(i,j+1)-vtmp(i-1,j)+vtmp(i+1,j))
+        if(mype<=1.and.abs(j-48)<=5.and.k.eq.63.and.i.eq.96)then
+          write(80+mype,*)'left  border middle ',vort(i,j,k),'utmp',j-1,utmp(i,j-1),j+1,utmp(i,j+1)
+          write(80+mype,*)'vtmp',i-1,j,vtmp(i-1,j),i+1,j,vtmp(i+1,j),'rarea',rarea(i,j)
+      call flush(80+mype)
+        endif
+#if 0
+        if(j.eq.jbar.and.abs(i-ibar)<3.and.k.eq.63)then
+          if(mype<=1)then
+            write(6,*)'vort',i,vort(i,j,k),'vtmp',i-1,vtmp(i-1,j),i+1,vtmp(i+1,j)
+            write(6,*)'utmp',i,j-1,utmp(i,j-1),utmp(i,j+1)
+            write(80+mype,*)'vort',i,vort(i,j,k),'vtmp',i-1,vtmp(i-1,j),i+1,vtmp(i+1,j)
+            write(80+mype,*)'utmp',i,j-1,utmp(i,j-1),utmp(i,j+1)
+          endif
+        endif
+#endif
+      end do
+    end do
+!   now handle outside where can not do full centered
+    if(ihs.eq.ids)then
+!     left side 1 dx and not two
+      do j=jhs+1,jhe-1
+        vort(ids,j,k)=rarea(ids,j)*(utmp(ids,j-1)-utmp(ids,j+1)-vtmp(ids,j)+vtmp(ids+1,j))
+      end do
+      if(jhs.eq.jds)then
+        vort(ids,jds,k)=rarea(ids,jds)*(utmp(ids,jds)-utmp(ids,jds+1)-vtmp(ids,jds)+vtmp(ids+1,jds))
+      endif
+      if(jhe.eq.jde)then
+        vort(ids,jde,k)=rarea(ids,jde)*(utmp(ids,jde-1)-utmp(ids,jde)-vtmp(ids,jde)+vtmp(ids+1,jde))
+      endif
+    endif
+    if(mype<=1.and.k.eq.63)then
+      write(80+mype,*)'ihe',ihe,'ide',ide
+      call flush(80+mype)
+    endif
+    if(ihe.eq.ide)then
+      if(mype<=1.and.k.eq.63)then
+        write(80+mype,*)'ihe.eq.ide j loop ',jhs+1,jhe-1,'ide',ide
+        call flush(80+mype)
+      endif
+      do j=jhs+1,jhe-1
+        vort(ide,j,k)=rarea(ide,j)*(utmp(ide,j-1)-utmp(ide,j+1)-vtmp(ide-1,j)+vtmp(ide,j))
+        if(mype<=1.and.k.eq.63)then
+          write(80+mype,*)'did left side ',ide,j,vort(ide,j,k)
+          call flush(80+mype)
+        endif
+        
+        if(mype<=1.and.k.eq.63.and.abs(j-48)<=5)then
+          write(80+mype,*)'left side ide',ide,j,'vort',vort(ide,j,k)
+          call flush(80+mype)
+        endif
+      end do
+      if(jhs.eq.jds)then
+        vort(ide,jds,k)=rarea(ide,jds)*(utmp(ide,jds)-utmp(ide,jds+1)-vtmp(ide-1,jds)+vtmp(ide,jds))
+        if(mype<=1.and.k.eq.63.and.jds.eq.65)then
+          write(80+mype,*)'bottom right',ide,jds,'vort',vort(ide,jds,k)
+!          write(80+mype,*)'br utmp',jds,utmp(ide,jds),jds+1,utmp(ide,jds)
+          !write(80+mype,*)'br vtmp',ide-1,vtmp(ide-1,jds),ide,vtmp(ide,jds)
+        endif
+      endif
+      if(jhe.eq.jde)then
+        vort(ide,jde,k)=rarea(ide,jde)*(utmp(ide,jde-1)-utmp(ide,jde)-vtmp(ide-1,jde)+vtmp(ide,jde))
+      endif
+    endif
+    if(jhs.eq.jds)then
+      do i=ihs+1,ihe-1
+        vort(i,jds,k)=rarea(i,jds)*(utmp(i,jds)-utmp(i,jds+1)-vtmp(i-1,jds)+vtmp(i+1,jds))
+      end do
+      if(ihs.eq.ids)then
+        vort(ids,jds,k)=rarea(ids,jds)*(utmp(ids,jds)-utmp(ids,jds+1)-vtmp(ids,jds)+vtmp(ids+1,jds))
+      endif
+      if(ihe.eq.ide)then
+        vort(ide,jds,k)=rarea(ide,jds)*(utmp(ide,jds)-utmp(ide,jds+1)-vtmp(ide-1,jds)+vtmp(ide,jds))
+      endif
+    endif
+    if(jhe.eq.jde)then
+      do i=ihs+1,ihe-1
+        vort(i,jde,k)=rarea(i,jde)*(utmp(i,jde-1)-utmp(i,jde)-vtmp(i-1,jde)+vtmp(i+1,jde))
+#if 0
+        if(k.eq.63.and.mype.eq.1)then
+          write(6,*)'top centered i',vort(i,jde,k),i,jde,'ide',ide,ihe
+          write(6,*)'utmp',utmp(i,jde-1:jde),'vtmp',i-1,vtmp(i-1,jde),i+1,vtmp(i+1,jde)
+        endif
+#endif
+      end do
+      if(ihs.eq.ids)then
+        vort(ids,jde,k)=rarea(ids,jde)*(utmp(ids,jde-1)-utmp(ids,jde)-vtmp(ids,jde)+vtmp(ids+1,jde))
+      endif
+      if(ihe.eq.ide)then
+        vort(ide,jde,k)=rarea(ide,jde)*(utmp(ide,jde-1)-utmp(ide,jde)-vtmp(ide,jde)+vtmp(ide+1,jde))
+      endif
+    endif
+    if(mype<=1.and.k.eq.63)then
+      if(ide>48)then
+        write(80+mype,*)'ids midr ',ids,ide,'jds',jds,jde,'ihs',ihs,ihe,'jhs',jhs,jhe
+!      if(jde>=48.and.jds<=48)then
+         do j=jds,jde
+!        do j=max(47,jds),min(50,jde)
+           write(80+mype,*)'vort midr',j,vort(96,j,k)
+         end do
+!       endif
+      call flush(80+mype)
+      endif
+    endif
+!   handle corners
+#if 0
+    if(mype.eq.1)then
+      write(6,*)'vort k',k,maxval(vort(:,:,k)),minval(vort(:,:,k))
+    endif
+    if(k.eq.63)then
+    do j=jds,jde
+      do i=ids,ide
+        if(abs(vort(i,j,k))>1.)then
+           write(6,*)'corners',i,j,'ids',ids,ide,'jds',jds,jde,'ihs',ihs,ihe,'j',jhs,jhe
+           call flush(6)
+        endif
+      end do
+    end do
+    endif
+#endif
+  end do
+  return
+  end subroutine calcvort
+end module calcvort_mod

@@ -1,0 +1,8 @@
+2664,2665c2664,2667
+< !              write(200+iam,*)'dv_hobr_ice ice ',dv_hobr_ice
+< !              call flush(200+iam)
+---
+>               if(isnan(dv_hobr))then
+>                 write(200+iam,*)'dv_hobr_ice ice ',dv_hobr_ice,' draw2d ',draw2d(i),'dz ',dz
+>                 call flush(200+iam)
+>               endif

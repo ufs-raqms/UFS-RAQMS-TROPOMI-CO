@@ -1,0 +1,34 @@
+#%Module######################################################################
+##
+##    NEMS FV3 Prerequisites: Theia/Intel
+
+proc ModulesHelp {} {
+  puts stderr "\tcit - loads modules required for building and running FV3 under NEMS on S4-submit/Intel"
+}
+
+module-whatis "loads NEMS FV3 prerequisites for S4-submit/Intel"
+
+# NOTE: the "module purge" and loading of the module command are
+# handled by the module-setup.sh (or .csh) script.
+
+##
+## load programming environment
+## this typically includes compiler, MPI and job scheduler
+##
+module load license_intel
+module load intel/18.0.4
+module load hdf/4.2.14
+module load hdf5/1.8.21
+module load netcdf4/4.6.2
+module use -a /home/lenzen/FV3libs/modulefiles
+module load bacio/v2.0.1
+module load sp/v2.0.2
+module load ip/v2.0.0
+module load w3nco/v2.0.6
+module load w3emc/v2.0.5
+module load nemsio/v1.0.0
+module use /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/modulefiles
+#module load esmf/8.0.0
+#module load esmf/8.0.g
+module load esmf/$ESMFV
+setenv FC mpiifort

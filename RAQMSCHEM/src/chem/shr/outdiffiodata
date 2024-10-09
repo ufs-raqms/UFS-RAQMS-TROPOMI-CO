@@ -1,0 +1,3 @@
+1820a1821,1822
+> !        write(200+iam,*)'zwligrd',tile,maxval(zlwigrd),minval(zlwigrd)
+> !        call flush(200+iam)

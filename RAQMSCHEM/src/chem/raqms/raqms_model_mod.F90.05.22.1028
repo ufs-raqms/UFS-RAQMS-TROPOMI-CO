@@ -1,0 +1,215 @@
+module raqms_model_mod
+contains
+  subroutine raqms_model_advance(rc)
+  use machine,only : kind_phys
+!  use ozne_def,only : oz_lat,kozpl,kozc
+  use chem_types_mod
+  use raqmschem_state_mod
+  use raqmschem_config_mod
+  use raqmschem_data_mod
+  use raqmschem_model_mod
+  use chem_comm_mod, only : chem_comm_get
+!  use raqmschem_comm_mod, only : chem_reducetile_pushwithhalo
+  use raqmschem_io_mod, only : chem_io_write,chem_io_read
+  use raqms_mod
+  use calcdxdy, only : initdxdy
+  use calcvort_mod, only :calcvort
+  use calcvort_dgrid_mod, only :calcvortdgrid
+  use field_manager_mod, only : find_field_index
+  use raqmschem_iodata_mod, only : raqmschem_chem_init
+  use raqmschem_tracers_mod
+  implicit none
+  type(chem_state_type),  pointer :: stateIn, stateOut
+  integer rc,localrc,de,is,ie,js,je,ni,nl,i,decount,advancecount
+  integer ihs,ihe,jhs,jhe
+  integer its,ite,jts,jte,ims,ime,jms,jme,mype
+  integer advnaceCount, julday, mm, tz,yy,dd,h,m
+  real(CHEM_KIND_R8) :: dts,f
+  real(CHEM_KIND_R8), dimension(:,:), pointer :: lat, lon 
+  type(raqmschem_config_type), pointer :: config
+  type(chem_data_type),   pointer :: data
+  integer icall,isave
+  integer tile,j,k,ii,jj,ico,ino2,io3mr,io3mr2,ipotvort
+  save ico,ino2,io3mr,io3mr2,ipotvort
+  real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: potvorttrace
+  real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: varin
+  real(CHEM_KIND_R4),allocatable,dimension(:,:) :: vort200
+  real(CHEM_KIND_R4) :: af
+  save icall
+  data icall/0/
+  logical first
+  save first
+  data first/.true./
+  call raqmschem_model_get(deCount=deCount, tile=tile,rc=localrc)
+  if (deCount < 1) return
+  call chem_comm_get(localpe=mype)
+  call chem_model_clock_get(advanceCount=advanceCount, dts=dts, yy=yy, mm=mm, dd=dd, h=h, m=m, tz=tz, julday=julday, rc=localrc)
+!  if(mype.eq.0)then
+    icall=icall+1
+!  endif
+  if(first)then
+    call setchempointers
+    ico=find_field_index(1,'co')
+    ino2=find_field_index(1,'no2')
+    io3mr=find_field_index(1,'o3mr')
+    io3mr2=find_field_index(1,'o3mr2')
+    ipotvort=find_field_index(1,'potvort')
+    if(mype.eq.0)then
+    write(6,*)'p_co',p_co,'p_no2',p_no2
+    write(6,*)'ico',ico,' ino2 ',ino2,' io3mr ',io3mr
+    write(6,*)'io3mr2',io3mr2,'potvort',ipotvort
+    call flush(6)
+    endif
+  endif
+  do de = 0, deCount-1
+      call raqmschem_model_get(de=de, config=config, data=data, &
+        stateIn=stateIn, stateOut=stateOut, rc=localrc)
+     call chem_model_domain_get(de=de, ids=is, ide=ie, jds=js, jde=je, ni=ni, nl=nl, &
+     lon=lon, lat=lat, rc=localrc,its=its,ite=ite,jts=jts,jte=jte,ims=ims,ime=ime,jms=jms,jme=jme) 
+     ihs=max(is-1,its)
+     jhs=max(js-1,jts)
+     ihe=min(ie+1,ite)
+     jhe=min(je+1,jte)
+     if(first)then
+!      can calculate griddx,and griddy first time
+!       if(mype.eq.0)then
+!         write(6,*)'zzzz ajl initdxdy'
+!         call flush(6)
+!       endif
+       call initdxdy(is,ie,js,je,lon,lat,ihs,ihe,jhs,jhe,data%griddx,data%griddy,de,mype)
+     endif
+    if(.not.allocated(data%vort))then
+      allocate(data%vort(is:ie,js:je,nl))
+    endif
+!    call calcvortdgrid(stateIn%us3d,stateIn%vs3d,statein%area,data%griddx,data%griddy, &
+    call calcvortdgrid(stateIn%us3d,stateIn%vs3d,statein%prl3d,statein%tk3d,statein%area, &
+     lat,is,ie,js,je,nl,ihs,ihe,jhs,jhe,de,mype)
+!     write(6,*)'vort',maxval(data%vort),minval(data%vort)
+!   prl3d is on dashes
+    if(.not.allocated(vort200))then
+      allocate(vort200(is:ie,js:je))
+      vort200=0.0
+    endif
+    do j=js,je
+      jj=j-js+1
+      do i=is,ie
+        ii=i-is+1
+        do k=1,nl-1
+          if(statein%prl3d(ii,jj,k)>=20000..and.statein%prl3d(ii,jj,k+1)<=20000.)then
+            af=(20000.-statein%prl3d(ii,jj,k+1))/(statein%prl3d(ii,jj,k)-statein%prl3d(ii,jj,k+1))
+            vort200(i,j)=data%vort(i,j,k)*af+data%vort(i,j,k+1)*(1.-af)
+            exit
+          endif
+        end do
+      end do
+    end do
+    if(.not.allocated(data%absvort))then
+       allocate(data%absvort(is:ie,js:je,nl))
+    endif
+          
+        
+    
+    if(first)then
+!     read in chemicals
+!      write(6,*)'input_chem_inname',trim(config%input_chem_inname)
+!      call flush(6)
+      allocate(varin(is:ie,js:je,nl))
+!      varin=0
+      call raqmschem_chem_init(trim(config%input_chem_inname),statein,varin,de=de,rc=localrc)
+!      call chem_io_read(trim(config%input_chem_inname),varin,varname='co',rc=localrc)
+!      write(6,*)'chem_io_read varin co',maxval(varin),minval(varin)
+!      statein%tr3d(:,:,:,ico)=varin
+!      varin=0
+!      call chem_io_read(trim(config%input_chem_inname),varin,varname='no2',rc=localrc)
+!      write(6,*)'chem_io_read varin no2',maxval(varin),minval(varin)
+!      statein%tr3d(:,:,:,ino2)=varin
+      call chem_io_write('vort.nc',data%vort,path=trim(config%emi_outname),de=de,rc=localrc)
+      call chem_io_write('absvort.nc',data%absvort,path=trim(config%emi_outname),de=de,rc=localrc)
+    endif
+    if(icall.eq.12)then
+      call chem_io_write('vort200.nc',vort200,path=trim(config%emi_outname),de=de,rc=localrc)
+    endif
+    deallocate(vort200)
+!    if(mype.eq.0)then
+!      write(6,*)'zzz ajl call chem_io_write potvort ',icall
+!      call flush(6)
+!    endif
+!   put at hour
+    if(mod(icall,2).eq.0)then
+      isave=icall/2
+      allocate(potvorttrace(is:ie,js:je,nl))
+      if(ipotvort>0)then
+        potvorttrace=statein%tr3d(:,:,:,ipotvort)
+      call chem_io_write('potvorttrace.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='potvort',rc=localrc)
+       endif
+    endif
+    call raqms_advance(de,dts,advanceCount, &
+    StateIn%pr3d, &
+    StateIn%prl3d, &
+    Statein%tk3d, &
+    StateIn%tr3d, &
+    StateOut%tr3d, &
+    config%ntra, &
+    config%numgas, &
+    lon,lat, &
+    yy,mm,dd,h,m,tz,julday, &
+    is, ie, js, je, 1, nl, &
+    is, ie, js, je, 1, nl, &
+    data, &
+    rc=localrc)
+!   put at hour
+!    write(6,*)'co out',maxval(stateout%tr3d(:,:,:,ico))
+!    write(6,*)'no2 out',maxval(stateout%tr3d(:,:,:,ino2))
+    if(mod(icall,2).eq.0)then
+      isave=icall/2
+      if(ico>0)then
+        potvorttrace=stateout%tr3d(:,:,:,ico)
+!        write(6,*)'ico out',maxval(stateout%tr3d(:,:,:,ico)),minval(stateout%tr3d(:,:,:,ico))
+!        call flush(6)
+        call chem_io_write('co.new.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='co',rc=localrc)
+        call chem_io_write('tracer.out.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='co',rc=localrc)
+      endif
+      if(ino2>0)then
+        potvorttrace=stateout%tr3d(:,:,:,ino2)
+!        write(6,*)'ino2 out',maxval(stateout%tr3d(:,:,:,ino2)),minval(stateout%tr3d(:,:,:,ino2))
+!        call flush(6)
+      call chem_io_write('no2.new.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='no2',rc=localrc)
+      call chem_io_write('tracer.out.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='no2',rc=localrc)
+      endif
+      call chem_io_write('potvort.nc',data%potvort,path=trim(config%emi_outname),de=de,time=isave,varname='potvort',rc=localrc)
+      if(io3mr>0)then
+        potvorttrace=stateout%tr3d(:,:,:,io3mr)
+        call chem_io_write('o3mra.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='o3mr',rc=localrc)
+        
+      endif
+      if(io3mr2>0)then
+        potvorttrace=stateout%tr3d(:,:,:,io3mr2)
+        call chem_io_write('o3mrchem.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='o3mr',rc=localrc)
+      endif
+      if(io3mr>0.and.io3mr2>0)then
+        if(mype==0)then
+          write(6,*)icall,'chem',maxval(stateout%tr3d(:,:,:,io3mr2)),'phys',maxvaL(stateout%tr3d(:,:,:,io3mr))
+        endif
+        potvorttrace=stateout%tr3d(:,:,:,io3mr2)-stateout%tr3d(:,:,:,io3mr)
+#if 0
+        do k=1,nl
+          do j=js,je
+            jj=j-js+1
+            do i=is,ie
+              ii=i-is+1
+              if(abs(potvortrace(i,j,k))>1.e-10)then
+                 write(6,*)'diff',i,j,k,potvorttrace(i,j,k),'chem',stateout%tr3d(ii,jj,k,io3mr2),stateout%tr3d(ii,jj,k,io3mr)
+              endif
+            end do
+          end do
+        end do
+#endif
+        call chem_io_write('diffo3mrchem.nc',potvorttrace,path=trim(config%emi_outname),de=de,time=isave,varname='o3mr',rc=localrc)
+      endif
+      deallocate(potvorttrace)
+    endif
+  end do
+  first=.false.
+  return
+  end subroutine raqms_model_advance
+end module raqms_model_mod

@@ -1,0 +1,432 @@
+Binary file libraqmschem.a matches
+outraqms.AOD.SAMF:<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+outraqms.AOD.SAMF:<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+raqms/printerr:                  if(gsicem(n).eq.'co')then
+raqms/printerr:                  elseif(gsicem(n).eq.'no2')then
+raqms/printerr:                  elseif(gsicem(n).eq.'o3vmr')then
+raqms/printerr:                  elseif(gsicem(n).eq.'ch2o')then
+raqms/printerr:                  elseif(numgsicem>=14)then
+raqms/printerr:!                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/printerr:                   if(gsicem(n).eq.'o3vmr')then
+raqms/printerr:                   if(gsicem(n).eq.'co')then
+Binary file raqms/libraqms.a matches
+raqms/printomps:        allocate (tempgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/printomps:!        write(6,*)'numgsicem',numgsicem
+raqms/printomps:        if(gsicem(1).eq.'o3vmr')then
+raqms/printomps:        if(numgsicem==14)then
+raqms/printomps:        do n=1,numgsicem
+raqms/printomps:            write(6,*)'read ',trim(gsicem(n))//'inc',n
+raqms/printomps:          de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/printomps:          de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/printomps:                  if(gsicem(n).eq.'co')then
+raqms/printomps:                  elseif(gsicem(n).eq.'no2')then
+raqms/printomps:                  elseif(gsicem(n).eq.'o3vmr')then
+raqms/printomps:                  elseif(gsicem(n).eq.'ch2o')then
+raqms/printomps:                  elseif(numgsicem==14)then
+raqms/printomps:!                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/printomps:!                  if(gsicem(n).eq.'o3vmr')then
+raqms/printomps:                   if(gsicem(n).eq.'o3vmr')then
+raqms/printomps:!                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+raqms/printomps:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+raqms/printomps:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+raqms/diff.raqms.model:< !      call gsivar(numgsicem,gsicem,loccem)
+raqms/diff.raqms.model:< !        write(6,*)'numgsicem',numgsicem
+raqms/diff.raqms.model:< !        do n=1,numgsicem
+raqms/diff.raqms.model:< !          write(6,*)n,gsicem(n),'loc',loccem(n)
+raqms/diff.raqms.model:< !            write(6,*)'numgsicem',numgsicem
+raqms/diff.raqms.model:<             if(numgsicem==14)then
+raqms/diff.raqms.model:< !              write(6,*)'gsicem',gsicem(1:numgsicem)
+raqms/diff.raqms.model:<               if(gsicem(1).eq.'sulf')then
+raqms/diff.raqms.model:<               do n=1,numgsicem
+raqms/diff.raqms.model:<                   if(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<                     //cdateout(1:10)//'/'//'tropomi.'//trim(gsicem(n))//'.bufr.'//cdateout(1:10)
+raqms/diff.raqms.model:< !                elseif(gsicem(m).eq.'o3vmr')then
+raqms/diff.raqms.model:<                 elseif(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+raqms/diff.raqms.model:<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+raqms/diff.raqms.model:<                 if(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<             write(6,*)'numgsicem',numgsicem
+raqms/diff.raqms.model:<           allocate(gsiinc(is:ie,js:je,nl,numgsicem))
+raqms/diff.raqms.model:<           allocate(pergsiv(is:ie,js:je,nl,numgsicem))
+raqms/diff.raqms.model:<           allocate(colgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/diff.raqms.model:< !        call gsivar(numgsicem,gsicem,loccem)
+raqms/diff.raqms.model:< !          write(6,*)'numgsicem',numgsicem,gsicem(1:numgsicem)
+raqms/diff.raqms.model:<         allocate (tempgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/diff.raqms.model:< !        write(6,*)'numgsicem',numgsicem
+raqms/diff.raqms.model:<         if(gsicem(1).eq.'o3vmr')then
+raqms/diff.raqms.model:<         if(gsicem(1).eq.'co')then
+raqms/diff.raqms.model:<         if(numgsicem==14)then
+raqms/diff.raqms.model:<         do n=1,numgsicem
+raqms/diff.raqms.model:<             write(6,*)'read ',trim(gsicem(n))//'inc',n
+raqms/diff.raqms.model:<           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/diff.raqms.model:<           de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/diff.raqms.model:<                   if(gsicem(n).eq.'co')then
+raqms/diff.raqms.model:<                   elseif(gsicem(n).eq.'no2')then
+raqms/diff.raqms.model:<                   elseif(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<                   elseif(gsicem(n).eq.'ch2o')then
+raqms/diff.raqms.model:<                   elseif(numgsicem==14)then
+raqms/diff.raqms.model:< !                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/diff.raqms.model:< !                  if(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<                    if(gsicem(n).eq.'o3vmr')then
+raqms/diff.raqms.model:<                    if(gsicem(n).eq.'co')then
+raqms/diff.raqms.model:< !                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+raqms/diff.raqms.model:< !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+raqms/diff.raqms.model:< !                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+raqms/diff.raqms.model:<       if(numgsicem==14)then
+raqms/printnn:              if(gsicem(n).eq.'co')then
+raqms/printnn:              elseif(gsicem(n).eq.'no2')then
+raqms/printnn:              elseif(gsicem(n).eq.'o3vmr')then
+raqms/printnn:              elseif(gsicem(n).eq.'ch2o')then
+raqms/printnn:              elseif(gsicem(n)=='AOD')then
+raqms/printnn:!                write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/printnn:            if(gsicem(n).eq.'o3vmr')then
+raqms/printnn:            else if(gsicem(n).eq.'co')then
+raqms/raqms_model_mod.F90:  use raqmschem_pmgrid_mod, only : gsivar,numgsicem,gsicem,loccem
+raqms/raqms_model_mod.F90:!  integer numgsicem,loccem(100),countsleep,n,numneg
+raqms/raqms_model_mod.F90:!  character *20 gsicem(100)
+raqms/raqms_model_mod.F90:!      call gsivar(numgsicem,gsicem,loccem)
+raqms/raqms_model_mod.F90:!        write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90:!        do n=1,numgsicem
+raqms/raqms_model_mod.F90:!          write(6,*)n,gsicem(n),'loc',loccem(n)
+raqms/printper:                  if(gsicem(n).eq.'co')then
+raqms/printper:                  elseif(gsicem(n).eq.'no2')then
+raqms/printper:                  elseif(gsicem(n).eq.'o3vmr')then
+raqms/printper:                  elseif(gsicem(n).eq.'ch2o')then
+raqms/printper:                  elseif(numgsicem==14)then
+raqms/printper:!                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/printper:!                  if(gsicem(n).eq.'o3vmr')then
+raqms/printper:                   if(gsicem(n).eq.'o3vmr')then
+raqms/printper:!                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+raqms/printper:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+raqms/printper:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+Binary file raqms/libraqms_a-chemgsimod.o matches
+raqms/chemgsimod.F90:  use raqmschem_pmgrid_mod, only : tile,ibeg,iam,numgsicem,gsivar,gsicem,nstepat,cdateat
+raqms/chemgsimod.F90:      write(6,*)'numgsicem',numgsicem
+raqms/chemgsimod.F90:      if(numgsicem>=14)then
+raqms/chemgsimod.F90:        write(6,*)'gsicem',gsicem(1:numgsicem)
+raqms/chemgsimod.F90:        if(gsicem(1).eq.'sulf')then
+raqms/chemgsimod.F90:          do n=1,numgsicem
+raqms/chemgsimod.F90:              if(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:                //cdateout(1:10)//'/'//'tropomi.'//trim(gsicem(n))//'.bufr.'//cdateout(1:10)
+raqms/chemgsimod.F90:!            elseif(gsicem(m).eq.'o3vmr')then
+raqms/chemgsimod.F90:            elseif(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:            if(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:      allocate(pergsiv(is:ie,js:je,nl,numgsicem))
+raqms/chemgsimod.F90:      allocate(colgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/chemgsimod.F90:  do n=1,numgsicem
+raqms/chemgsimod.F90:    gsichemp=>gsiarray(n)%gsicem
+raqms/chemgsimod.F90:    write(200+iam,*)'gsicem',shape(gsicem),'numgsicem',numgsicem
+raqms/chemgsimod.F90:    write(200+iam,*)'gsicem',gsicem,'n',n
+raqms/chemgsimod.F90:    write(200+iam,*)'gsicem',gsicem(n)
+raqms/chemgsimod.F90:        write(6,*)'numgsicem',numgsicem,'is',is,ie,js,je,nl,'ngsivar',ngsivar
+raqms/chemgsimod.F90:      write(6,*)'gsiinc',shape(gsiinc),'n',n,'gsicem',gsicem(n)
+raqms/chemgsimod.F90:    if(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:      write(6,*)'gsicem1',gsicem(n)
+raqms/chemgsimod.F90:!    endif ! gsicem==o3vmr
+raqms/chemgsimod.F90:    elseif(gsicem(n).eq.'co')then
+raqms/chemgsimod.F90:!    endif ! gsicem==co
+raqms/chemgsimod.F90:!    if(gsicem(n)=='CO')then
+raqms/chemgsimod.F90:!    endif ! gsicem==co
+raqms/chemgsimod.F90:    else if(gsicem(n)=='AOD')then
+raqms/chemgsimod.F90:      write(6,*)'read ',trim(gsicem(n))//'inc',n
+raqms/chemgsimod.F90:              if(gsicem(n).eq.'co')then
+raqms/chemgsimod.F90:              elseif(gsicem(n).eq.'no2')then
+raqms/chemgsimod.F90:              elseif(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:              elseif(gsicem(n).eq.'ch2o')then
+raqms/chemgsimod.F90:              elseif(gsicem(n)=='AOD')then
+raqms/chemgsimod.F90:                write(6,*)'var not defined yet',n,gsicem(n)
+raqms/chemgsimod.F90:!                write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/chemgsimod.F90:            if(gsicem(n).eq.'o3vmr')then
+raqms/chemgsimod.F90:            else if(gsicem(n).eq.'co')then
+raqms/chemgsimod.F90:    if(gsicem(n)=='AOD')then
+raqms/raqms_model_mod.F90.05.02.2022.save:  use raqmschem_pmgrid_mod, only : gsivar,numgsicem,gsicem,loccem
+raqms/raqms_model_mod.F90.05.02.2022.save:!  integer numgsicem,loccem(100),countsleep,n,numneg
+raqms/raqms_model_mod.F90.05.02.2022.save:!  character *20 gsicem(100)
+raqms/raqms_model_mod.F90.05.02.2022.save:!      call gsivar(numgsicem,gsicem,loccem)
+raqms/raqms_model_mod.F90.05.02.2022.save:!        write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:!        do n=1,numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:!          write(6,*)n,gsicem(n),'loc',loccem(n)
+raqms/raqms_model_mod.F90.05.02.2022.save:!      call gsivar(numgsicem,gsicem,loccem)
+raqms/raqms_model_mod.F90.05.02.2022.save:!        write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:!        do n=1,numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:!          write(6,*)n,gsicem(n),'loc',loccem(n)
+raqms/raqms_model_mod.F90.05.02.2022.save:!            write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:            if(numgsicem==14)then
+raqms/raqms_model_mod.F90.05.02.2022.save:!              write(6,*)'gsicem',gsicem(1:numgsicem)
+raqms/raqms_model_mod.F90.05.02.2022.save:              if(gsicem(1).eq.'sulf')then
+raqms/raqms_model_mod.F90.05.02.2022.save:              do n=1,numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:                  if(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                    //cdateout(1:10)//'/'//'tropomi.'//trim(gsicem(n))//'.bufr.'//cdateout(1:10)
+raqms/raqms_model_mod.F90.05.02.2022.save:!                elseif(gsicem(m).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                elseif(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                if(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:            write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:          allocate(gsiinc(is:ie,js:je,nl,numgsicem))
+raqms/raqms_model_mod.F90.05.02.2022.save:          allocate(pergsiv(is:ie,js:je,nl,numgsicem))
+raqms/raqms_model_mod.F90.05.02.2022.save:          allocate(colgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/raqms_model_mod.F90.05.02.2022.save:!        call gsivar(numgsicem,gsicem,loccem)
+raqms/raqms_model_mod.F90.05.02.2022.save:!          write(6,*)'numgsicem',numgsicem,gsicem(1:numgsicem)
+raqms/raqms_model_mod.F90.05.02.2022.save:        allocate (tempgsiinc(is:ie,js:je,nl,numgsicem))
+raqms/raqms_model_mod.F90.05.02.2022.save:!        write(6,*)'numgsicem',numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:        if(gsicem(1).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:        if(numgsicem==14)then
+raqms/raqms_model_mod.F90.05.02.2022.save:        do n=1,numgsicem
+raqms/raqms_model_mod.F90.05.02.2022.save:            write(6,*)'read ',trim(gsicem(n))//'inc',n
+raqms/raqms_model_mod.F90.05.02.2022.save:          de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/raqms_model_mod.F90.05.02.2022.save:          de=de,varname='inc'//trim(gsicem(n)),rc=localrc)
+raqms/raqms_model_mod.F90.05.02.2022.save:                  if(gsicem(n).eq.'co')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                  elseif(gsicem(n).eq.'no2')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                  elseif(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                  elseif(gsicem(n).eq.'ch2o')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                  elseif(numgsicem==14)then
+raqms/raqms_model_mod.F90.05.02.2022.save:!                    write(6,*)'n',n,'loccem',loccem(n),'gsicem',gsicem(n)
+raqms/raqms_model_mod.F90.05.02.2022.save:!                  if(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:                   if(gsicem(n).eq.'o3vmr')then
+raqms/raqms_model_mod.F90.05.02.2022.save:!                    write(6,*)trim(gsicem(n)),' very small ',i,j,k,stateout%tr3d(ii,jj,k,loccem(n)) 
+raqms/raqms_model_mod.F90.05.02.2022.save:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+1,stateout%tr3d(ii,jj,k+1,loccem(n))
+raqms/raqms_model_mod.F90.05.02.2022.save:!                      write(6,*)trim(gsicem(n)),' above ',i,j,k+2,stateout%tr3d(ii,jj,k+2,loccem(n))
+raqms/raqms_model_mod.F90.05.02.2022.save:      if(numgsicem==14)then
+shr/printreadchem_gsiinc:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/printreadchem_gsiinc:!    character*20 :: gsicem(100)
+shr/printreadchem_gsiinc:!    integer numgsicem,loccem(100)
+shr/raqmschem_pmgrid_mod.F90:integer numgsicem
+shr/raqmschem_pmgrid_mod.F90:character *8,dimension(:),allocatable :: gsicem,gsivarr
+shr/raqmschem_pmgrid_mod.F90:    character *8,allocatable,dimension(:) :: gsicem
+shr/raqmschem_pmgrid_mod.F90:    numgsicem=igot
+shr/raqmschem_pmgrid_mod.F90:!      write(6,*)'numgsicem',numgsicem,'allocated',allocated(loccem)
+shr/raqmschem_pmgrid_mod.F90:      allocate(gsiarray(numgsicem))
+shr/raqmschem_pmgrid_mod.F90:      allocate (loccem(numgsicem),gsicem(numgsicem),gsivarr(numgsicem))
+shr/raqmschem_pmgrid_mod.F90:    do i=1,numgsicem
+shr/raqmschem_pmgrid_mod.F90:      gsicem(i)=cinput(is(i):ie(i))
+shr/raqmschem_pmgrid_mod.F90:        write(6,*)'gsicem',i,gsicem(i),'p_ox',p_ox
+shr/raqmschem_pmgrid_mod.F90:      if(gsicem(i).eq.'o3vmr')then
+shr/raqmschem_pmgrid_mod.F90:        allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+shr/raqmschem_pmgrid_mod.F90:        gsiarray(i)%gsicem(1)=gsicem(i)
+shr/raqmschem_pmgrid_mod.F90:      elseif(gsicem(i).eq.'AOD')then
+shr/raqmschem_pmgrid_mod.F90:        allocate (gsiarray(i)%loccem(15),gsiarray(i)%gsicem(15))
+shr/raqmschem_pmgrid_mod.F90:          gsiarray(i)%gsicem(n)=cemaod(n)
+shr/raqmschem_pmgrid_mod.F90:            write(6,*)'gsicem',i,gsicem(i)
+shr/raqmschem_pmgrid_mod.F90:        allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+shr/raqmschem_pmgrid_mod.F90:        loccem(i)=find_field_index(1,gsicem(i))
+shr/raqmschem_pmgrid_mod.F90:        gsiarray(i)%gsicem(1)=gsicem(i)
+shr/raqmschem_pmgrid_mod.F90:!      write(6,*)'loccem',i,loccem(i),gsicem(i)
+shr/raqmschem_pmgrid_mod.F90:        write(6,*)'i',i,'gsicem',gsicem(i),'ngsivar',gsiarray(i)%ngsivar
+shr/raqmschem_pmgrid_mod.F90:          write(6,*)'loccem',gsiarray(i)%loccem(n),'gsichem',gsiarray(i)%gsicem(n)
+shr/raqmschem_pmgrid_mod.F90:    numgsicem=0
+shr/printgsi_write:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/printgsi_write:!    character*20 :: gsicem(100)
+shr/printgsi_write:!    integer numgsicem,loccem(100)
+shr/printgsi_write:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printgsi_write:!          do i=1,numgsicem
+shr/printgsi_write:!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+shr/printgsi_write:           write(6,*)'numgsicem',numgsicem
+shr/printgsi_write:        if(numgsicem>=14)then
+shr/printgsi_write:!        write(6,*)'gsi_write numgsicem',numgsicem
+shr/printgsi_write:        do i=1,numgsicem
+shr/printgsi_write:          if(gsicem(i).eq.'o3vmr')then
+shr/printgsi_write:!            write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+shr/printgsi_write:          if(gsicem(i)(1:2).eq.'bc'.or.gsicem(i)(1:3).eq.'oc1'.or. &
+shr/printgsi_write:            gsicem(i)(1:3).eq.'oc2'.or.                               &
+shr/printgsi_write:            gsicem(i)(1:3).eq.'dus'.or.gsicem(i)(1:3).eq.'sea'.or. &
+shr/printgsi_write:!           gsicem(i)(1:3).eq.'so2'.or.gsicem(i)(1:4).eq.'sulf')then
+shr/printgsi_write:            gsicem(i)(1:4).eq.'sulf')then
+shr/printgsi_write:!          write(6,*)'writegsi',mype,i,gsicem(i),units
+shr/printgsi_write:!            write(6,*)'tracer gsi write',gsicem(i),iprn,jprn,traceout(iprn,jprn,1)
+shr/printgsi_write:          varname=gsicem(i),units=units,rc=localrc)
+shr/printgsi_write:          varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+shr/printgsi_write:          if(gsicem(i)=='o3vmr')then
+shr/printgsi_write:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/printgsi_write:!    character*20 :: gsicem(100)
+shr/printgsi_write:!    integer numgsicem,loccem(100)
+shr/printgsi_write:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/printgsi_write:!    character*20 :: gsicem(100)
+shr/printgsi_write:!    integer numgsicem,loccem(100)
+shr/printgsi_write:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/printgsi_write:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printgsi_write:          do m=1,numgsicem
+shr/printgsi_write:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/printgsi_write:            if(numgsicem>=14)then
+shr/printgsi_write:              varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/printgsi_write:              varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/printgsi_write:            varname='per'//trim(gsicem(m)),units='fraction',rc=localrc)
+shr/printgsi_write:            varname='int'//trim(gsicem(m)),units='sum',rc=localrc)
+shr/printgsi_write:          if(gsicem(1).eq.'o3vmr')then
+shr/printgsi_write:          if(gsicem(1).eq.'co')then
+shr/printgsi_write:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/printgsi_write:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+Binary file shr/libshr_a-raqmschem_iodata_mod.o matches
+shr/printgsivar:    numgsicem=igot
+shr/printgsivar:!      write(6,*)'numgsicem',numgsicem,'allocated',allocated(loccem)
+shr/printgsivar:      allocate (loccem(numgsicem),gsicem(numgsicem))
+shr/printgsivar:    do i=1,numgsicem
+shr/printgsivar:      gsicem(i)=cinput(is(i):ie(i))
+shr/printgsivar:        write(6,*)'gsicem',i,gsicem(i),'p_ox',p_ox
+shr/printgsivar:      if(gsicem(i).eq.'o3vmr')then
+shr/printgsivar:        loccem(i)=find_field_index(1,gsicem(i))
+shr/printgsivar:!      write(6,*)'loccem',i,loccem(i),gsicem(i)
+shr/printgsivar:    numgsicem=0
+shr/printchemwrite:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/printchemwrite:!    character*20 :: gsicem(100)
+shr/printchemwrite:!    integer numgsicem,loccem(100)
+shr/printchemwrite:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/printchemwrite:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printchemwrite:          do m=1,numgsicem
+shr/printchemwrite:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/printchemwrite:            if(numgsicem>=14)then
+shr/printchemwrite:              varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/printchemwrite:              varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/printchemwrite:            varname='per'//trim(gsicem(m)),units='fraction',rc=localrc)
+shr/printchemwrite:            varname='int'//trim(gsicem(m)),units='sum',rc=localrc)
+shr/printchemwrite:          if(gsicem(1).eq.'o3vmr')then
+shr/printchemwrite:          if(gsicem(1).eq.'co')then
+shr/printchemwrite:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/printchemwrite:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+Binary file shr/libshr_a-raqmschemcomm_mod.o matches
+shr/printgsivar2:    numgsicem=igot
+shr/printgsivar2:!      write(6,*)'numgsicem',numgsicem,'allocated',allocated(loccem)
+shr/printgsivar2:      allocate(gsiarray(numgsicem))
+shr/printgsivar2:      allocate (loccem(numgsicem),gsicem(numgsicem),gsivarr(numgsicem))
+shr/printgsivar2:    do i=1,numgsicem
+shr/printgsivar2:      gsicem(i)=cinput(is(i):ie(i))
+shr/printgsivar2:        write(6,*)'gsicem',i,gsicem(i),'p_ox',p_ox
+shr/printgsivar2:      if(gsicem(i).eq.'o3vmr')then
+shr/printgsivar2:        allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+shr/printgsivar2:        gsiarray(i)%gsicem(1)=gsicem(i)
+shr/printgsivar2:      elseif(gsicem(i).eq.'AOD')then
+shr/printgsivar2:        allocate (gsiarray(i)%loccem(15),gsiarray(i)%gsicem(15))
+shr/printgsivar2:          gsiarray(i)%gsicem(n)=cemaod(n)
+shr/printgsivar2:            write(6,*)'gsicem',i,gsicem(i)
+shr/printgsivar2:        allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+shr/printgsivar2:        loccem(i)=find_field_index(1,gsicem(i))
+shr/printgsivar2:        gsiarray(i)%gsicem(1)=gsicem(i)
+shr/printgsivar2:!      write(6,*)'loccem',i,loccem(i),gsicem(i)
+shr/printgsivar2:        write(6,*)'i',i,'gsicem',gsicem(i),'ngsivar',gsiarray(i)%ngsivar
+shr/printgsivar2:          write(6,*)'loccem',gsiarray(i)%loccem(n),'gsichem',gsiarray(i)%gsicem(n)
+shr/printgsivar2:    numgsicem=0
+shr/raqmschem_iodata_mod.F90:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem
+shr/raqmschem_iodata_mod.F90:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90:    character*8,pointer,dimension(:) :: gsicem
+shr/raqmschem_iodata_mod.F90:!        call gsivar(numgsicem,gsicem,loccem)
+shr/raqmschem_iodata_mod.F90:!          do i=1,numgsicem
+shr/raqmschem_iodata_mod.F90:!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+shr/raqmschem_iodata_mod.F90:           write(6,*)'numgsicem',numgsicem
+shr/raqmschem_iodata_mod.F90:        if(numgsicem>=14)then
+shr/raqmschem_iodata_mod.F90:!        write(6,*)'gsi_write numgsicem',numgsicem
+shr/raqmschem_iodata_mod.F90:        do ii=1,numgsicem
+shr/raqmschem_iodata_mod.F90:          gsicem=>gsiarray(ii)%gsicem
+shr/raqmschem_iodata_mod.F90:              write(6,*)'gsicem',i,gsicem(i),'loccem',loccem(i)
+shr/raqmschem_iodata_mod.F90:!             write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+shr/raqmschem_iodata_mod.F90:            varname=gsicem(i),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90:            varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/raqmschem_iodata_mod.F90:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/raqmschem_iodata_mod.F90:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+shr/raqmschem_iodata_mod.F90:    character *8,pointer,dimension(:) :: gsicem
+shr/raqmschem_iodata_mod.F90:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/raqmschem_iodata_mod.F90:!        call gsivar(numgsicem,gsicem,loccem)
+shr/raqmschem_iodata_mod.F90:        do mm=1,numgsicem
+shr/raqmschem_iodata_mod.F90:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/raqmschem_iodata_mod.F90:                varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='units',rc=localrc)
+shr/raqmschem_iodata_mod.F90:                varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='ppv',rc=localrc)
+shr/raqmschem_iodata_mod.F90:            write(6,*)'mm',mm,'gsicem',gsiarray(mm)%gsicem(1)
+shr/raqmschem_iodata_mod.F90:            varname=trim(gsiarray(mm)%gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/raqmschem_iodata_mod.F90:            if(gsiarray(mm)%gsicem(1)=='co')then
+shr/raqmschem_iodata_mod.F90:              varname='per'//trim(gsiarray(mm)%gsicem(1))//'inc',units='percent',rc=localrc)
+Binary file shr/raqmschem_pmgrid_mod.mod matches
+shr/raqmschemcomm_mod.F90:    use raqmschem_pmgrid_mod, only : gsicem,loccem
+shr/raqmschemcomm_mod.F90:    if(allocated(gsicem))then
+shr/raqmschemcomm_mod.F90:      deallocate(gsicem,loccem)
+shr/printchemwrite4:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/printchemwrite4:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+shr/printchemwrite4:    character *8,pointer,dimension(:) :: gsicem
+shr/printchemwrite4:!    character*20 :: gsicem(100)
+shr/printchemwrite4:!    integer numgsicem,loccem(100)
+shr/printchemwrite4:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/printchemwrite4:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printchemwrite4:        do mm=1,numgsicem
+shr/printchemwrite4:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/printchemwrite4:                varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/printchemwrite4:                varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/printchemwrite4:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/printchemwrite4:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+Binary file shr/libshr_a-raqmschem_pmgrid_mod.o matches
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/raqmschem_iodata_mod.F90.07.29.2022:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:    character*8,pointer,dimension(:) :: gsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!        call gsivar(numgsicem,gsicem,loccem)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!          do i=1,numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+shr/raqmschem_iodata_mod.F90.07.29.2022:           write(6,*)'numgsicem',numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:        if(numgsicem>=14)then
+shr/raqmschem_iodata_mod.F90.07.29.2022:!        write(6,*)'gsi_write numgsicem',numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:        do ii=1,numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:          gsicem=>gsiarray(ii)%gsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:              write(6,*)'gsicem',i,gsicem(i),'loccem',loccem(i)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!             write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+shr/raqmschem_iodata_mod.F90.07.29.2022:            varname=gsicem(i),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90.07.29.2022:            varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/raqmschem_iodata_mod.F90.07.29.2022:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+shr/raqmschem_iodata_mod.F90.07.29.2022:    character *8,pointer,dimension(:) :: gsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90.07.29.2022:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!        call gsivar(numgsicem,gsicem,loccem)
+shr/raqmschem_iodata_mod.F90.07.29.2022:        do mm=1,numgsicem
+shr/raqmschem_iodata_mod.F90.07.29.2022:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/raqmschem_iodata_mod.F90.07.29.2022:                varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/raqmschem_iodata_mod.F90.07.29.2022:                varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/raqmschem_iodata_mod.F90.07.29.2022:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/raqmschem_iodata_mod.F90.07.29.2022:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+shr/printwrite:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/printwrite:!    character*20 :: gsicem(100)
+shr/printwrite:!    integer numgsicem,loccem(100)
+shr/printwrite:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/printwrite:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printwrite:          do m=1,numgsicem
+shr/printwrite:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/printwrite:            if(numgsicem==14)then
+shr/printwrite:              varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/printwrite:              varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/printwrite:            varname='per'//trim(gsicem(m)),units='fraction',rc=localrc)
+shr/printwrite:            varname='int'//trim(gsicem(m)),units='sum',rc=localrc)
+shr/printwrite:          if(gsicem(1).eq.'o3vmr')then
+shr/printwrite:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/printwrite:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+shr/raqmschem_iodata_mod.F90.05.06.2020:    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90.05.06.2020:    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90.05.06.2020:        call gsivar(numgsicem,gsicem,loccem)
+shr/raqmschem_iodata_mod.F90.05.06.2020:!          do i=1,numgsicem
+shr/raqmschem_iodata_mod.F90.05.06.2020:!            write(6,*)'gsicem ',i,trim(gsicem(i)),' at ',loccem(i)
+shr/raqmschem_iodata_mod.F90.05.06.2020:        do i=1,numgsicem
+shr/raqmschem_iodata_mod.F90.05.06.2020:!          write(6,*)'gsicem',i,gsicem(i),maxval(traceout),minval(traceout)
+shr/raqmschem_iodata_mod.F90.05.06.2020:          varname=gsicem(i),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90.05.06.2020:          varname='inc'//trim(gsicem(i)),units=units,rc=localrc)
+shr/raqmschem_iodata_mod.F90.05.06.2020:    character*20 :: gsicem(100)
+shr/raqmschem_iodata_mod.F90.05.06.2020:    integer numgsicem,loccem(100)
+shr/raqmschem_iodata_mod.F90.05.06.2020:        varname='int'//trim(gsicem(n)),units='sum',rc=localrc)
+shr/printwrite2:!    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+shr/printwrite2:    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+shr/printwrite2:    character *8,pointer,dimension(:) :: gsicem
+shr/printwrite2:!    character*20 :: gsicem(100)
+shr/printwrite2:!    integer numgsicem,loccem(100)
+shr/printwrite2:!        write(500+iam)'did gsiinc',allocated(gsiinc),'num',numgsicem
+shr/printwrite2:!        call gsivar(numgsicem,gsicem,loccem)
+shr/printwrite2:        do mm=1,numgsicem
+shr/printwrite2:!            write(6,*)'writenc',m,'inc',trim(gsicem(m))
+shr/printwrite2:              varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+shr/printwrite2:              varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+shr/printwrite2:          varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+shr/printwrite2:          varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+Binary file shr/libshr.a matches

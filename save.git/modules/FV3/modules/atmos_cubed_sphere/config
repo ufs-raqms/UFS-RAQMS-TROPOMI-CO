@@ -1,0 +1,12 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	worktree = ../../../../../FV3/atmos_cubed_sphere
+[remote "origin"]
+	url = https://github.com/NOAA-EMC/GFDL_atmos_cubed_sphere
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "dev/emc"]
+	remote = origin
+	merge = refs/heads/dev/emc

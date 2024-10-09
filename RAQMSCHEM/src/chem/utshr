@@ -1,0 +1,2323 @@
+Only in shr: addgsidata
+Binary files shr/calcdxdy.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcdxdy.mod differ
+Binary files shr/calcvort_dgrid_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcvort_dgrid_mod.mod differ
+Binary files shr/calcvort_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/calcvort_mod.mod differ
+Binary files shr/libshr.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr.a differ
+Binary files shr/libshr_a-calcdxdy.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcdxdy.o differ
+Binary files shr/libshr_a-calcvort-dgrid_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcvort-dgrid_mod.o differ
+Binary files shr/libshr_a-calcvort_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-calcvort_mod.o differ
+Binary files shr/libshr_a-mpishorthand.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-mpishorthand.o differ
+Binary files shr/libshr_a-raqmschem_comm_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_comm_mod.o differ
+Binary files shr/libshr_a-raqmschemcomm_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschemcomm_mod.o differ
+Binary files shr/libshr_a-raqmschem_config_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_config_mod.o differ
+Binary files shr/libshr_a-raqmschem_const_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_const_mod.o differ
+Binary files shr/libshr_a-raqmschem_data_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_data_mod.o differ
+Binary files shr/libshr_a-raqmschem_iodata_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_iodata_mod.o differ
+Binary files shr/libshr_a-raqmschem_io_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_io_mod.o differ
+Binary files shr/libshr_a-raqmschemlocaltype_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschemlocaltype_mod.o differ
+Binary files shr/libshr_a-raqmschem_map_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_map_mod.o differ
+Binary files shr/libshr_a-raqmschem_model_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_model_mod.o differ
+Binary files shr/libshr_a-raqmschem_pmgrid_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_pmgrid_mod.o differ
+Binary files shr/libshr_a-raqmschem_species_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_species_mod.o differ
+Binary files shr/libshr_a-raqmschem_state_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_state_mod.o differ
+Binary files shr/libshr_a-raqmschem_vars_mod.o and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/libshr_a-raqmschem_vars_mod.o differ
+diff -Bbw shr/Makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/Makefile
+114d113
+< 	libshr_a-raqmschemlocaltype_mod.$(OBJEXT) \
+124c123,124
+< 	libshr_a-raqmschem_map_mod.$(OBJEXT) caldyi.$(OBJEXT)
+---
+> 	libshr_a-raqmschem_map_mod.$(OBJEXT) \
+> 	libshr_a-raqmschemlocaltype_mod.$(OBJEXT) caldyi.$(OBJEXT)
+209c209
+< ACLOCAL = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+---
+> ACLOCAL = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing aclocal-1.15
+212,214c212,214
+< AUTOCONF = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+< AUTOHEADER = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+< AUTOMAKE = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+---
+> AUTOCONF = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoconf
+> AUTOHEADER = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing autoheader
+> AUTOMAKE = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing automake-1.15
+229c229
+< ESMFMKFILE = /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libg/Linux.intel.64.intelmpi.default/esmf.mk
+---
+> ESMFMKFILE = /home/lenzen/ESMF.8.0.0.BS47.S4/esmf/lib/libO/Linux.intel.64.intelmpi.default/esmf.mk
+233,234c233,234
+< FCFLAGS = -traceback -ftz -align array64byte -axavx -O2 -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -g -traceback -ftrapuv -check bounds,format,output_conversion,stack,uninit -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modg/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_g -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+< FCLIBS =    -m64 -mcmodel=small -threads -Wl,--no-as-needed -L/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libg/Linux.intel.64.intelmpi.default -L/opt/netcdf4/4.6.2-intel-18.0.3/lib  -Wl,-rpath,/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libg/Linux.intel.64.intelmpi.default  -Wl,-rpath,/opt/netcdf4/4.6.2-intel-18.0.3/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf
+---
+> FCFLAGS = -traceback -ftz -align array64byte -qno-opt-dynamic-align -fno-alias -nowarn -safe-cray-ptr -fp-model source  -O2 -fPIC -assume realloc_lhs -m64 -mcmodel=small -threads -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//mod/modO/Linux.intel.64.intelmpi.default -I/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//src/include -I/opt/netcdf4/4.6.2-intel-18.0.3/include -DESMF_NO_INTEGER_1_BYTE -DESMF_NO_INTEGER_2_BYTE -DESMFVERSIONGIT='ESMF_8_0_0_beta_snapshot_47' -DESMF_LAPACK=1 -DESMF_LAPACK_INTERNAL=1 -DESMF_MOAB=1 -DESMF_NO_ACC_SOFTWARE_STACK=1 -DESMF_NETCDF=1 -DESMF_PIO=1 -DESMF_MPIIO -DESMF_NO_OPENMP -DESMF_NO_OPENACC -DESMF_BOPT_O -DESMF_TESTCOMPTUNNEL -DSx86_64_small=1 -DESMF_OS_Linux=1 -DESMF_COMM=intelmpi -DESMF_DIR=/home/lenzen/ESMF.8.0.0.BS47.S4/esmf/
+> FCLIBS =    -m64 -mcmodel=small -threads -Wl,--no-as-needed -L/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default -L/opt/netcdf4/4.6.2-intel-18.0.3/lib  -Wl,-rpath,/home/lenzen/ESMF.8.0.0.BS47.S4/esmf//lib/libO/Linux.intel.64.intelmpi.default  -Wl,-rpath,/opt/netcdf4/4.6.2-intel-18.0.3/lib -lesmf  -cxxlib -lrt -ldl -lnetcdff -lnetcdf
+246c246
+< MAKEINFO = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+---
+> MAKEINFO = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/missing makeinfo
+263,266c263,266
+< abs_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+< abs_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+< abs_top_builddir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+< abs_top_srcdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+---
+> abs_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+> abs_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+> abs_top_builddir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+> abs_top_srcdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM
+279c279
+< datarootdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> datarootdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+287,288c287,288
+< install_sh = ${SHELL} /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+< libdir = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> install_sh = ${SHELL} /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/install-sh
+> libdir = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+296c296
+< prefix = /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+---
+> prefix = /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM_INSTALL
+310d309
+< 	raqmschemlocaltype_mod.F90 \
+315c314
+< 	raqmschem_map_mod.F90 caldyi.F
+---
+> 	raqmschem_map_mod.F90 raqmschemlocaltype_mod.F90 caldyi.F
+317c316
+< libshr_a_FCFLAGS = -I. -traceback -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+---
+> libshr_a_FCFLAGS = -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+418,423d416
+< libshr_a-raqmschemlocaltype_mod.o: raqmschemlocaltype_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.o `test -f 'raqmschemlocaltype_mod.F90' || echo '$(srcdir)/'`raqmschemlocaltype_mod.F90
+< 
+< libshr_a-raqmschemlocaltype_mod.obj: raqmschemlocaltype_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.obj `if test -f 'raqmschemlocaltype_mod.F90'; then $(CYGPATH_W) 'raqmschemlocaltype_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqmschemlocaltype_mod.F90'; fi`
+< 
+488a482,487
+> 
+> libshr_a-raqmschemlocaltype_mod.o: raqmschemlocaltype_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.o `test -f 'raqmschemlocaltype_mod.F90' || echo '$(srcdir)/'`raqmschemlocaltype_mod.F90
+> 
+> libshr_a-raqmschemlocaltype_mod.obj: raqmschemlocaltype_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.obj `if test -f 'raqmschemlocaltype_mod.F90'; then $(CYGPATH_W) 'raqmschemlocaltype_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqmschemlocaltype_mod.F90'; fi`
+diff -Bbw shr/Makefile.am /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/Makefile.am
+5d4
+< 	raqmschemlocaltype_mod.F90 \
+10c9
+< 	raqmschem_map_mod.F90 caldyi.F
+---
+> 	raqmschem_map_mod.F90 raqmschemlocaltype_mod.F90 caldyi.F
+12c11
+< libshr_a_FCFLAGS = -I. -traceback -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+---
+> libshr_a_FCFLAGS = -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+diff -Bbw shr/Makefile.in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/Makefile.in
+114d113
+< 	libshr_a-raqmschemlocaltype_mod.$(OBJEXT) \
+124c123,124
+< 	libshr_a-raqmschem_map_mod.$(OBJEXT) caldyi.$(OBJEXT)
+---
+> 	libshr_a-raqmschem_map_mod.$(OBJEXT) \
+> 	libshr_a-raqmschemlocaltype_mod.$(OBJEXT) caldyi.$(OBJEXT)
+310d309
+< 	raqmschemlocaltype_mod.F90 \
+315c314
+< 	raqmschem_map_mod.F90 caldyi.F
+---
+> 	raqmschem_map_mod.F90 raqmschemlocaltype_mod.F90 caldyi.F
+317c316
+< libshr_a_FCFLAGS = -I. -traceback -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+---
+> libshr_a_FCFLAGS = -I. -real-size 64 -I../../../../FV3/gfsphysics -I../../../../GSDCHEM/src/chem/shr -I../../../../FMS/fv3gfs
+418,423d416
+< libshr_a-raqmschemlocaltype_mod.o: raqmschemlocaltype_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.o `test -f 'raqmschemlocaltype_mod.F90' || echo '$(srcdir)/'`raqmschemlocaltype_mod.F90
+< 
+< libshr_a-raqmschemlocaltype_mod.obj: raqmschemlocaltype_mod.F90
+< 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.obj `if test -f 'raqmschemlocaltype_mod.F90'; then $(CYGPATH_W) 'raqmschemlocaltype_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqmschemlocaltype_mod.F90'; fi`
+< 
+488a482,487
+> 
+> libshr_a-raqmschemlocaltype_mod.o: raqmschemlocaltype_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.o `test -f 'raqmschemlocaltype_mod.F90' || echo '$(srcdir)/'`raqmschemlocaltype_mod.F90
+> 
+> libshr_a-raqmschemlocaltype_mod.obj: raqmschemlocaltype_mod.F90
+> 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-raqmschemlocaltype_mod.obj `if test -f 'raqmschemlocaltype_mod.F90'; then $(CYGPATH_W) 'raqmschemlocaltype_mod.F90'; else $(CYGPATH_W) '$(srcdir)/raqmschemlocaltype_mod.F90'; fi`
+Binary files shr/mpishorthand.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/mpishorthand.mod differ
+Only in shr: nrseach.F90
+diff -Bbw shr/options.h /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/options.h
+2d1
+< #define DIAGCO
+Only in shr: outdiffiodata
+diff -Bbw shr/outpwd /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/outpwd
+1c1
+< /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+---
+> /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printaa
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printbackgd
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printchmiofile
+Only in shr: printdo
+Only in shr: printdocedsair9
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printfire
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printfire2
+Only in shr: printget
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printiofilename
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printioread
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printread
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printread2dnc
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr: printwrite
+diff -Bbw shr/raqmschemcomm_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschemcomm_mod.F90
+2d1
+< #include <choosechem.h>
+21,22c20
+<   real(CHEM_KIND_R4), allocatable, dimension(:,:) :: ptropraq,ztropraq
+<   real(CHEM_KIND_R4), allocatable, dimension(:,:) :: ptropgsi,ztropgsi
+---
+>   real(CHEM_KIND_R4), allocatable, dimension(:,:) :: ptrop,ztrop
+37,42d34
+<   real*4, allocatable :: intcedsair(:,:,:,:)
+<   character*10  cedsair(8),ccedsair(8)
+<   data cedsair/'CO','NOx','SO2','BC','OC','N2O','NH3','CH4'/
+<   integer :: p_ceds_co,p_ceds_NOx,p_ceds_so2,p_ceds_bc,p_ceds_oc
+<   integer :: p_ceds_n2o,p_ceds_nh3,p_ceds_ch4,numcedsair
+< 
+45,47d36
+<   real*4, allocatable :: altair(:),intaltair(:)
+<   real*4, allocatable :: intcoair(:,:,:),intnoxair(:,:,:)
+<   integer*4,allocatable  :: ktopcedsair(:,:,:),kbotcedsair(:,:,:)
+49,50d37
+<   real*4,allocatable :: srccocedsair(:,:,:),srcso2cedsair(:,:,:),ratioso2ceds(:,:,:),ratiococeds(:,:,:)
+<   real*4,allocatable :: srcn2ocedsair(:,:,:),ration2oceds(:,:,:)
+122c109
+<   integer navg,navgfire
+---
+>   integer navg
+135d121
+<   real(CHEM_KIND_R4), allocatable :: bbco_hr(:,:,:)
+138,139c124
+<   real(CHEM_KIND_R4), allocatable :: emisco3d(:,:,:),co3dtend(:,:,:)
+<   real(CHEM_KIND_R4), allocatable :: emisco3dave(:,:,:)
+---
+>   real(CHEM_KIND_R4), allocatable :: emisco3d(:,:,:)
+162,166c147,148
+<   integer nlnair,nlnlgt,nl_clim,nl_clim_dyn,nlcedsair
+< !  integer,parameter :: nlnairdim=19
+<   logical :: lcedsair=.false.
+< !  parameter (nlnair=19,nlnlgt=16,nlcedsair=25)
+<   parameter (nlnlgt=16)
+---
+>   integer nlnair,nlnlgt,nl_clim,nl_clim_dyn
+>   parameter (nlnair=19,nlnlgt=16)
+202,215d183
+<     call getenv('CEDSAIR',cenv)
+<     if(cenv=='YES')then
+<       lcedsair=.true.
+<       nlnair=25
+<       if(iam==0)then
+<         write(6,*)'turn on CEDSAIR'
+<         call flush(6)
+<       endif
+<       call definecedsair
+<     else
+<       lcedsair=.false.
+<       nlnair=19
+<     endif
+<     cenv=' '
+281c249
+<     allocate (pksrcnair(0:nlnair),altair(nlnair),intaltair(0:nlnair))
+---
+>     allocate (pksrcnair(0:nlnair))
+392d359
+< !    allocate (bbco_hr(nc,begj:endj,24))
+440,446c407
+<     deallocate (pksrcnair,altair,intaltair)
+<     if(allocated(intcoair))then
+<       deallocate (intcoair,intnoxair)
+<     endif
+<     if(allocated(intcedsair))then
+<       deallocate (intcedsair)
+<     endif
+---
+>     deallocate (pksrcnair)
+481,483d441
+<     if(allocated (bbco_hr))then
+<       deallocate (bbco_hr)
+<     endif
+493,498d450
+<     if(allocated(emisco3dave))then
+<       deallocate(emisco3dave)
+<     endif
+<     if(allocated(co3dtend))then
+<       deallocate(co3dtend)
+<     endif
+601,905d552
+<     subroutine definecedsair
+<     use raqmschem_pmgrid_mod, only : iam,strip
+<     character *256 :: ccedsairin
+<     integer is(20),ie(20),k,igot
+<     call getenv('CCEDSAIR',ccedsairin)
+<     call strip(ccedsairin,is,ie,9,igot)
+<     numcedsair=igot
+<     do k=1,igot
+<       ccedsair(k)=ccedsairin(is(k):ie(k))
+<       select caSe (ccedsair(k))
+<       case ('CO')
+<         p_ceds_co=k
+<       case ('NOx')
+<         p_ceds_nox=k
+<       case ('SO2')
+<         p_ceds_so2=k
+<       case ('BC')
+<         p_ceds_bc=k
+<       case ('OC')
+<         p_ceds_oc=k
+<       case ('N2O')
+<         p_ceds_n2o=k
+<       caSe ('NH3')
+<         p_ceds_nh3=k
+<       caSe ('CH4')
+<         p_ceds_ch4=k
+<       case default
+<         write(6,*)'bad ceds cehm',ccedsair(k)
+<         call killit('stop cedsin')
+<       end select
+<     end do
+<     if(iam==0)then
+<       write(6,*)'numcedsair',numcedsair
+<       write(6,*)'P_ceds_co',p_ceds_co,'nox',p_ceds_nox,'so2',p_ceds_so2
+<       do k=1,numcedsair
+<         write(6,*)'cedsair',k,ccedsair(k)
+<       end do
+<     endif
+< 
+<     end subroutine definecedsair
+<       subroutine docedsair(i,j,ip,lbot,ltb,dens,zgeoh,sacco,sacnox,dt,chemlocal)
+<       use raqmschemlocaltype_mod
+<       use raqmschem_pmgrid_mod, only : iam,tile,ibeg,beglat
+< !      use raqmschemcomm_mod, only : intcedsair,ccedsair,p_ceds_co,p_ceds_nox,p_ceds_so2
+< !      use raqmschemcomm_mod, only : p_ceds_bc,p_ceds_oc,p_ceds_n2o,p_ceds_ch4
+< !      use raqmschemcomm_mod, only : numcedsair,ktopcedsair
+< !      use raqmschemcomm_mod, only : srccocedsair,srcso2cedsair
+< !      use raqmschemcomm_mod, only : lcedsair,intaltair
+<       implicit none
+<       type(chemlocaltype),target :: chemlocal
+< 
+< 
+<       integer lbot,klo,kup,k,i,j,ip,m,l,ltb(:)
+<       real dens,sacco,sacnox,zgeoh(:),aflo,afup
+<       real*4 dt
+<       real intvallo,intvalup,zlo,zup,sacso2,sacbc,sacoc,sacnh3,sacn2o
+<       logical :: zloset,zupset
+< #include <chemlocaldefinepointer.h>
+< #include <chemlocaldefinepointer2.h>
+< #include <chemlocalsetpointer.h>
+< #include <chemlocalsetpointer2.h>
+< !      write(6,*)'cogrd in commmon cogrd',shape(cogrd)
+< !      write(6,*)'lb cogrd',lbound(cogrd),'ub',ubound(cogrd)
+<       zloset=.false.
+<       zupset=.false.
+< !     need to find depth of layer 1 in altitude
+<       zlo = zgeoh(ip)-zgeoh(lbot)              !height above surface (km)
+<       klo=-1
+<       kup=-1
+< !     if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !       write(6,*)'ip',ip,'lbot',lbot,'ktopcessair',ktopcedsair
+< !       write(6,*)'zlo',zlo,'intaltair',intaltair(ktopcedsair)
+< !     endif
+< !      write(6,*)'ktopcedsair',ktopcedsair
+< !      flush(6)
+< !      write(6,*)'allocated',allocated(intaltair)
+< !      flush(6)
+<       !if(iam==75)then
+< !      write(6,*)'newktopcedsair chemmoc ',maxval(ktopcedsair(:,:,1)),'shape intaltair',shape(intaltair)
+< !      call flush(6)
+<       !endif
+<       if(zlo<intaltair(maxval(ktopcedsair(i,j,:))).and.ip/=1)then
+<         zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)ip,'zlo',zlo,zup
+< !             call flush(6)
+< !         do k=1,ktopcedsair
+< !           write(6,*)'intaltair',k,intaltair(k),'intcoair',intcoair(i,j,k)
+< !        end do
+< !           endif
+<            if(zup>=intaltair(maxval(ktopcedsair(i,j,:))))then
+<              kup=ktopcedsair(i,j,1)
+<              afup=1.
+<              zupset=.true.
+<            endif
+<            do k=1,ktopcedsair(i,j,1)
+<              if(zlo<intaltair(k).and.zlo>=intaltair(k-1))then
+<                klo=k-1
+<                aflo=(zlo-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !             if(iam==75.and.i==1.and.j==49)then
+<                !write(6,*)'newsetklo',klo,'k',k,'zlo',zlo
+< !               write(6,*)'intaltair',k-1,k,intaltair(k-1:k)
+< !               write(6,*)'aflo',aflo
+< !             endif
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiplo/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'ip',ip,'k1',k1
+<                !write(6,*)'zlo',zlo,'af',af,'coiplo',coiplo
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+<                !call flush(6)
+< !               endif
+<                zloset=.true.
+<              endif
+<              if(zup<intaltair(k).and.zup>=intaltair(k-1))then
+<                kup=k-1
+<                afup=(zup-intaltair(k-1))/(intaltair(k)-intaltair(k-1))
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !               if(coiphi/=0.0)then
+< !               write(6,*)'iam',iam,i,j,'k1',k1
+< !               write(6,*)'zup',zup,'af',af,'coiphi',coiphi
+< !               write(6,*)'intaltair',k-1,intaltair,k,intaltair(k)
+< !               call flush(6)
+< !               endif
+<                zupset=.true.
+<              endif
+<              if(zupset.and.zloset)exit
+<            end do ! k=1,ktop
+<           if(klo<0)then
+< !             if(klo<0.and.iam==75.and.i==1.and.j==49)then
+< !             !write(6,*)'new klo',klo,'i',i,j,ip,'zlo',zlo,'zup',zup,'kup',kup
+< !             write(6,*)'new kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+< !             flush(6)
+<              klo=0
+< !             do k=1,25
+< !               write(6,*)'new intaltair',k,intaltair(k),'intcedsair',intcedsair(i,j,k,1)
+< !
+< !             end do
+<              
+<            endif
+<            if(kup<0)then
+< !             if(kup<0.and.iam==75.and.i==1.and.j==49)then
+< !             write(6,*)'new kup',kup,'i',i,j,ip,'zlo',zlo,'zup',zup,'klo',klo
+< !             write(6,*)'new kbotcedsair',kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+< !             flush(6)
+<              kup=0
+<            endif
+< !           if(coiplo/=0.0)then
+< !         if(tile==5.and.i==168.and.j==192)then
+< !       if(tile==5.and.ibeg+i-1==168.and.j==192)then
+< !             write(6,*)'iam',iam,i,j,'zgeoh',ip-1,zgeoh(ip-1),ip,zgeoh(ip)
+< !             write(6,*)'coiphi-coiplo',coiphi-coiplo
+< !             write(6,*)'ip',ip,'zup-zlo',zup-zlo
+< !                     !write(6,*)'sacco',ip,(coiphi-coiplo)/(zup-zlo)*1.e-5
+<         !           endif
+<                  l=ltb(ip)
+<                  do m=1,numcedsair
+<                    select case (ccedsair(m))
+<                    case ('CO')
+< !                     if(iam==75.and.i==1.and.j==49)then
+< !                       write(6,*)i,j,ip,'new codeaflo',aflo,'up',afup,'klo',klo,'kup',kup,'P-ceds_co',p_ceds_co
+< !                       flush(6)
+< !                       do k=kbotcedsair(i,j,1),ktopcedsair(i,j,1)
+< !                         write(6,*)'newcode intcedsair',k,intcedsair(i,j,k,p_ceds_co),intaltair(k)
+< !                       end do
+< !                     endif
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_co)*aflo+intcedsair(i,j,klo,p_ceds_co)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_co)*afup+intcedsair(i,j,kup,p_ceds_co)*(1.-afup)
+< !                    if(iam==75.and.i==1.and.j==49)then
+< !                      write(6,*)'new bottom klo',klo,'kup',kup
+< !                      write(6,*)'new bottom aflo',aflo,'afup',afup
+< !                      write(6,*)'intvallo',intvallo,'up',intvalup
+< !                      write(6,*)'intcedsair',klo,intcedsair(i,j,klo:klo+1,p_ceds_co)
+< !                      write(6,*)'intcedsair',kup,intcedsair(i,j,kup:kup+1,p_ceds_co)
+< !                      write(6,*)i,j,'new kbotcedsair',kbotcedsair(i,j,1),'ktopceddair',ktopcedsair(i,j,1)
+< !                      write(6,*)i,j,ip,'newintvallo',intvallo
+< !                      write(6,*)'intvalup',intvalup,'zup',zup,'zlo',zlo,'diff',zup-zlo
+< !                    flush(6)
+< !                    endif
+<                      sacco=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacco=max(sacco,0.0)
+<                      ratiococeds(i,j,l)=sacco/dens*dt/max(cogrd(i,l),1.e-20)
+<         !             if(iam==75.and.i==1.and.j==49)then
+<         !             if(iam==75)then
+<         !             write(6,*)'newsacco',sacco
+<         !             flush(6)
+<         !             write(6,*)'lb',lbound(srccocedsair),'ub',ubound(srccocedsair)
+<         !             flush(6)
+<         !             endif
+<         !             srccocedsair(i,j,ip)=sacco
+<                    case ('NOx')
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_nox)*aflo+intcedsair(i,j,klo,p_ceds_nox)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_nox)*afup+intcedsair(i,j,kup,p_ceds_nox)*(1.-afup)
+<                      sacnox=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacnox=max(sacnox,0.0)
+<                    case ('SO2')
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_so2)*aflo+intcedsair(i,j,klo,p_ceds_so2)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_so2)*afup+intcedsair(i,j,kup,p_ceds_so2)*(1.-afup)
+<                      sacso2=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacso2=max(sacso2,0.0)
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'do so2grd'
+<                          flush(6)
+<                          write(6,*)'docedsair so2grd in',l,so2grd(i,l),'sacso2',sacso2,'tend',sacso2/dens*dt
+<                          flush(6)
+<                        endif
+<                      endif
+< #endif
+<                      so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'docedsair so2grd out',l,so2grd(i,l)
+<                        endif
+<                      endif
+< #endif
+<                      so2grd(i,l)=so2grd(i,l)+sacso2/dens*dt
+<                      srcso2cedsair(i,j,l)=sacso2
+<                      ratioso2ceds(i,j,l)=sacso2/dens*dt/max(so2grd(i,l),1.e-20)
+<                    case ('BC')
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_bc)*aflo+intcedsair(i,j,klo,p_ceds_bc)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_bc)*afup+intcedsair(i,j,kup,p_ceds_bc)*(1.-afup)
+<                      sacbc=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacbc=max(sacbc,0.0)*1.e9 ! now ug/kg
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'do bcgrd'
+<                          flush(6)
+<                          write(6,*)'bc1grd in',l,bc1grd(i,l),'sacbc',sacbc,'tend',sacbc/dens*dt
+<                          flush(6)
+<                        endif
+<                      endif
+< #endif
+<                      bc1grd(i,l)=bc1grd(i,l)+sacbc/dens*dt*.8
+<                      bc2grd(i,l)=bc2grd(i,l)+sacbc/dens*dt*.2
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'bc1grd out',l,bc1grd(i,l)
+<                        endif
+<                      endif
+< #endif
+<                    case ('OC')
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_oc)*aflo+intcedsair(i,j,klo,p_ceds_oc)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_oc)*afup+intcedsair(i,j,kup,p_ceds_oc)*(1.-afup)
+<                      sacoc=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacoc=max(sacoc,0.0)*1.e9 ! noew ug/kg
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'do ocgrd'
+<                          flush(6)
+<                          write(6,*)'oc1grd in',l,oc1grd(i,l),'sacoc',sacoc,'tend',sacoc/dens*dt
+<                          flush(6)
+<                        endif
+<                      endif
+< #endif
+<                      oc1grd(i,l)=oc1grd(i,l)+sacoc/dens*dt*.5
+<                      oc2grd(i,l)=oc2grd(i,l)+sacoc/dens*dt*.5
+< #ifdef DIAGCEDS
+<                      if(tile==1)then
+<                      if(tile==1)then
+<                        if(i+ibeg-1==178.and.j==31)then
+<                          write(6,*)'oc1grd out',l,oc1grd(i,l)
+<                        endif
+<                      endif
+< #endif
+<                    caSe ('N2O')
+<                      intvallo=intcedsair(i,j,klo+1,p_ceds_n2o)*aflo+intcedsair(i,j,klo,p_ceds_n2o)*(1.-aflo)
+<                      intvalup=intcedsair(i,j,kup+1,p_ceds_n2o)*afup+intcedsair(i,j,kup,p_ceds_n2o)*(1.-afup)
+<                      sacn2o=(intvalup-intvallo)/(zup-zlo)*1.e-5
+<                      sacn2o=max(sacn2o,0.0)
+<                      ration2oceds(i,j,l)=sacn2o/dens*dt/max(xn2ogrd(i,l),1.e-20)
+<                      xn2ogrd(i,l)=xn2ogrd(i,l)+sacn2o/dens*dt
+<                      srcn2ocedsair(I,J,l)=sacn2o/dens*dt
+<                      if(ration2oceds(i,j,l)>.02)then
+< !                     if(tile==5)then
+< !                       if(i+ibeg-1==18.and.j==114)then
+<                          write(6,*)'tile=',tile,i,j,'ii',i+ibeg-1,'docedsair n2ogrd out',l,xno2grd(i,l),'tend',sacn2o/dens*dt
+<                          write(6,*)i,j,'ii',i+ibeg-1,'ratio',l,ration2oceds(i,j,l)
+<                        endif
+<                      if(tile==5)then
+<                        if(i+ibeg-1==18.and.j==114)then
+<                          write(6,*)'tile=',tile,i,j,'ii',i+ibeg-1,'docedsair n2ogrd out',l,xno2grd(i,l),'tend',sacn2o/dens*dt
+<                          write(6,*)i,j,'ii',i+ibeg-1,'ratio',l,ration2oceds(i,j,l)
+<                        endif
+<                      endif
+< !                   caSe ('NH3')
+< !                     intvallo=intcedsair(i,j,klo+1,p_ceds_nh3)*aflo+intcedsair(i,j,klo,p_ceds_nh3)*(1.-aflo)
+< !             intvalup=intcedsair(i,j,kup+1,p_ceds_nh3)*afup+intcedsair(i,j,kup,p_ceds_nh3)*(1.-afup)
+<              !sacnh3=(intvalup-intvallo)/(zup-zlo)*1.e-5
+< !             sacnh3=max(sacnh3,0.0)
+< !             nh3grd(i,l)=nh3grd(i,l)+sacnh3/dens*dt
+<            case default
+<            end select
+<          end do ! M  
+<            
+< 
+<          endif ! zlo< ip/=1
+<       end subroutine docedsair
+Binary files shr/raqmschem_comm_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_comm_mod.mod differ
+Binary files shr/raqmschemcomm_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschemcomm_mod.mod differ
+diff -Bbw shr/raqmschem_config_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_config_mod.F90
+30d29
+< !  logical :: dofirehour=.false.
+36d34
+<     character(len=CHEM_MAXSTR) :: cedsemi_inname         = ''
+71c69
+< !  public :: dofirehour
+---
+> 
+104c102
+<     character(CHEM_MAXSTR) :: sbuffer(6)
+---
+>     character(CHEM_MAXSTR) :: sbuffer(5)
+108d105
+<     character(len=CHEM_MAXSTR) :: cedsemi_inname
+119d115
+<       cedsemi_inname,                &
+136d131
+<     cedsemi_inname      = ""
+194c189
+<     sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname, gsi_path , cedsemi_inname /)
+---
+>     sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname, gsi_path /)
+204,205d198
+<     config % cedsemi_inname        = sbuffer(6)
+< !    write(6,*)'cedsemi_inname',config%cedsemi_inname
+Binary files shr/raqmschem_config_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_config_mod.mod differ
+Binary files shr/raqmschem_const_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_const_mod.mod differ
+diff -Bbw shr/raqmschem_data_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_data_mod.F90
+31,32d30
+<     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: plume_hr             ! fire info - MODIS & GBBEPx
+<     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: bbco_hr ! fire info GbbEPX
+Binary files shr/raqmschem_data_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_data_mod.mod differ
+diff -Bbw shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+23d22
+<   public :: raqmschem_chem_write_aodfcst
+30,32d28
+<   public :: flipz
+<   public :: dofirehr
+<   logical :: dofirehr
+108,109d103
+<     use raqmschemcomm_mod, only : lcedsair,intcoair,intnoxair,ktopcedsair
+<     use raqmschemcomm_mod, only : intcedsair,numcedsair
+119,120c113,114
+<     character *2 cmonth(2),file*256,cday*2,yyyy*4,yyyymm*6,yyyymmdd*8,cmm*2,cmonth2(2)
+<     integer its,ite,jts,jte,i,j,ii
+---
+>     character *2 cmonth(2),file*256,cday*2,yyyy*4,yyyymm*6,yyyymmdd*8,cmm*2
+>     integer its,ite,jts,jte,i,j
+133,136c127
+<     logical first,doco85,donox85,oldname
+<     integer nlevin,k,n
+<     real*4 amaxcedsair
+<     real*4,allocatable :: air3d(:,:,:),srcinhr(:,:,:)
+---
+>     logical first,doco85,donox85
+139c130
+<     character *10 cenv,ctile*1
+---
+>     character *10 cenv
+168d158
+<     write(cmonth2(1),'(i2.2)')mm
+180d169
+<     write(cmonth2(2),'(i2.2)')imonth(2)
+268,282d256
+<          if(config%cedsemi_inname/=' ')then
+<            srcin=0.0
+< !          write(6,*)m,'comnth2',cmonth2(m)
+<            if(iam==0)then
+<            write(6,*)'read path',trim(config % cedsemi_inname)//trim(cmonth2(m))
+<            call flush(6)
+<            endif   
+<            call chem_io_read('emi_CO_molpercm2persec.dat', &
+<            srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<            bigendian=bigendian,rc=localrc,oldname=oldname)
+<            if(iam==0)then
+<             write(6,*)'ceds co_emis',maxval(srcin),minval(srcin)
+<             call flush(6)
+<            endif   
+<           else 
+286d259
+<           endif
+307,315d279
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_NOx_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds NOx_emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+323d286
+<         endif
+345,353d307
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_ethane_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  ethaneemis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+354a309,310
+> !        inquire(file=trim(config%emi_inname)//file,exist=exist)
+> !        if(exist)then
+357d312
+<         endif
+369,377d323
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_ethene_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  ethene emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+380d325
+<         endif
+389,397d333
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_propane_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  propanene emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+400d335
+<         endif
+408,416d342
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_butane_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  butane emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+419d344
+<         endif
+427,435d351
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_pentane_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  pentane emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+438d353
+<         endif
+446,454d360
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_hexane_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  hexane emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+457d362
+<         endif
+465,473d369
+<         if(config%cedsemi_inname/=' ')then
+<           call chem_io_read('emi_propene_molpercm2persec.dat', &
+<           srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<           bigendian=bigendian,rc=localrc,oldname=oldname)
+<           if(iam==0)then
+<           write(6,*)'ceds  propene emis',maxval(srcin),minval(srcin)
+<           call flush(6)
+<           endif
+<         else
+476d371
+<         endif
+484,485d378
+< !        write(6,*)'now ch2o'
+< !        call flush(6)
+531,532d423
+< !      write(6,*)'did loop'
+< 
+558,705d448
+<       if(iam==0.and.tile==1)then
+<         write(6,*)'lcedsair',lcedsair
+<       endif
+<       if(lcedsair)then
+<         write(ctile,'(i1.1)')tile
+< !          srcin, path=trim(config % cedsemi_inname)//trim(cmonth2(m)), de=de, &
+<         file='tile'//ctile//'/emi_CO-AIR_molpercm2persec.dat'
+<         open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+<         convert='big_endian',form='unformatted')
+<         read(10)nlevin
+<         if(iam==0)then
+<         write(6,*)'nlevin',nlevin
+<         call flush(6)
+<         endif
+<         read(10)altair
+<         if(iam==0)then
+<         write(6,*)'altair',altair
+<         call flush(6)
+<         endif
+<         intaltair(0)=0
+<         intaltair(1)=2.*altair(1)
+<         do k=2,nlnair
+<           intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+<         end do
+<         if(iam==0)then
+<           do k=1,nlnair
+<             write(6,*)k,altair(k),intaltair(k)
+<           end do
+<         endif
+<         allocate(air3d(192,192,nlnair))
+<         read(10)air3d
+<         do j=jds,jde
+<           do i=ids,ide
+<             srccoair(i-ids+1,j,:)=air3d(i,j,:)
+<           end do
+<         end do
+<         if(iam==0)then
+<         write(6,*)'srccoair',maxval(srccoair),minval(srccoair)
+<         call flush(6)
+<         endif
+<         close(10)
+<         file='tile'//ctile//'/emi_NOx-AIR_molpercm2persec.dat'
+<         open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+<         convert='big_endian',form='unformatted')
+<         read(10)nlevin
+<         read(10)altair
+< !        allocate(air3d(192,192,nlnair))
+<         read(10)air3d
+<         do j=jds,jde
+<           do i=ids,ide
+<             srcnair(i-ids+1,j,:)=air3d(i,j,:)
+<           end do
+<         end do
+<         if(iam==0)then
+<         write(6,*)'srccoair',maxval(srcnair),minval(srcnair)
+<         call flush(6)
+<         endif
+< 
+<         close(10)
+<         if(.not.allocated(intcedsair).and.numcedsair/=0)then
+<           allocate(intcedsair(ide-ids+1,jds:jde,0:nlnair,numcedsair))
+<           intcedsair=0.0
+<           allocate(ktopcedsair(ide-ids+1,jds:jde,numcedsair))
+<           allocate(kbotcedsair(ide-ids+1,jds:jde,numcedsair))
+<           ktopcedsair=1
+<           kbotcedsair=1
+<           do n=1,numcedsair
+<             file='tile'//ctile//'/emi_'//trim(ccedsair(n))//'-AIR_molpercm2persec.dat'
+<             open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+<             convert='big_endian',form='unformatted')
+<             read(10)nlevin
+<             if(iam==75.and.n==1)then
+<               write(6,*)'nlevin',nlevin
+<               call flush(6)
+<             endif
+<             read(10)altair
+<             if(iam==75.and.n==1)then
+<               write(6,*)'altair',altair
+<               call flush(6)
+<             endif
+<             if(n==1)then
+<               intaltair(0)=0
+<               intaltair(1)=2.*altair(1)
+<               do k=2,nlnair
+<                 intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+<               end do
+<               if(iam==75)then
+<                 do k=1,nlnair
+<                   write(6,*)k,altair(k),intaltair(k)
+<                 end do
+<               endif
+<               if(.not.allocated(air3d))then
+<               allocate(air3d(192,192,nlnair))
+<               endif
+<             endif
+<             read(10)air3d
+<             do j=jds,jde
+<              do i=ids,ide
+<                ii=i-ids+1
+<                do k=1,nlnair
+<                  intcedsair(i-ids+1,j,k,n)=intcedsair(i-ids+1,j,k-1,n)+air3d(i,j,k)
+<                  if(kbotcedsair(ii,j,n)==0.and.air3d(i,j,k)/=0.)then
+<                    kbotcedsair(ii,j,n)=k
+<                  endif
+<                  if(air3d(i,j,k)/=0.0)then
+<                    ktopcedsair(ii,j,n)=k
+<                  endif
+< !              if(iam==75.and.n==1.and.i==1.and.j==25)then
+<               if(tile==5)then
+<                 if(air3d(i,j,k)/=0.0)then
+<                    write(6,*)trim(ccedsair(n)),i,j,'k',k,'intcedsair','iloc',i-ids+1,intcedsair(i-ids+1,j,k,n),'air3d',air3d(i,j,k)
+<                    flush(6)
+<                 endif
+<               endif
+<                end do
+<              end do
+<             end do
+< !            if(iam==75.or.iam==11)then
+<              if(tile==5)then
+<                write(6,*)'srccedsair',n,trim(ccedsair(n)),maxval(intcedsair(:,:,:,n))
+<                call flush(6)
+<             endif
+<             close(10)
+<           end do ! n
+<           if(iam==75.and.jds<=25.and.jde>=25)then
+< !          if(tile==5)then
+<             do k=1,maxval(ktopcedsair(:,:,1))
+<               write(6,*)'75 intcedsair',k,maxval(intcedsair(:,:,k,1)),minval(intcedsair(:,:,k,1))
+<             end do
+<             write(6,*)'751,24 kbot',kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+<             do k=kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+<               write(6,*)'75 intcedsair',k,intcedsair(1,25,k,1)
+<             end do
+<             
+<           endif
+<  
+<         endif
+<         if(.not.allocated(intcoair))then
+<           allocate(intcoair(ide-ids+1,jds:jde,0:nlnair))
+<           allocate(intnoxair(ide-ids+1,jds:jde,0:nlnair))
+<           intcoair(:,:,0)=0.0
+<           intnoxair(:,:,0)=0.0
+<           do k=1,nlnair
+<             intcoair(:,:,k)=intcoair(:,:,k-1)+srccoair(:,:,k)
+<             intnoxair(:,:,k)=intnoxair(:,:,k-1)+srcnair(:,:,k)
+<           end do
+<         endif
+<       else
+730c473
+< !         if(debug)then
+---
+>         if(debug)then
+734d476
+< !         endif
+893,894d634
+< !        write(200+iam,*)'read ebu_co'
+< !        call flush(200+iam)
+897,912d636
+<           if(inquire_file_dim('ebu_co.tile1.nc','nhr',trim(config%fireemi_inname)))then
+<  !           allocate (srcinhr(ide-ids+1,jds:jde,24))
+<            dofirehr=.true.
+<            allocate (data%bbco_hr(ide-ids+1,jds:jde,24))
+< !           path=trim(config % fireemi_inname), de=de,
+< !           recrange=recrange,varname='bb_co',rc=localrc)
+< !           write(200+iam,*)'read ebu_co'
+< !           call flush(200+iam)
+< !           call chem_io_read(file,srcinhr,  &
+<            call chem_io_read(file,data%bbco_hr,  &
+<            path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+< !           write(200+iam,*)'allocate bbco_hr',ide-ids+1,jds,jde
+< !           call flush(200+iam)
+< !           data%bbco_hr=srcinhr
+<  !          deallocate(srcinhr)
+<           else
+917d640
+<           endif
+944,945c667,668
+< !        write(200+iam,*)'now plume'
+< !        call flush(200+iam)
+---
+> !        write(6,*)'now plume'
+> !        call flush(6)
+951,959d673
+<           if(inquire_file_var('plumefrp.tile1.nc','plumefrp',trim(config%fireemi_inname)))then
+<             if(inquire_file_dim('plumefrp.tile1.nc','nhr',trim(config%fireemi_inname)))then
+<               allocate(data%plume_hr(ide-ids+1,jds:jde,24))
+<               allocate (srcinhr(ide-ids+1,jds:jde,24))
+<               call chem_io_read(file,srcinhr,  &
+<               path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='plumefrp',rc=localrc)
+<               data%plume_hr=srcinhr
+<               deallocate(srcinhr)
+<             else
+963,968d676
+<             endif
+<           else
+<               call chem_io_read(file,srcin,  &
+<               path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='plumefrp',rc=localrc)
+<               data%plume(:,:,1)=srcin
+<           endif
+1121c829
+<     integer :: de, deCount, localpe, tile ,itime,dims(2)
+---
+>     integer :: de, deCount, localpe, tile 
+1124d831
+<     real(CHEM_KIND_R4),allocatable,dimension(:,:,:) :: traceout
+1140c847
+<       call chem_io_write('srcco_totl.nc',srcco_totl(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+---
+>       call chem_io_write('srcco_totl.03.nc',srcco_totl(:,:,3), path=trim(config % emi_outname), de=de, rc=localrc)
+1147,1202c854
+<       call chem_io_write('srcnind.nc', srcnind(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcethane.nc', srcethane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< !        dims=shape(srcethane(:,:,7))
+< !        allocate (traceout(dims(1),dims(2),1))
+< !        traceout(:,:,1)=srcethane(:,:,7)
+< !        itime=1
+< !        call chem_io_writenc('srcethane.nc',traceout,path=trim(config%emi_outname),de=de,time=itime, &
+< !        varname='srcetane',units='ug/kg/sec',rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcethene.nc', srcethene(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcpropane.nc', srcpropane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcpropene.nc', srcpropene(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcbutane.nc', srcbutane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srcpentane.nc', srcpentane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+< 
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       if(debug)then
+<       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," nox - min/max = "2g16.6)') localpe, de, &
+<         tile, minval(srcnind), maxval(srcnind) 
+<       endif
+<       call chem_io_write('srchexane.nc', srchexane(:,:,7), path=trim(config % emi_outname), de=de, rc=localrc)
+---
+>       call chem_io_write('srcnind.03.nc', srcnind(:,:,3), path=trim(config % emi_outname), de=de, rc=localrc)
+1234,1236c886
+< !    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+<     use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem
+<     use raqmschem_pmgrid_mod,only : gsidatatype,gsiarray,gsivarr
+---
+>     use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem
+1264c914
+<     integer :: de, deCount, localpe, tile ,m,k,kk,nl,ii
+---
+>     integer :: de, deCount, localpe, tile ,m,k,kk,nl
+1270,1271d919
+<     character*8,pointer,dimension(:) :: gsicem
+<     integer,pointer,dimension(:) :: loccem
+1346,1351d993
+<         endif
+< !        write(6,*)'gsi_write numgsicem',numgsicem
+<         do ii=1,numgsicem
+<           gsicem=>gsiarray(ii)%gsicem
+<           loccem=>gsiarray(ii)%loccem
+<           if(gsivarr(ii)=='AOD')then
+1369,1373c1011,1012
+<             if(iam==0)then
+<               write(6,*)'ii=',ii,'nsigvar',gsiarray(ii)%ngsivar,gsivarr(ii)
+<              endif
+<           do i=1,gsiarray(ii)%ngsivar
+<              if(gsivarr(ii).eq.'o3vmr')then
+---
+>         do i=1,numgsicem
+>           if(gsicem(i).eq.'o3vmr')then
+1375,1376c1014,1016
+<               units='ppv'
+<             elseif(gsivarr(ii)=='AOD')then
+---
+>           else
+>             traceout=tr3d(:,:,:,loccem(i))
+>           endif
+1377a1018,1022
+>           if(gsicem(i)(1:2).eq.'bc'.or.gsicem(i)(1:3).eq.'oc1'.or. &
+>             gsicem(i)(1:3).eq.'oc2'.or.                               &
+>             gsicem(i)(1:3).eq.'dus'.or.gsicem(i)(1:3).eq.'sea'.or. &
+> !           gsicem(i)(1:3).eq.'so2'.or.gsicem(i)(1:4).eq.'sulf')then
+>             gsicem(i)(1:4).eq.'sulf')then
+1379,1380d1023
+< !              write(6,*)'gsicem',i,gsicem(i),'loccem',loccem(i)
+<               traceout=tr3d(:,:,:,loccem(i))
+1382,1383d1024
+< !             write(6,*)'gsi_write',i,'loccem',loccem(i),'gsicem',gsicem(i)
+<               traceout=tr3d(:,:,:,loccem(i))
+1386,1387c1027,1033
+< !            if(iam==0)then
+< !              write(6,*)'output i',i,'ii',ii,gsicem(i),'loccem',loccem(i)
+---
+> !          if(iam.eq.0)then
+> !          write(6,*)'writegsi',mype,i,gsicem(i),units
+> !          call flush(6)
+> !          endif
+> !          if(iam.eq.iamprn)then
+> !            write(6,*)'tracer gsi write',gsicem(i),iprn,jprn,traceout(iprn,jprn,1)
+> !            flush(6)
+1394c1040
+<             if(gsivarr(ii)=='o3vmr')then
+---
+>           if(gsicem(i)=='o3vmr')then
+1401d1046
+<         end do
+1412c1057
+<         varname='aodgsi',units=' ',rc=localrc)
+---
+>         varname='ptrop',units='pa',rc=localrc)
+1466c1111
+<     use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+---
+>     use raqmschemcomm_mod, only : cprate,lprate,ncplprate,gsiinc
+1469,1473c1114
+<     use raqmschemcomm_mod, only : srccocedsair,srcso2cedsair,ratioso2ceds,ratiococeds,ration2oceds
+<     use raqmschemcomm_mod, only : srcn2ocedsair
+< !    use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+<     use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+<     use raqmschem_pmgrid_mod,only : gsiarray,gsivarr
+---
+>     use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,gsicem,loccem,ompsgsi
+1486c1127
+<     real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout,cotend
+---
+>     real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout
+1502c1143
+<     integer :: de, deCount, localpe, tile ,m,k,kk,nl,mm
+---
+>     integer :: de, deCount, localpe, tile ,m,k,kk,nl
+1507c1148
+<     logical aerosol_ugpKg,lcodiag
+---
+>     logical aerosol_ugpKg
+1509,1523d1149
+<     integer,pointer,dimension(:) :: loccem
+<     character *8,pointer,dimension(:) :: gsicem
+<     real*4,pointer,dimension(:,:,:,:) :: gsiinc
+<     character ccodiag*10
+<     ccodiag=' '
+<     call getenv('CODIAG',ccodiag)
+<     if(ccodiag=='YES')then
+<       lcodiag=.true.
+<     else
+<       lcodiag=.false.
+<     endif
+<     if(iam==0)then
+<       write(6,*)'write codiag',lcodiag
+<       call flush(6)
+<     endif
+1603c1229,1230
+< !      if(allocated(gsiinc))then
+---
+>       if(allocated(gsiinc))then
+>         gsitotinc=0.0
+1614c1241
+< !      endif
+---
+>       endif
+1622,1623c1249,1251
+< !        if(allocated(gsiinc))then
+< !        endif
+---
+>         if(allocated(gsiinc))then
+>           gsitotinc(:,:)=gsitotinc(:,:)+dpm(:,:,k)*gsiinc(:,:,k,1)
+>         endif
+1647,1648c1275,1278
+< !      if(allocated(gsiinc))then
+< !      endif
+---
+>       if(allocated(gsiinc))then
+>         gsitotinc=gsitotinc*avgro/airmw*10./grvity*1.e-18
+>         pergsiinc=gsitotinc/cotot
+>       endif
+1687,1721d1316
+<         if(allocated(srccocedsair))then
+<           traceout=srccocedsair
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cedscoair',units='mol/ccm3',rc=localrc)
+<         endif
+<         if(allocated(srcn2ocedsair))then
+<           traceout=srcn2ocedsair
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cedsn2oair',units='mol/ccm3',rc=localrc)
+<         endif
+<         if(allocated(ratioso2ceds))then
+<           traceout=ratioso2ceds
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='ratioso2ceds',units=' ',rc=localrc)
+<         endif
+<         if(allocated(ratiococeds))then
+<           traceout=ratiococeds
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='ratiococeds',units=' ',rc=localrc)
+<         endif
+<         if(allocated(ration2oceds))then
+<           traceout=ration2oceds
+<           if(maxval(ration2oceds)>.2)then
+<              write(6,*)'max ration2oceds',maxval(ration2oceds)
+<            endif
+<            write(6,*)'maxration2o',maxval(ration2oceds)
+<            flush(6)
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='ration2oceds',units=' ',rc=localrc)
+<         endif
+<         if(allocated(srcso2cedsair))then
+<           traceout=srcso2cedsair
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cedsso2air',units='mol/ccm3',rc=localrc)
+<         endif
+1757c1352
+<         traceout=dpm *100.
+---
+>         traceout=dpm
+1759c1354
+<         varname='dpm',units='Pa',rc=localrc)
+---
+>         varname='dpm',units='mb',rc=localrc)
+1776,1778d1370
+<         if(iam==0)write(6,*)'doallgsiaod 1'
+< #ifdef DOALLGSIAOD
+<         if(iam==0)write(6,*)'doallgsiaod 1aod'
+1782,1783d1373
+< #endif
+<         if(iam==0)write(6,*)'doallgsiaod 2'
+1787,1794d1376
+<         if(allocated(ptropgsi))then
+<           call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ptrop',units='Pa',attribute='using gsi code to calc ptrop',rc=localrc)
+<         endif
+<         if(allocated(ztropgsi))then
+<           call chem_io_writenc(trim(fileout),ztropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ztrop',units='m',attribute='using gsi code to calc ztrop',rc=localrc)
+<         endif
+1800,1801d1381
+<         if(iam==0)write(6,*)'doallgsiaod 3'
+< #ifdef DOALLGSIAOD
+1804d1383
+<         if(iam==0)write(6,*)'doallgsiaod 4'
+1808,1809d1386
+< #endif
+< !        write(200+iam,*)'allocated adoincgsi',allocated(data%aodincgsi)
+1812d1388
+< !          write(200+iam,*)'aodincgsi out ',maxval(trace2dout),minval(trace2dout)
+1815c1391
+<           data%aodincgsi=0.0
+---
+>           data%aodincgsi=0.0 ! added 8/20/2022 12:25PM
+1817,1818d1392
+< #ifdef DOALLGSIAOD
+<         if(iam==0)write(6,*)'doallgsiaod 5'
+1839,1840d1412
+< #endif
+<         if(iam==0)write(6,*)'doallgsiaod 6'
+1845d1416
+< #ifdef DOALLGSIAOD
+1853,1854d1423
+<         write(6,*)iam,'allocated ext3d',allocated(data%ext_3d)
+<         call flush(6)
+1856d1424
+<         if(iam==0)write(6,*)'doallgsiaod 7'
+1858,1859d1425
+<           write(6,*)iam,'do old ext_sulf'
+<           call flush(6)
+1904d1469
+< #endif
+1991c1556
+< !        if(allocated(gsiinc))then
+---
+>         if(allocated(gsiinc))then
+1996,2008c1561
+<         do mm=1,numgsicem
+<           if(allocated(gsiarray(mm)%gsiinc))then
+<             gsiinc=>gsiarray(mm)%gsiinc
+<             if(gsiarray(mm)%ngsivar==1)then
+< !             ajl check on this find
+<               gsitotinc=0.0
+<               do k=1,nl
+<                 gsitotinc(:,:)=gsitotinc(:,:)+dpm(:,:,k)*gsiinc(:,:,k,1)
+<               end do
+<               gsitotinc=gsitotinc*avgro/airmw*10./grvity*1.e-18
+<             endif
+<             do m=1,gsiarray(mm)%ngsivar
+<        
+---
+>           do m=1,numgsicem
+2012c1565
+<               if(gsivarr(mm)=='AOD')then
+---
+>             if(numgsicem>=14)then
+2015c1568
+<                 varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='units',rc=localrc)
+---
+>               varname='inc'//trim(gsicem(m)),units='units',rc=localrc)
+2018c1571
+<                 varname='inc'//trim(gsiarray(mm)%gsicem(m)),units='ppv',rc=localrc)
+---
+>               varname='inc'//trim(gsicem(m)),units='ppv',rc=localrc)
+2019a1573,1584
+> !          traceout=gsiinc(:,:,:,1)/tr3d(:,:,:,p_co)*100.
+> #if 0
+>             traceout=pergsiv(:,:,:,m)
+>             call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+>             varname='per'//trim(gsicem(m)),units='fraction',rc=localrc)
+> !            call chem_io_writenc(trim(fileout),perco,path=trim(config%emi_outname),de=de,time=itime, &
+> !          varname='perco',units='fraction',rc=localrc)
+>             traceout=colgsiinc(:,:,:,m)
+>             call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+>             varname='int'//trim(gsicem(m)),units='sum',rc=localrc)
+> #endif
+> 
+2021,2023c1586,1587
+<             end do ! m
+<           endif ! gsiarray%gsiinc
+<           if(gsivarr(mm).eq.'o3vmr')then
+---
+>           end do
+>           if(gsicem(1).eq.'o3vmr')then
+2025c1589
+< !            write(6,*)'ompsgsi',ompsgsi,'incLP',maxval(traceout),minval(traceout)
+---
+>             write(6,*)'ompsgsi',ompsgsi,'incLP',maxval(traceout),minval(traceout)
+2055,2057c1619,1621
+<           endif ! o3vmr
+<           if(gsivarr(mm).eq.'co')then
+<             if(allocated(incNUCAPSco3d))then
+---
+>           endif
+>           if(gsicem(1).eq.'co')then
+>             if(allocated(incnucapsco3d))then
+2060c1624
+< !              write(6,*)'cogsi','incNUCAPS',maxval(traceout),minval(traceout)
+---
+>               write(6,*)'cogsi','incNUCAPS',maxval(traceout),minval(traceout)
+2067c1631
+<             if(allocated(incTROPOMIco3d))then
+---
+>             if(allocated(inctropomico3d))then
+2076,2092d1639
+<           endif ! co
+< !          write(6,*)'gsiarray mm ngsivar ',mm,gsiarray(mm)%ngsivar
+< !          call flush(6)
+<           if(gsiarray(mm)%ngsivar==1)then
+< !            write(6,*)'mm',mm,'gsicem',gsiarray(mm)%gsicem(1)
+< !            call flush(6)
+< !            write(6,*)'gsitotinc',maxval(gsitotinc)
+< !            call flush(6)
+<             call chem_io_writenc(trim(fileout),gsitotinc,path=trim(config%emi_outname),de=de,time=itime, &
+<             varname=trim(gsiarray(mm)%gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+< !            write(6,*)'did iowriet'
+< !            call flush(6)
+<             if(gsiarray(mm)%gsicem(1)=='co')then
+<               pergsiinc=gsitotinc/cotot
+<               call chem_io_writenc(trim(fileout),pergsiinc,path=trim(config%emi_outname),de=de,time=itime, &
+<               varname='per'//trim(gsiarray(mm)%gsicem(1))//'inc',units='percent',rc=localrc)
+<             endif
+2094d1640
+<         end do ! mm findhere
+2100a1647,1650
+>           call chem_io_writenc(trim(fileout),gsitotinc,path=trim(config%emi_outname),de=de,time=itime, &
+>           varname=trim(gsicem(1))//'totinc',units='10**18 molec/cm2',rc=localrc)
+>           call chem_io_writenc(trim(fileout),pergsiinc,path=trim(config%emi_outname),de=de,time=itime, &
+>           varname='per'//trim(gsicem(1))//'inc',units='percent',rc=localrc)
+2102c1652
+< !        endif
+---
+>         endif
+2127c1677
+<         traceout=dpm*100.
+---
+>         traceout=dpm
+2129c1679
+<         varname='dpm',units='Pa',rc=localrc)
+---
+>         varname='dpm',units='mb',rc=localrc)
+2132c1682
+<         varname='pdash',units='Pa',rc=localrc)
+---
+>         varname='pdash',units='mb',rc=localrc)
+2218c1768,1769
+< !!       they changed so2 to ppm done in raqms_mod now
+---
+> !       they changed so2 to ppm
+> !       now done in raqms_mod 6/28/2023
+2241,2243c1792,1793
+<         trace2dout=sfcp*100.
+<         call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='sfcp',units='Pa',rc=localrc)
+---
+>         call chem_io_writenc(trim(fileout),sfcp,path=trim(config%emi_outname),de=de,time=itime, &
+>         varname='sfcp',units='mb',rc=localrc)
+2270,2272c1820,1821
+<         trace2dout=sfcp*100.
+<         call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),time=1,de=de, &
+<         varname='sfcp',units='Pa',rc=localrc)
+---
+>         call chem_io_writenc(trim(fileout),sfcp,path=trim(config%emi_outname),time=1,de=de, &
+>         varname='sfcp',units='mb',rc=localrc)
+2280a1830
+>       codep_save=codep_save*86400.
+2282,2294d1831
+< #ifdef DIAGCO
+<         if(lcodiag)then
+<         call flipz(coften_save,traceout)
+<         cotend=traceout
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cosrc',units='ppv sec -1',rc=localrc)
+<         call flipz(codten_save,traceout)
+<         cotend=cotend-traceout
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cosink',units='ppv sec -1',rc=localrc)
+<         cotend(:,:,1)=cotend(:,:,1)-codep_save(:,:)
+<         call chem_io_writenc(trim(fileout),cotend,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cotend',units='ppv sec -1',rc=localrc)
+2296,2299c1833
+<         varname='codepsec',units='ppv sec -1',rc=localrc)
+<         endif
+< #endif
+<         codep_save=codep_save*86400.
+---
+>         varname='codep',units='ppv day -1',rc=localrc)
+2356,2361d1889
+<           if(allocated(emisco3dave))then
+<             emisco3dave=emisco3dave/float(navgfire)
+<             call flipz(emisco3dave,traceout)
+<             navgfire=0.0
+<             emisco3dave=0.0
+<           else
+2363d1890
+<           endif
+2394,2396d1920
+<     if(iam==0)then
+<        write(6,*)'bottom chem_write'
+<     endif
+2402,2793d1925
+< 
+<     subroutine raqmschem_chem_write_aodfcst(tr3d,data,statein,dims,itime,cdate,filename,rc)
+<     use raqmschem_species_mod
+<     use raqmschemcomm_mod, only : thgrd,tcmw,idbc1,idbc2,idoc1,idoc2,idso4,pgrd
+<     use raqmschemcomm_mod, only : cprate,lprate,ncplprate
+<     use raqmschem_pmgrid_mod,only : iam,cdatestr,gsivar,numgsicem,ompsgsi
+<     use raqmschem_pmgrid_mod,only : gsiarray,gsivarr,cemaod
+<     use raqmschem_const_mod, only : mw_so4_aer,avgro,mw_co,grvity
+<     use raqmschem_state_mod
+<     implicit none
+<     integer dims(3),i,j
+<     integer,optional :: itime
+<     character*10, optional, intent(in) :: cdate
+<     character*100 fileout
+<     character *(*), optional, intent(in) :: filename
+<     character*100 :: aodatt='using aod coeff defived from geos-5 crtm coefficients'
+<     integer, optional, intent(out) :: rc
+<     type(chem_data_type) :: data
+<     
+<     real(CHEM_KIND_R8),dimension(:,:,:,:) :: tr3d
+<     real(CHEM_KIND_R4),dimension(dims(1),dims(2),dims(3)) :: traceout,cotend
+<     real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: dpm,dz
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: sfcp,trace2dout
+<     real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_bcoc,ext_dust,ext_seasalt
+<     real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc,ext_dust1
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot,aod_dust1
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bc,aod_oc
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: cotot
+<     type(chem_state_type),  pointer :: stateIn, stateOut
+< 
+<     ! -- local variables
+<     integer :: localrc
+<     integer :: de, deCount, localpe, tile ,m,k,kk,nl,mm
+<     type(chem_config_type), pointer :: config => null()
+<     REAL,    PARAMETER :: airmw    = 28.97
+<     character *10 :: units,cemadd(4)*8
+<     real(chem_kind_r4) :: fac,facdob
+<     logical aerosol_ugpKg,doadd
+<     character *10 caerosol_ugpKg,cenv
+<     integer,pointer,dimension(:) :: loccem
+<     integer  nadd,iadd(4)
+<     character *8,pointer,dimension(:) :: gsicem
+<     real*4,pointer,dimension(:,:,:,:) :: gsiinc
+<     iadd(1)=p_ox
+<     iadd(2)=p_no2
+<     iadd(3)=p_ch2o
+<     iadd(4)=p_ch4
+<     cemadd(1)='ox'
+<     cemadd(2)='no2'
+<     cemadd(3)='ch2o'
+<     cemadd(4)='ch4'
+<     cenv=' '
+<     call getenv('ADD_OX_NO2_CH2O',cenv)
+<     
+<     if(cenv/=' ')then
+<       write(6,*)'ADD_OX_NO2_CH2O',trim(cenv)
+<       doadd=.true.
+<       nadd=4
+<     else
+<       doadd=.false.
+<       nadd=0
+<     endif
+<     caerosol_ugpKg=' '
+<     call getenv('AEROSOL_ugpKg',caerosol_ugpKg)
+<     if(iam==0)then
+<        write(6,*)'top aodfcst '
+<     endif
+<     if(caerosol_ugpKg/=' ')then
+<       if(caerosol_ugpKg=='YES')then
+<         aerosol_ugpKg=.true.
+<         if(iam==0)then
+<           write(6,*)'aersol_ugpKg'
+<         endif
+<       elseif(caerosol_ugpKg=='NO')then
+<         aerosol_ugpKg=.false.
+<         if(iam==0)then
+<           write(6,*)'aersol_ppmv'
+<         endif
+<       endif
+<     else ! make default
+<       aerosol_ugpKg=.true.
+<       if(iam==0)then
+<         write(6,*)'aersol_ugpKg'
+<       endif
+<     endif
+<       
+< !    character*20 :: gsicem(100)
+< !    integer numgsicem,loccem(100)
+<     fac=avgro/airmw*10./grvity
+<     facdob=1.0e4*6.023e23/28.97/9.806/2.687e19
+<     cdatestr(1:4)=cdate(1:4)
+<     cdatestr(5:5)='-'
+<     cdatestr(6:7)=cdate(5:6)
+<     cdatestr(8:8)='-'
+<     cdatestr(9:10)=cdate(7:8)
+<     cdatestr(11:11)=' '
+<     cdatestr(12:13)=cdate(9:10)
+<     cdatestr(14:)=':00:00'
+< !    write(6,*)'ajl top chem_write'
+< !    write(200+iam,*)'ajl top chem_write',trim(cdatestr)
+< !    call flush(6)
+< !    call flush(200+iam)
+< 
+< 
+<     ! -- begin
+<     if (present(rc)) rc = CHEM_RC_SUCCESS
+< 
+<     call raqmschem_model_get(deCount=deCount, config=config, rc=localrc)
+<     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+< 
+<     call chem_comm_get(localpe=localpe, rc=localrc)
+<     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+< !    write(6,*)'present filename',present(filename),'presend cdate',present(cdate)
+<     if(present(filename))then
+<       fileout=trim(filename)
+<     else
+<       if(present(cdate))then
+<         fileout='tracer.'//cdate//'.nc'
+<       else
+<         fileout='tracer.nc'
+<       endif
+<     endif
+<     nl=dims(3)
+< 
+<     do de = 0, deCount-1
+<       call raqmschem_model_get(de=de,  tile=tile, rc=localrc)
+<       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       traceout=tr3d(:,:,:,1)
+<       sfcp(:,:)=statein%pr3d(:,:,1)*.01
+<       do k=1,dims(3)
+<         dpm(:,:,k)=(statein%pr3d(:,:,k)-statein%pr3d(:,:,k+1))*.01
+<         dz(:,:,k)=(statein%ph3d(:,:,k+1)-statein%ph3d(:,:,k))/9.80616
+<         cotot(:,:)=cotot(:,:)+dpm(:,:,k)*tr3d(:,:,k,p_co)
+<       end do
+<       cotot=cotot*avgro/airmw*10./grvity*1.e-18
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='q',units='kg/kg',rc=localrc)
+<         do k=1,dims(3)
+<           traceout(:,:,k)=zsurf(:,:)+statein%phl3d(:,:,k)/9.80616
+<         end do
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='zdash',units='m',rc=localrc)
+<         traceout=dpm*100. ! make pascals
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='dpm',units='Pa',rc=localrc)
+<         traceout=dz
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='dz',units='m',rc=localrc)
+<         traceout=statein%prl3d
+< !        write(6,*)'iodata pdash',maxval(traceout),minval(traceout)
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='pdash',units='Pa',rc=localrc)
+<         traceout=statein%tk3d
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='T',units='K',rc=localrc)
+<         traceout=statein%us3d
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='U',units='m/s',rc=localrc)
+<         traceout=statein%vs3d
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='V',units='m/s',rc=localrc)
+<         if(allocated(data%ext_3dg))then
+<           traceout=data%ext_3dg(:,:,:,1)
+<           call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ext_sulfg',units='1',attribute=aodatt,rc=localrc)
+<           ext_bcoc=0.0
+<           ext_bc=0.0
+<           ext_oc=0.0
+<           aod_bcoc=0.0
+<           aod_bc=0.0
+<           aod_oc=0.0
+<           aod_dust=0.0
+<           aod_seasalt=0.0
+<           aod_sulf=0.0
+<           do m=2,5
+<             ext_bcoc=ext_bcoc+data%ext_3dg(:,:,:,m)
+<             if(m<=3)then
+<               ext_bc=ext_bc+data%ext_3dg(:,:,:,m)
+<             else
+<               ext_oc=ext_oc+data%ext_3dg(:,:,:,m)
+<             endif
+<           end do
+<           ext_dust=0.0
+<           ext_seasalt=0.0
+< !         shoule be 6,10 ajl
+< !         for gsi should be 6,10 since now have 5 dust bins and 6 is now dust1
+< !         and not no3 which we don't have in model
+< !         for gsi aod 6 is dust1 since have 1-5
+<           do m=6,10
+<             ext_dust=ext_dust+data%ext_3dg(:,:,:,m)
+< !            write(6,*)'ext_dust',m,maxval(data%ext_3dg(:,:,:,m))
+<           end do
+<          ext_dust1=data%ext_3dg(:,:,:,6)
+<          do m=11,14
+<             ext_seasalt=ext_seasalt+data%ext_3dg(:,:,:,m)
+< !            write(300+iam,*)'ext_3dg',m,maxval(data%ext_3dg(:,:,:,m))
+<           end do
+<           aod_dust1=0.0
+<           do k=1,dims(3)
+<             aod_bcoc(:,:)=aod_bcoc(:,:)+ext_bcoc(:,:,k)*dz(:,:,k)
+<             aod_bc(:,:)=aod_bc(:,:)+ext_bc(:,:,k)*dz(:,:,k)
+<             aod_oc(:,:)=aod_oc(:,:)+ext_oc(:,:,k)*dz(:,:,k)
+<             aod_seasalt(:,:)=aod_seasalt(:,:)+ext_seasalt(:,:,k)*dz(:,:,k)
+<             aod_dust(:,:)=aod_dust(:,:)+ext_dust(:,:,k)*dz(:,:,k)
+<             aod_sulf(:,:)=aod_sulf(:,:)+data%ext_3d(:,:,k,1)*dz(:,:,k)
+<             aod_tot(:,:)=aod_bcoc(:,:)+aod_seasalt(:,:)+aod_dust(:,:)+aod_sulf(:,:)
+<             aod_dust1(:,:)=aod_dust1(:,:)+ext_dust1(:,:,k)*dz(:,:,k)
+<           end do
+< !          write(6,*)'aod_dust1',maxval(aod_dust1)
+< !          write(6,*)'aod_dust',maxval(aod_dust)
+< !          write(6,*)'maxvalaod',maxval(aod_tot),maxval(data%aodgsi)
+<           ext_tot=ext_bcoc+ext_dust+ext_seasalt+data%ext_3dg(:,:,:,1)
+<           call chem_io_writenc(trim(fileout),ext_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ext_bcocg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),ext_dust,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ext_dustg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),ext_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ext_seasg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),ext_tot,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ext_totg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_bcoc,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aod_bcocg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_bc,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aod_bcg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_oc,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aod_ocg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_seasalt,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aodssaltg',units='1',attribute=aodatt,rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_dust,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aoddustg',units='1',rc=localrc)
+<           call chem_io_writenc(trim(fileout),aod_sulf,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aodsulfg',units='1',attribute=aodatt,rc=localrc)
+<         endif
+<         if(allocated(ptropgsi))then
+<           call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ptrop',units='Pa',attribute='using gsi code to calc ptrop',rc=localrc)
+<         endif
+<         if(allocated(ztropgsi))then
+<           call chem_io_writenc(trim(fileout),ptropgsi,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='ztrop',units='m',attribute='using gsi code to calc ztrop',rc=localrc)
+<         endif
+<         if(allocated(data%aodg5))then
+<           trace2dout=data%aodg5
+<           call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname='aodg5',units='1',attribute=aodatt,rc=localrc)
+< 
+<         endif  
+< #ifdef DIAGCO2
+<         call flipz(coften_save,traceout)
+<         cotend=traceout
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cosrc',units='ppv sec -1',rc=localrc)
+<         call flipz(codten_save,traceout)
+<         cotend=cotend-traceout
+<         call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cosink',units='ppv sec -1',rc=localrc)
+<         cotend(:,:,1)=cotend(:,:,1)-codep_save(:,:)
+<         call chem_io_writenc(trim(fileout),cotend,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cotend',units='ppv sec -1',rc=localrc)
+<         call chem_io_writenc(trim(fileout),codep_save,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='codep',units='ppv sec -1',rc=localrc)
+<         call chem_io_writenc(trim(fileout),cotot,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cotot',units='molec/ccm2*10-18',rc=localrc)
+< #endif
+<    
+<       if(iam==0)then
+<          write(6,*)'nsolmax',nsolmax
+<       endif
+<       do m=1,nsolmax
+< !        m=idaodgsi(mm)
+<         units='ppv'
+< !        traceout=tr3d(:,:,:,icheminputpt(m))
+<         traceout=tr3d(:,:,:,idaodgsi(m))
+< !       convert to raqms units
+<         if(iam==0)then
+<           write(6,*)m,'aodfcst cheminput',cheminput(m)
+<         endif
+<         if(cemaod(m)(1:2).eq.'bc'.or.cemaod(m)(1:3).eq.'oc1'.or. &
+<           cemaod(m)(1:3).eq.'oc2'.or.                               &
+<           cemaod(m)(1:3).eq.'dus'.or.cemaod(m)(1:3).eq.'sea'.or. &
+< !          cemaod(m)(1:3).eq.'so2'.or.cemaod(m)(1:4).eq.'sulf')then
+<           cemaod(m)(1:4).eq.'sulf')then
+<           if( aerosol_ugpKg)then
+<             units='ug/kg-dryair'
+<             if(cemaod(m)(1:3).eq.'bc1')then
+<                if(iam.eq.0)then
+<                  write(6,*)'bc1',tcmw(idbc1),idbc1
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'bc2')then
+<                if(iam.eq.0)then
+<                  write(6,*)'bc2',tcmw(idbc2),idbc2
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'oc1')then
+<                if(iam.eq.0)then
+<                  write(6,*)'oc1',tcmw(idoc1),idoc1
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'oc2')then
+<                if(iam.eq.0)then
+<                  write(6,*)'oc2',tcmw(idoc2),idoc2
+<                endif
+<             elseif(cemaod(m)(1:4).eq.'sulf')then
+<                if(iam.eq.0)then
+<                  write(6,*)'so4',mw_so4_aer
+<                endif
+< !              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+<             endif
+<           else
+< !           convert  from ppv to ugpkg ?
+<             traceout=traceout*1.e-9
+<             if(cemaod(m)(1:3).eq.'bc1')then
+<                traceout=traceout*airmw/tcmw(idbc1)
+<                if(iam.eq.0)then
+<                  write(6,*)'bc1',tcmw(idbc1),idbc1
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'bc2')then
+<               traceout=traceout*airmw/tcmw(idbc2)
+<                if(iam.eq.0)then
+<                  write(6,*)'bc2',tcmw(idbc2),idbc2
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'oc1')then
+<               traceout=traceout*airmw/tcmw(idoc1)
+<                if(iam.eq.0)then
+<                  write(6,*)'oc1',tcmw(idoc1),idoc1
+<                endif
+<             elseif(cemaod(m)(1:3).eq.'oc2')then
+<               traceout=traceout*airmw/tcmw(idoc2)
+<                if(iam.eq.0)then
+<                  write(6,*)'oc2',tcmw(idoc2),idoc2
+<                endif
+<             elseif(cemaod(m)(1:4).eq.'sulf')then
+<               traceout=traceout*airmw/mw_so4_aer
+<                if(iam.eq.0)then
+<                  write(6,*)'so4',mw_so4_aer
+<                endif
+< !              maybe should convert to ug/kg for ammoninum sulfate instead of so4
+<             else
+<               units='kg kg-1'
+<             endif
+<           endif
+< !          if(tile.eq.5)then
+<             !write(300+iam,*)cemaod(m)(1:4),maxval(traceout),minval(traceout)
+< !            flush(300+iam)
+< !          endif
+<         endif
+< !        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa')then
+< !       they changed so2 to ppm
+< !        if(cemaod(m)(1:3).eq.'dms'.or.cemaod(m)(1:3).eq.'msa'.or.cemaod(m)(1:3).eq.'so2')then
+< !          traceout=traceout*1.e-6
+< !        endif
+< !        !if(iam.eq.0.and.tile.eq.2)then
+< !          write(6,*)'m',m,'icemaodpt',cemaodlist(m),'cemaod',cemaod(m)
+< !          call flush(6)
+< !        endif
+< !        write(200+iam,*)'m',m,cemaod(m),units
+< !        call flush(200+iam)
+<           call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<           varname=cemaod(m),units=units,rc=localrc)
+< !        write(6,*)'varname',trim(cemaod(m)),'rc',localrc
+< !        call flush(6)
+<         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+<       end do
+<         trace2dout=sfcp*100. ! make Pa
+<         call chem_io_writenc(trim(fileout),trace2dout,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='sfcp',units='Pa',rc=localrc)
+<         call chem_io_writenc(trim(fileout),zsurf,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='sfcz',units='m',rc=localrc)
+<         call chem_io_writenc(trim(fileout),thgrd,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='theta',units='K',rc=localrc)
+<         call chem_io_writenc(trim(fileout),zlwigrd,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='zlwigrd',units=' ',rc=localrc)
+<         call chem_io_writenc(trim(fileout),tau6hr,path=trim(config%emi_outname),de=de,time=itime, &
+<         varname='cot6hr',units=' ',rc=localrc)
+<         navg=0
+<         tau6hr=0.0
+<       
+<     call flipz(o3vmr_inst,traceout)
+<     call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<       varname='o3vmr',units='ppv',rc=localrc)
+<       traceout=tr3d(:,:,:,p_co)
+<     call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<       varname='co',units='ppv',rc=localrc)
+<       if(nadd>0)then
+<         do m=1,nadd
+<           traceout=tr3d(:,:,:,iadd(m))
+<           call chem_io_writenc(trim(fileout),traceout,path=trim(config%emi_outname),de=de,time=itime, &
+<          varname=cemadd(m),units='ppv',rc=localrc)
+<         end do
+<       endif
+<     end do
+<      
+<     return
+<     end subroutine raqmschem_chem_write_aodfcst
+Only in shr: raqmschem_iodata_mod.F90.07.29.2022
+Only in shr: raqmschem_iodata_mod.F90.09.16.2022.save
+Only in shr: raqmschem_iodata_mod.F90.beforefix.06.13.2023
+Only in shr: raqmschem_iodata_mod.F90.fixcode
+Only in shr: raqmschem_iodata_mod.F90.savefixtry
+Binary files shr/raqmschem_iodata_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.mod differ
+diff -Bbw shr/raqmschem_io_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.F90
+44d43
+<   public :: inquire_file_dim
+149c148
+<   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread,oldname)
+---
+>   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread)
+155d153
+<     logical, optional :: oldname
+179,181d176
+<          if(present(oldname))then
+<            write(fname, '("tile",i0,"/",a)') tile, trim(filename)
+<          else
+183c178
+<          endif
+---
+> !        write(fname, '("tile",i0,"/",a)') tile, trim(filename)
+369d363
+<     use raqmschem_pmgrid_mod, only : iam
+373,380d366
+< !    write(200+iam,*)'inquire_file_var'
+< !    call flush(200+iam)
+< !    write(200+iam,*)'path',trim(path)
+< !    call flush(200+iam)
+< !    write(200+iam,*)'datafile',trim(datafile)
+< !    call flush(200+iam)
+<   
+<       
+385,386d370
+< !    else
+< !      write(6,*)'did open',iam
+394d377
+<     ierr=nf90_close(ncid)
+396,424d378
+<   logical function inquire_file_dim(datafile,dimname,path)
+<     use netcdf
+<     use raqmschem_pmgrid_mod, only : iam
+<     integer ncid,idvar,ierr
+<     character(len=*),   intent(in)  :: datafile,path
+<     character(len=*),  intent(in)  :: dimname
+< !    write(200+iam,*)'inquire_file_var'
+< !    call flush(200+iam)
+< !    write(200+iam,*)'path',trim(path)
+< !    call flush(200+iam)
+< !    write(200+iam,*)'datafile',trim(datafile)
+< !    call flush(200+iam)
+<   
+<       
+<     ierr=nf90_open(trim(path)//trim(datafile),0,ncid)
+<     if (ierr /= nf90_noerr)then
+<        write(6,*)'error open ',trim(path)//trim(datafile)
+<        call flush(6)
+< !    else
+< !      write(6,*)'did open',iam
+<     endif
+<     ierr=nf90_inq_dimid(ncid,dimname,idvar)
+<     if(ierr==nf90_noerr)then
+<       inquire_file_dim=.true.
+<     else
+<       inquire_file_dim=.false.
+<     endif
+<     ierr=nf90_close(ncid)
+<   end function inquire_file_dim
+781c735
+< !    write(6,*)'rcountbig endian',rcount,'rstride',rstride,'is',is,ie
+---
+> !    write(6,*)'rcount',rcount,'rstride',rstride,'is',is,ie
+789c743
+<       if (chem_rc_test((localrc /= 0), msg="Failure reading data g from file: "//trim(datafile), &
+---
+>       if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+874,875c828,829
+<     write(6,*)'rrange',rrange
+<     call flush(6)
+---
+> !    write(6,*)'rrange',rrange
+> !    call flush(6)
+891,892c845,846
+<     write(6,*)'rcountbb',rcount,'rstride',rstride,'is',is,ie
+<     call flush(6)
+---
+> !    write(6,*)'rcountbb',rcount,'rstride',rstride,'is',is,ie
+> !    call flush(6)
+950c904
+<   subroutine chem_io_file_writenc(datafile, filename,buffer, lat,lon, time,varname,units,attribute,rc)
+---
+>   subroutine chem_io_file_writenc(datafile, filename,buffer, lat,lon, time,varname,units,rc)
+960d913
+<     character(len=*), optional, intent(in)  :: attribute
+1047,1058d999
+< !   ajl new code 5/22/2023
+<       ierr=nf90_put_att(ncid,idtime,'long_name','time')
+< !      ierr=nf90_put_att(ncid,idtime,'units','days since '//trim(cdatestr))
+<       ierr=nf90_put_att(ncid,idtime,'cartesian_axis','T')
+<       ierr=nf90_put_att(ncid,idgridxt,'long_name','T-cell longitude')
+<       ierr=nf90_put_att(ncid,idgridxt,'units','degrees_E')
+<       ierr=nf90_put_att(ncid,idgridxt,'cartesian_axis','X')
+<       ierr=nf90_put_att(ncid,idgridyt,'long_name','T-cell latitude')
+<       ierr=nf90_put_att(ncid,idgridyt,'units','degrees_N')
+<       ierr=nf90_put_att(ncid,idgridyt,'cartesian_axis','Y')
+<       ierr=nf90_put_att(ncid,idgridzt,'cartesian_axis','Z')
+< !   ajl end new code 5/22/2023
+1065,1067d1005
+<       if(present(attribute))then
+<         ierru=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<       endif
+1073,1075d1010
+<       if(present(attribute))then
+<         ierru=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<       endif
+1148c1083
+<   subroutine chem_io_file_writenc3d(datafile, filename,buffer, lat,lon,time,varname, units,attribute,rc)
+---
+>   subroutine chem_io_file_writenc3d(datafile, filename,buffer, lat,lon,time,varname, units,rc)
+1159d1093
+<     character (len=*), optional, intent(in) :: attribute
+1289,1291d1222
+<           if(present(attribute))then
+<             ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<           endif
+1368,1370d1298
+<           if(present(attribute))then
+<             ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<           endif
+1517,1519d1444
+<       if(present(attribute))then
+<         ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<       endif
+1611c1536
+<   subroutine chem_io_file_writenc2d(datafile, filename,buffer, lat,lon,time,varname, units,attribute,rc)
+---
+>   subroutine chem_io_file_writenc2d(datafile, filename,buffer, lat,lon,time,varname, units,rc)
+1622d1546
+<     character (len=*), optional, intent(in) :: attribute
+1709,1716d1632
+<           if(present(attribute))then
+< !            write(6,*)'put -att ',trim(attribute)
+<             ierr=nf90_put_att(ncid,varid,'attrib',trim(attribute))
+<             if (ierr /= nf90_noerr)then
+<               write(6,*)'error put_att 1,trim(varname),trim(attribute)'
+<               write(6,*)trim(nf90_strerror(ierr))
+<             endif
+<           endif
+1777,1783d1692
+<             if(present(attribute))then
+<                ierr=nf90_put_att(ncid,varid,'attribute',trim(attribute))
+<               if (ierr /= nf90_noerr)then
+<                 write(6,*)'error put_att attribuet 2',trim(varname),trim(units)
+<                 write(6,*)trim(nf90_strerror(ierr))
+<               endif
+<             endif
+1959c1868
+<   subroutine chem_io_read_2DR4(filename, farray, path, recrange, recsize, recstride, de, bigendian,varname,rc,oldname)
+---
+>   subroutine chem_io_read_2DR4(filename, farray, path, recrange, recsize, recstride, de, bigendian,varname,rc)
+1970d1878
+<     logical,optional,intent(in) :: oldname
+2026c1934
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread,oldname=oldname)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+2415c2323
+<   subroutine chem_io_write_2DR4(filename, farray, path, pos, de, time,varname,units,attribute,rc)
+---
+>   subroutine chem_io_write_2DR4(filename, farray, path, pos, de, time,varname,units,rc)
+2426d2333
+<     character(len=*),optional,  intent(in)  :: attribute
+2525,2528d2431
+<             if(present(attribute))then
+<             call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+<             time=time, varname=varname,units=units,attribute=attribute,rc=localrc)
+<             else
+2531d2433
+<             endif
+2803c2705
+<   subroutine chem_io_writenc_2DR4(filename, farray, path, pos, de, time,varname,units,attribute,rc)
+---
+>   subroutine chem_io_writenc_2DR4(filename, farray, path, pos, de, time,varname,units,rc)
+2815d2716
+<     character(len=*),optional,  intent(in)  :: attribute
+2939,2945d2839
+<             if(present(attribute))then
+< !              if(iam==0)then
+< !                write(6,*)'chem_io_file_writenc2d attribute',trim(attribute)
+< !              endif
+<               call chem_io_file_writenc2d(datafile, filename,recvbuf,latbuf,lonbuf, &
+<               time=time, varname=varname,units=units,attribute=attribute,rc=localrc)
+<             else
+2948d2841
+<             endif
+2978c2871
+<   subroutine chem_io_writenc_3DR4(filename, farray, order, path, pos, de,time, varname,units,attribute,rc)
+---
+>   subroutine chem_io_writenc_3DR4(filename, farray, order, path, pos, de,time, varname,units,rc)
+2990d2882
+<     character(len=*),optional,  intent(in)  :: attribute
+3110,3113d3001
+<           if(present(attribute))then
+<             call chem_io_file_writenc3d(datafile, filename,buf3d,latbuf,lonbuf,  time=time, varname=varname,  &
+<             units=units,attribute=attribute,rc=localrc)
+<           else
+3115d3002
+<           endif
+Binary files shr/raqmschem_io_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.mod differ
+Binary files shr/raqmschemlocaltype_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschemlocaltype_mod.mod differ
+diff -Bbw shr/raqmschem_map_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_map_mod.F90
+83,86c83
+< !if(iam==11.and.tile==1.and.jin==31)then
+< !   write(6,*)'at top map to chem',j,'nc',nc,'ibeg',ibeg,'jin',jin
+< !   flush(6)
+< !endif
+---
+> 
+183,187d179
+< #ifdef DIAGCEDS
+<   if(iat==178.and.jin==31.and.tile==1)then
+<     write(6,*)'map to so2grd',k,so2grd(i,k)
+<   endif
+< #endif
+269c261
+< use raqmschem_pmgrid_mod, only : nc,nr,ibeg,begj,endj,nlev,tile,iam
+---
+> use raqmschem_pmgrid_mod, only : nc,nr,begj,endj,nlev,tile
+272d263
+< use raqmschemcomm_mod, only : lcedsair
+275c266
+< integer i,j,k,nchem,iat
+---
+> integer i,j,k,nchem
+281,285d271
+< #ifdef DIAGCEDS
+<   if(ibeg<=178.and.ibeg+nc-1>=178.and.j==31.and.tile==1)then
+<     write(6,*)'top mapfromchem ',j,'begj',begj,endj,'nc',nc
+<   endif
+< #endif
+288d273
+<   iat=i+ibeg+1
+369,380d353
+< #ifdef DIAGCEDS
+<   if(iat==178.and.j==31.and.tile==1)then
+<     write(6,*)'i=',i,'map so2grd back',k,so2grd(i,k),'t3d_out',t3d_out(i,j,k,p_so2)
+<     write(6,*)'bc1 out',bc1grd(i,k),'oc1',oc2grd(i,k)
+<   endif
+< #endif
+<   if(lcedsair)then
+<     t3d_out(i,j,k,p_bc1)=bc1grd(i,k)
+<     t3d_out(i,j,k,p_bc2)=bc2grd(i,k)
+<     t3d_out(i,j,k,p_oc1)=oc1grd(i,k)
+<     t3d_out(i,j,k,p_oc2)=oc2grd(i,k)
+<   endif
+Binary files shr/raqmschem_map_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_map_mod.mod differ
+diff -Bbw shr/raqmschem_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_model_mod.F90
+81c81
+<     use raqmschem_pmgrid_mod, only : iam,cdateat,cdatestart
+---
+>     use raqmschem_pmgrid_mod, only : iam,cdateat
+98c98
+<          open(10,file='RUNDONE.'//trim(cdatestart),form='formatted')
+---
+>          open(10,file='RUNDONE.'//trim(cdateat),form='formatted')
+100d99
+<          call flush(10)
+Binary files shr/raqmschem_model_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_model_mod.mod differ
+diff -Bbw shr/raqmschem_pmgrid_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_pmgrid_mod.F90
+8c8
+< character *10 cdateat,cdatestart
+---
+> character *10 cdateat
+21,22c21,22
+< character *8,dimension(:),allocatable :: gsicem,gsivarr
+< integer,dimension(:),allocatable,target :: loccem
+---
+> character *8,dimension(:),allocatable :: gsicem
+> integer,dimension(:),allocatable :: loccem
+27,37d26
+<   type gsidatatype
+<     integer ngsivar,nsecgsi
+<     real*4,allocatable,dimension(:,:,:,:) :: gsiinc
+<     integer,allocatable,dimension(:) :: loccem
+<     character *8,allocatable,dimension(:) :: gsicem
+<     character *8 :: gsivarr
+<   end type
+<   type(gsidatatype),allocatable,target :: gsiarray(:)
+<   character *8 cemaod(15)
+<   data cemaod/'sulf','bc1','bc2','oc1','oc2','dust1','dust2','dust3','dust4','dust5', &
+<      'seas1','seas2','seas3','seas4','seas5'/
+180c169
+<   use raqmschem_species_mod,only : p_ox,idaodgsi
+---
+>   use raqmschem_species_mod,only : p_ox
+184,187c173,174
+<   integer numvar,is(30),ie(30),igot,num,i,n,nsecgsi(30),is2(30),ie2(30),igot2,num2
+<   character *256 cinput,cinput2
+<   logical :: first=.true.
+<   save first
+---
+>   integer numvar,is(30),ie(30),igot,num,i
+>   character *256 cinput
+190,206d176
+<   cinput2=' '
+<   call getenv('GSISEC',cinput2)
+<   igot2=0
+<   if(cinput2/=' ')then
+<     num2=30
+<     call strip(cinput2,is2,ie2,num2,igot2)
+<     do i=1,igot2
+<       read(cinput2(is2(i):ie2(i)),*)nsecgsi(i)
+<       if(first)then
+<       if(iam==0)then
+<       write(6,*)'nsecgsi',i,nsecgsi(i)
+<       endif
+<       first=.false.
+<       endif
+<     end do
+<   endif
+< 
+215,217d184
+<     if(.not.allocated(gsiarray))then
+<       allocate(gsiarray(numgsicem))
+<     endif
+219c186
+<       allocate (loccem(numgsicem),gsicem(numgsicem),gsivarr(numgsicem))
+---
+>       allocate (loccem(numgsicem),gsicem(numgsicem))
+228d194
+<       gsivarr(i)=cinput(is(i):ie(i))
+233d198
+<       gsiarray(i)%gsivarr=gsivarr(i)
+235d199
+<         allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+237,264d200
+<         gsiarray(i)%ngsivar=1
+<         gsiarray(i)%loccem(1)=loccem(i)
+<         gsiarray(i)%gsicem(1)=gsicem(i)
+<         if(igot2>=i)then
+<           gsiarray(i)%nsecgsi=nsecgsi(i)
+<         elseif(igot2==1)then
+<           gsiarray(i)%nsecgsi=nsecgsi(1)
+<         else
+<           gsiarray(i)%nsecgsi=-1
+<         endif
+<       elseif(gsicem(i).eq.'AOD')then
+<         gsiarray(i)%ngsivar=15
+<         allocate (gsiarray(i)%loccem(15),gsiarray(i)%gsicem(15))
+<         do n=1,15
+<           gsiarray(i)%loccem(n)=idaodgsi(n)
+<           gsiarray(i)%gsicem(n)=cemaod(n)
+< !          if(iam==0)then
+< !            write(6,*)'gsicem',i,gsicem(i)
+< !            write(6,*)'cem',n,cemaod(n),'loccem',idaodgsi(n)
+< !          endif
+<         end do
+<         if(igot2>=i)then
+<           gsiarray(i)%nsecgsi=nsecgsi(i)
+<         elseif(igot2==1)then
+<           gsiarray(i)%nsecgsi=nsecgsi(1)
+<         else
+<           gsiarray(i)%nsecgsi=-1
+<         endif
+266d201
+<         allocate (gsiarray(i)%loccem(1),gsiarray(i)%gsicem(1))
+268,281d202
+<         gsiarray(i)%loccem(1)=loccem(i)
+<         gsiarray(i)%ngsivar=1
+<         gsiarray(i)%gsicem(1)=gsicem(i)
+<         if(igot2>=i)then
+<           gsiarray(i)%nsecgsi=nsecgsi(i)
+<         elseif(igot2==1)then
+<           gsiarray(i)%nsecgsi=nsecgsi(1)
+<         else
+< !          if(igot2==0)then
+< !           write(6,*)'igot2 zero ',i,gsicem(i)
+< !           call flush(6)
+< !          endif
+<           gsiarray(i)%nsecgsi=-1
+<         endif
+285,290d205
+< !      if(iam==0)then
+< !        write(6,*)'i',i,'gsicem',gsicem(i),'ngsivar',gsiarray(i)%ngsivar
+< !        do n=1,gsiarray(i)%ngsivar
+< !          write(6,*)'loccem',gsiarray(i)%loccem(n),'gsichem',gsiarray(i)%gsicem(n)
+< !        end do
+< !      endif
+371,491d285
+< ! SGI version of routine
+< !
+< !-----------------------------------------------------------------------
+< subroutine rsearch(im,km1,ixz1,kxz1,z1,km2,ixz2,kxz2,z2,ixl2,kxl2,l2)
+< !$$$  subprogram documentation block
+< !                .      .    .                                       .
+< ! subprogram:    rsearch     search for a surrounding real interval
+< !   prgmmr: iredell          org: np23                date: 1998-05-01
+< !
+< ! abstract: This subprogram searches monotonic sequences of real numbers
+< !   for intervals that surround another given search set of real numbers.
+< !   The sequences may be monotonic in either direction; the real numbers
+< !   may be single or double precision; the input sequences and sets
+< !   and the output locations may be arbitrarily dimensioned.
+< !
+< ! program history log:
+< !   1999-01-05  mark iredell
+< !   2008-04-16  safford - rm unused vars
+< !
+< !   input argument list:
+< !     im           integer number of sequences to search
+< !     km1          integer number of points in each sequence
+< !     ixz1         integer sequence skip number for z1
+< !     kxz1         integer point skip number for z1
+< !     z1           real (1+(im-1)*ixz1+(km1-1)*kxz1)
+< !                  sequence values to search
+< !                  (z1 must be monotonic in either direction)
+< !     km2          integer number of points to search for
+< !                  in each respective sequence
+< !     ixz2         integer sequence skip number for z2
+< !     kxz2         integer point skip number for z2
+< !     z2           real (1+(im-1)*ixz2+(km2-1)*kxz2)
+< !                  set of values to search for
+< !                  (z2 need not be monotonic)
+< !     ixl2         integer sequence skip number for l2
+< !     kxl2         integer point skip number for l2
+< !     
+< !   output argument list:
+< !     l2           real (1+(im-1)*ixl2+(km2-1)*kxl2)
+< !                  interval locations of the set of values
+< !                  (z2 will be between z1(l2) and z1(l2+1).)
+< !
+< ! remarks:
+< !   If the array z1 is dimensioned (im,km1), then the skip numbers are
+< !   ixz1=1 and kxz1=im; if it is dimensioned (km1,im), then the skip
+< !   numbers are ixz1=km1 and kxz1=1; if it is dimensioned (im,jm,km1),
+< !   then the skip numbers are ixz1=1 and kxz1=im*jm; etcetera.
+< !   similar examples apply to the skip numbers for z2 and l2.
+< !
+< !   Returned values of 0 or km1 indicate that the given search value
+< !   is outside the range of the sequence.
+< !
+< !   If a search value is identical to one of the sequence values
+< !   then the location returned points to the identical value.
+< !   If the sequence is not strictly monotonic and a search value is
+< !   identical to more than one of the sequence values, then the
+< !   location returned may point to any of the identical values.
+< !
+< !   To be exact, for each i from 1 to im and for each k from 1 to km2,
+< !   z=z2(1+(i-1)*ixz2+(k-1)*kxz2) is the search value and
+< !   l=l2(1+(i-1)*ixl2+(k-1)*kxl2) is the location returned.
+< !   If l=0, then z is less than the start point z1(1+(i-1)*ixz1)
+< !   for ascending sequences (or greater than for descending sequences).
+< !   If l=km1, then z is greater than or equal to the end point
+< !   z1(1+(i-1)*ixz1+(km1-1)*kxz1) for ascending sequences
+< !   (or less than or equal to for descending sequences).
+< !   otherwise z is between the values z1(1+(i-1)*ixz1+(l-1)*kxz1) and
+< !   z1(1+(i-1)*ixz1+(l-0)*kxz1) and may equal the former.
+< !
+< ! attributes:
+< !   language:  f90
+< !   machine:   RS/6000 SP
+< !
+< !$$$ end documentation block
+< 
+<   implicit none
+<  
+<   integer,intent(in   ) :: im,km1,ixz1,kxz1,km2,ixz2,kxz2,ixl2,kxl2
+<   real*4   ,intent(in   ) :: z1(1+(im-1)*ixz1+(km1-1)*kxz1)
+<   real*4   ,intent(in   ) :: z2(1+(im-1)*ixz2+(km2-1)*kxz2)
+<   integer,intent(  out) :: l2(1+(im-1)*ixl2+(km2-1)*kxl2)
+< 
+<   integer i,k2,l
+<   real*4 z
+< ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+< ! Find the surrounding input interval for each output point.
+<   do i=1,im
+<      if(z1(1+(i-1)*ixz1)<=z1(1+(i-1)*ixz1+(km1-1)*kxz1)) then
+< 
+< !       Input coordinate is monotonically ascending.
+<         do k2=1,km2
+<            z=z2(1+(i-1)*ixz2+(k2-1)*kxz2)
+<            l=0
+<            do
+<               
+<               if(z<z1(1+(i-1)*ixz1+l*kxz1)) exit
+<               l=l+1
+<               if(l==km1) exit
+<            enddo
+<            l2(1+(i-1)*ixl2+(k2-1)*kxl2)=l
+<         enddo
+< 
+<      else
+< 
+< !        write(200+iam,*)'descend'
+< !    Input coordinate is monotonically descending.
+<         do k2=1,km2
+<            z=z2(1+(i-1)*ixz2+(k2-1)*kxz2)
+<            l=0
+<            do
+< !              write(200+iam,*)'z',z,'k2',k2,'z1','l=',l,z1(1+(i-1)*ixz1+l*kxz1)
+<               if(z>z1(1+(i-1)*ixz1+l*kxz1)) exit
+<               l=l+1
+<               if(l==km1) exit
+<            enddo
+<            l2(1+(i-1)*ixl2+(k2-1)*kxl2)=l
+<         enddo
+<      endif
+< 
+<   enddo
+< end subroutine rsearch
+Binary files shr/raqmschem_pmgrid_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_pmgrid_mod.mod differ
+Binary files shr/raqmschem_species_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_species_mod.mod differ
+Binary files shr/raqmschem_state_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_state_mod.mod differ
+Binary files shr/raqmschem_vars_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_vars_mod.mod differ
+Common subdirectories: shr/shrkeep and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.VIIRS.AOD/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/shrkeep
+Only in shr: testcode2

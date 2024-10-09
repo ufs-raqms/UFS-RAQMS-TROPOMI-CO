@@ -1,0 +1,39 @@
+total_member:            1
+print_esmf:              .true.
+PE_MEMBER01:             150
+start_year:              2016
+start_month:             10
+start_day:               03
+start_hour:              00
+start_minute:            0
+start_second:            0
+nhours_fcst:             24
+RUN_CONTINUE:            .false.
+ENS_SPS:                 .false.
+
+dt_atmos:                1200
+calendar:                'julian'
+cpl:                     .true.
+memuse_verbose:          .false.
+atmos_nthreads:          1
+use_hyper_thread:        .false.
+ncores_per_node:         24
+restart_interval:        0
+output_1st_tstep_rst:    .false.
+
+quilting:                .true.
+write_groups:            1
+write_tasks_per_group:   6
+num_files:               2
+filename_base:           'dyn' 'phy'
+output_grid:             'cubed_sphere_grid'
+output_file:             'netcdf'
+write_nemsioflip:        .false.
+write_fsyncflag:         .false.
+imo:                     384
+jmo:                     190
+
+nfhout:                  3
+nfhmax_hf:               12
+nfhout_hf:               1
+nsout:                   -1

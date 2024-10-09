@@ -1,0 +1,167 @@
+16c16
+< #SBATCH --output=/ships19/aqda/lenzen/fv3/myjob.9.1.C192.JTASKS.TROPOMI.COC.OMPS.O3.VIIRS.AOD.DTSEC.CDATEIN
+---
+> #SBATCH --output=/ships19/models2/lenzen/fv3/myjob.9.0.C192.JTASKS.TROPOMI.CO.S4.DTSEC.CDATEIN
+18,28c18
+< export WRITE_GROUP_GFS=1
+< export WRTTASK_PER_GROUP_GFS=6
+< export WRTTASK_PER_GROUP=6
+< source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/setup18.0.4.esmf.8.0.0.bs47
+< source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base.emc.dyn.fv3.esrl
+< source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst.fv3.esrl
+< export cdmbgwd="0.2,2.5"
+< export nstf_name="2,0,0,0,0"
+< # AJL set last day to run for this experiment
+< export CDATEENDRUN=2023090112
+< #export CDATEENDRUN=2023070812
+---
+> export CDATEENDRUN=2019100112
+31,40d20
+< # ajl new one need
+< export NTASKS_FV3=$NTASKS
+< export restart_interval=0
+< export CDUMP=gfs
+< export WRITE_GROUP_GFS=1
+< export WRTTASK_PER_GROUP_GFS=6
+< export WRTTASK_PER_GROUP=6
+< 
+< 
+< # ajl end new
+51,53c31,32
+< #export SASTRACERPOS=YES
+< #export SASSHALTRACERPOS=YES
+< export SAMFCHEM=YES
+---
+> export SASTRACERPOS=YES
+> export SASSHALTRACERPOS=YES
+55,56c34
+< export GSIVAR="o3vmr co AOD"
+< 
+---
+> export GSIVAR="co"
+65,66c43
+< #export CDATEBEG=2019071512
+< export CDATEBEG=2023053012
+---
+> export CDATEBEG=2019071512
+78,84c55,56
+< export GSI_DIR=/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/
+< export GSI_DIRB=/data/users/lenzen/global-workflow_v16b/sorc/gsi.fd/fix/Big_Endian
+< #export BERRROR_EXP=$GSI_DIR/sorc/gsi.fd/fix/Big_Endiian/gsi.trace.r4.FIREX-AQ.o3.no2.co.ch2o.ch4.bothpos.berror_stats.4xtime.o3phys.91day.361.fv3gfs
+< export BERROR_EXP=$GSI_DIRB/gsi.trace.CEDS2019.o3vmr.ox.no2.co.ch2o.berror_stats.1xtime.o3phys.fv3gfs.5DEGLL.6-8.2020
+< export BERROR_EXP_AOD=$GSI_DIRB/gsi.trace.CEDS.seas5.aerosols.berror_stats.1xtime.o3phys.6-8.2020.fv3gfs
+< ls -l $BERROR_EXP
+< ls -l $BERROR_EXP_AOD
+---
+> export GSI_DIR=/home/lenzen/GSI/GSI.PRODGSI.16b.CO/
+> export BERRROR_EXP=$GSI_DIR/sorc/gsi.fd/fix/Big_Endiian/gsi.trace.r4.FIREX-AQ.o3.no2.co.ch2o.ch4.bothpos.berror_stats.4xtime.o3phys.91day.361.fv3gfs
+129c101
+< export FV3GFSVER=FV3GFS.9.1.2019/
+---
+> export FV3GFSVER=FV3GFS.9.0.2019/
+131c103
+< export EXPNAME=O3.CEDS.6-8.2020BKG.TROPOMI.COC.OCNCLD.LICLDCLR.OMPS.O3.VIIRS.AOD
+---
+> export EXPNAME=O3.TROPOMI.CO.10percent.cldfrc
+140,144c112
+< # ajl need to add fix_dir
+< 
+< 
+< export FIX_DIR=$BASE_DATA/fix
+< #export FIX_FV3=$BASE_DATA/fix/fix_fv3                 #model fixed fields
+---
+> export FIX_FV3=$BASE_DATA/fix/fix_fv3                 #model fixed fields
+150c118
+< export BASE_OUT=/ships19/aqda/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+---
+> export BASE_OUT=/ships19/models2/$LOGNAME/$FV3GFSVER/$EXPNAME/$CASE/
+174a143
+> export nstf_name="2,0,1,0,5"
+179c148
+< export GSIDRIVE=$FV3DIR_RELEASE/ush/runremapgsi.C192.TROPOMI.CO.OMPS.O3.VIIRS.AOD.sh
+---
+> export GSIDRIVE=$FV3DIR_RELEASE/ush/runremapgsi.C192.TROPOMI.CO.sh
+188c157
+< $GSIDRIVE >& $gsi_scratch/outrunremap.TROPOMI.CO.OMPS.O3.VIIRS.AOD &
+---
+> $GSIDRIVE >& $gsi_scratch/outrunremap &
+214,218c183,184
+< #export DIAG_TABLE=$FV3DIR/parm/chm_diag_table_gfdlmp
+< #ls -l $DIAG_TABLE
+< unset DIAG_TABLE
+< #export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.sh         
+< export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.current.ceds.sh         
+---
+> export DIAG_TABLE $FV3DIR_RELEASE/parm/chm_diag_table
+> export FORECASTSH=$FV3DIR_RELEASE/scripts/exglobal_fcst_nemsfv3gfs.GSI.CO.$CASE.DTSECX.gen.sh         
+256,258d221
+< # ajl need also
+< export APRUN_FV3="timeout 50m $mpiexec -s -l -n $NTASKS_EXE"
+< echo APRUN_FV3 $APRUN_FV3
+283d245
+<   mv $DATA $DATA.save
+288a251,256
+>   echoi RUNPATH $RUNPATH
+>   while (( DHR <= 6 ))
+>     do
+>       export CDATEGSI=$($new_date $CDATE ${DHR}h)
+>       echo CDATEGSI $CDATEGSI DHR $DHR
+>       DHR=$(( DHR + DHRGSI ))
+290,297c258,259
+< #  while (( DHR <= 6 ))
+< #    do
+< #      export CDATEGSI=$($new_date $CDATE ${DHR}h)
+< #      echo CDATEGSI $CDATEGSI DHR $DHR
+< #      DHR=$(( DHR + DHRGSI ))
+<       #echo RUNPATH $RUNPATH
+< #      echo DHR $DHR
+< #      $GSI_DIR/sorc/gsi.fd/run/getnucapacofiles.sh >& $RUNPATH/outgetnucapsfiles.sh.$CDATEGSI
+---
+>       echo DHR $DHR
+>       $GSI_DIR/sorc/gsi.fd/run/getnucapacofiles.sh >& $RUNPATH/outgetnucapsfiles.sh.$CDATEGSI
+299c261
+< #    done
+---
+>     done
+305d266
+<   export YYYYMM=`echo $CDATE | cut -c1-6`
+314c275
+<   export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/FRPMEAN.AVE.NONZERO/${YYYY}/${YYYYMM}/${YYYYMMDD}/
+---
+>   export GBBEPxDIR=/ships19/aqda/lenzen/GBBEPx.in.FV3C384Grid/FRPMEAN.AVE.NONZERO/${YYYY}/${YYYYMMDD}/
+316c277
+< #  mkdir -p $BASE_OUT/REGRID.0.5/$CDATE/ $BASE_OUT/OUTREGRID/$CDATE/
+---
+>   mkdir -p $BASE_OUT/REGRID.0.5/$CDATE/ $BASE_OUT/OUTREGRID/$CDATE/
+329,339c290
+<   if [ $? != 0 ]; then
+<     echo "forecast failed, exit"
+<     CDATENEW=$($new_date $CDATE 6h) 
+<     if [ ! -s RUNDONE.$CDATENEW ] ; then
+<       echo RUNDONE.$CDATENEW not found
+<       echo CDATE $CDATE CDATENEW $CDATENEW
+<       exit
+<     else
+<       echo had error code but RUNDONE.$CDATENEW is there so continue
+<     fi  
+<   fi
+---
+>   if [ $? != 0 ]; then echo "forecast failed, exit"; exit; fi
+361,363c312
+< #$REMAP05
+< export INC+6
+< sbatch --export=ALL -n1 --share -t 10 $REMAP05
+---
+> $REMAP05
+384c333
+< /home/lenzen/UTILS/addchemtomet.$CASE.x $CDATENEW $CDATE0 >& $SCRATCH_OUT/OUTREMAP/outaddchem.tropomi.co.OMPS.VIIRS.AOD.$CDATE.$CTILE &
+---
+> /home/lenzen/UTILS/addchemtomet.$CASE.x $CDATENEW $CDATE0 >& $SCRATCH_OUT/OUTREMAP/outaddchem.tropomi.co.$CDATE.$CTILE &
+397,399c346,348
+< sleep 120
+< export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.C192.2023.GSI.CEDS.6-8.BKG.TROPOMICOC.OCNCLD.LICLDCLR.OMPS.O3.VIIRS.AOD.scr
+< $NEXTDAYRUN >& $SCRATCH_OUT/outrundaynext.CEDS.6-8.BKG.TROPOMI.COC.OCNCLD.LICLDCLR.OMPs.O3.VIIRS.AOD.$CDATE
+---
+> export NEXTDAYRUN=$FV3DIR_RELEASE/exp/rundate.reloop.prod.C192.TROPOMI.CO.S4.scr
+> mkdir -p /scratch/users/lenzen/GSI_SCRATCH.TROPOMI.CO
+> $NEXTDAYRUN >& $SCRATCH_OUT/outrundaynext.TROPOMI.CO.$CDATE

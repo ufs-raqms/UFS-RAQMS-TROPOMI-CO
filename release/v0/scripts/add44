@@ -1,0 +1,41 @@
+
+rsync -ltvD $GBBEPxDIR/*C192* $DATA/GBBEPx
+mkdir -p $DATA/GBBEPx/Inputfire/
+rsync -ltvD /ships19/aqda/lenzen/RAQMSEMIS/C192/Inputfire/* $DATA/GBBEPx/Inputfire/
+cd $DATA/GBBEPx
+for i in {1..6}
+  do
+    export ctile=tile$i
+    mkdir $ctile
+    if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+      $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_bc.dat
+    else
+      $NLN $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_bc.nc
+    fi
+    if [ -f $DATA/GBBEPx/GBBEPx.bc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+      $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_oc.dat
+    else
+      $NLN $DATA/GBBEPx/GBBEPx.oc.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_oc.nc
+    fi
+    if [ -f $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+      $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_so2.dat
+    else
+      $NLN $DATA/GBBEPx/GBBEPx.so2.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_so2.nc
+    fi
+    if [ -f $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+      $NLN $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/ebu_pm_25.dat
+    else
+      $NLN $DATA/GBBEPx/GBBEPx.pm25.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_pm_25.nc
+    fi
+    if [ -f $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin ] ; then
+      $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.bin $ctile/plumefrp.dat
+    else
+      $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/plumefrp.nc
+    fi
+    $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc plumefrp.$ctile.nc
+    $NLN $DATA/GBBEPx/meanFRP.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/plumefrp.nc
+    $NLN $DATA/GBBEPx/GBBEPx.co.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc $ctile/ebu_co.nc
+    $NLN $DATA/GBBEPx/GBBEPx.co.$YYYYMMDD.FV3.$CASE"Grid."$ctile.nc ebu_co.$ctile.nc
+    
+  done
+cd $DATA || exit 8

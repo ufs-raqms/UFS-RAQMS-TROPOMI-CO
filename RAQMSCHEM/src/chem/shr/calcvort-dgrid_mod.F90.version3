@@ -1,0 +1,204 @@
+module calcvort_dgrid_mod
+contains
+  subroutine calcvortdgrid(u3d,v3d,area,griddx4,griddy4,lat,ids,ide,jds,jde,nl,ihs,ihe,jhs,jhe,vort,de,mype)
+  use chem_types_mod, only : CHEM_KIND_R4,CHEM_KIND_R8
+  use chem_io_mod, only : chem_reducetile_pushwithhalo_3dr8,chem_reducetile_pushwithhalo_2dr8
+  implicit none
+  integer ids,ide,jds,jde,nl,ihs,ihe,jhs,jhe,mype,de
+  integer i,j,rc,k
+  real(CHEM_KIND_R8),dimension(ids:ide,jds:jde,nl),intent(in) :: u3d,v3d
+  real(chEM_KIND_R8),dimension(ids:ide,jds:jde),intent(in) :: area
+  real(CHEM_KIND_R4),dimension(ids:ide,jds:jde) :: rarea
+  real(CHEM_KIND_R4),dimension(ids:ide,jds:jde),intent(in) :: griddx4,griddy4
+  real(CHEM_KIND_R8),dimension(ids:ide,jds:jde) :: griddx,griddy
+  real(CHEM_KIND_R4),dimension(ihs:ihe,jhs:jhe) :: dx,dy
+  real(CHEM_KIND_R8),dimension(jds:jde),intent(in) :: lat
+  real(CHEM_KIND_R4),dimension(ids:ide,jds:jde,nl),intent(out) :: vort
+  real(CHEM_KIND_R8),dimension(ihs:ihe,jhs:jhe,nl) :: u3dwithhalo,v3dwithhalo
+  real(CHEM_KIND_R8),dimension(ihs:ihe,jhs:jhe) :: dxwithhalo,dywithhalo
+  real(CHEM_KIND_R8),dimension(ids:ide,jhs:jhe+1) :: ud,dxd,utmp
+  real(CHEM_KIND_R8),dimension(ihs:ihe+1,jds:jde) :: vd,dyd,vtmp
+  real(CHEM_KIND_R8) :: first,second 
+  integer imax,imin,jmax,jmin,jbar,ibar
+  logical keepgrad
+  keepgrad=.true.
+  do j=jds,jde
+    do i=ids,ide
+      if(area(i,j)>0.0)then
+        rarea(i,j)=1./area(i,j)
+      else
+         write(6,*)'area zero',i,j,area(i,j)
+         call flush(6)
+         rarea(i,j)=0.0
+      endif
+    end do
+  end do
+!  if(.not.allocated(vort))then
+!    allocate(vort(ids:ide,jds:jde,nl))
+!  endif
+  griddx=griddx4
+  griddy=griddy4
+  call chem_reducetile_pushwithhalo_3dr8(u3d,ids,ide,jds,jde,nl,u3dwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_3dr8(v3d,ids,ide,jds,jde,nl,v3dwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_2dr8(griddx,ids,ide,jds,jde,dxwithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+  call chem_reducetile_pushwithhalo_2dr8(griddy,ids,ide,jds,jde,dywithhalo, &
+  ihs,ihe,jhs,jhe,de,rc)
+! calculate vorticity
+! determine where have 2dx and 2dy
+  dx=dxwithhalo
+  dy=dywithhalo
+  do j=jhs+1,jhe
+    do i=ids,ide
+      dxd(i,j)=.5*(dx(i,j-1)+dx(i,j))
+    end do
+  end do
+  if(jhs.eq.jds)then
+    do i=ids,ide
+       dxd(i,jhs)=dxd(i,jhs+1)
+    end do
+  endif
+  if(jhe.eq.jde)then
+    do i=ids,ide
+       dxd(i,jde+1)=dxd(i,jde)
+    end do
+  endif
+  do j=jds,jde
+    do i=ihs+1,ihe
+      dyd(i,j)=.5*(dy(i-1,j)+dy(i,j))
+    end do
+    if(ihs.eq.ids)then
+       dyd(ihs,j)=dyd(ihs+1,j)
+    endif
+    if(ihe.eq.ide)then
+      !dyd(ide+1,j)=1.5*dy(ide,j)-.5*dy(ide-1,j)
+      dyd(ide+1,j)=dyd(ide,j)
+    endif
+  end do
+  do k=1,nl
+!   inside utmp
+    do j=jhs+1,jhe
+      do i=ids,ide
+        ud(i,j)=.5*(u3dwithhalo(i,j-1,k)+u3dwithhalo(i,j,k))
+        utmp(i,j)=ud(i,j)*dxd(i,j)
+          
+      end do
+    end do
+    if(jhs.eq.jds)then
+      do i=ids,ide
+!       now try ud on actual boundary with a half box
+        ud(i,jhs)=u3dwithhalo(i,jhs,k)
+        utmp(i,jhs)=ud(i,jhs)*dxd(i,jhs)
+
+      end do
+    endif
+    if(jhe.eq.jde)then
+      do i=ids,ide
+        ud(i,jde+1)=1.5*u3dwithhalo(i,jde,k)-.5*u3dwithhalo(i,jde-1,k)
+        utmp(i,jde+1)=ud(i,jde+1)*dxd(i,jde+1)
+      end do
+    endif
+!   now vtmp
+    do j=jds,jde
+      do i=ihs+1,ihe
+        vd(i,j)=.5*(v3dwithhalo(i-1,j,k)+v3dwithhalo(i,j,k))
+        vtmp(i,j)=vd(i,j)*dyd(i,j)
+      end do
+      if(ihs.eq.ids)then
+        vd(ihs,j)=1.5*v3dwithhalo(ihs,j,k)-.5*v3dwithhalo(ihs+1,j,k)
+        vtmp(ihs,j)=vd(ihs,j)*dyd(ihs,j)
+      endif
+      if(ihe.eq.ide)then
+        vd(ide+1,j)=1.5*v3dwithhalo(ide,j,k)-.5*v3dwithhalo(ide-1,j,k)
+        vtmp(ide+1,j)=vd(ide+1,j)*dyd(ide+1,j)
+      endif
+      
+    end do
+!   redefine j=jds=jhs
+    if(jhs.eq.jds)then
+      do i=ihs+1,ihe
+        vd(i,jhs)=.75*vd(i,jhs)+.26*vd(i,jhs+1)
+        vtmp(i,jhs)=vd(i,jhs)*dyd(i,jds)*.5
+      end do
+    endif
+    write(60+mype,*)'ids',ids,ide,'jds',jds,jde,'nl',nl
+    call flush(60+mype)
+   
+    write(60+mype,*)'rarea',lbound(rarea),'u',ubound(rarea)
+    write(60+mype,*)'utmp ',lbound(utmp),'u',ubound(utmp)
+    write(60+mype,*)'vtmp ',lbound(vtmp),'u',ubound(vtmp)
+    write(60+mype,*)'vort',lbound(vort),'u',ubound(vort)
+    call flush(60+mype)
+    do j=jds,jde
+      do i=ids,ide
+        vort(i,j,k)=rarea(i,j)*(utmp(i,j)-utmp(i,j+1)-vtmp(i,j)+vtmp(i+1,j))
+!        if(i.eq.50.and.mype<=1.and.k.eq.63)then
+!          write(60+mype,*)'vort',i,j,k,vort(i,j,k),'utmp',i,j,utmp(i,j),j+1,utmp(i,j+1)
+!          call flush(60+mype)
+!        endif
+      end do
+    end do
+    write(60+mype,*)'did vort',k
+    call flush(60+mype)
+    if(jhs.eq.jds)then
+      do i=ids,ide
+!       since only half the areaa
+        vort(i,jhs,k)=2.*vort(i,jhs,k)
+      end do
+    endif
+!   now try justs extrapolation with 2nd order taylor series
+    if(jhs.eq.jds)then
+      do i=ids,ide
+        first=vort(i,jds+2,k)-vort(i,jds+1,k)
+        second=.5*(vort(i,jds+3,k)-2.*vort(i,jds+2,k)+vort(i,jds+1,k))
+        vort(i,jds,k)=vort(i,jds+1,k)-first+second
+      end do
+    endif
+    if(jhe.eq.jde)then
+      do i=ids,ide
+        first=vort(i,jde-1,k)-vort(i,jde-2,k)
+        second=.5*(vort(i,jde-1,k)-2.*vort(i,jde-2,k)+vort(i,jde-3,k))
+        vort(i,jde,k)=vort(i,jde-1,k)+first+second
+      end do
+    endif
+    write(60+mype,*)'west edge'
+    call flush(60+mype)
+!   now handle west edge
+    if(ihs.eq.ids)then
+      do j=jhs+1,jhe-1 ! skip corner for now
+        first=vort(ids+2,j,k)-vort(ids+1,j,k)
+        second=.5*(vort(ids+3,j,k)-2.*vort(ids+2,j,k)+vort(ids+1,j,k))
+        vort(ids,j,k)=vort(ids+1,j,k)-first+second
+      end do
+      if(jhs.eq.jds)then
+!       lower left corner
+        vort(ids,jds,k)=(vort(ids+1,jds,k)+vort(ids+1,jds+1,k)+vort(ids,jds+1,k))/3.
+      endif
+      if(jhe.eq.jde)then
+!       upper left corner
+        vort(ids,jde,k)=(vort(ids+1,jde,k)+vort(ids+1,jde-1,k)+vort(ids,jde-1,k))/3.
+      endif
+    endif
+    write(60+mype,*)'corners'
+    call flush(60+mype)
+    if(ihe.eq.ide)then
+      do j=jhs+1,jhe-1 ! skip corner for now
+        first=vort(ide-1,j,k)-vort(ide-2,j,k)
+        second=.5*(vort(ide-1,j,k)-2.*vort(ide-2,j,k)+vort(ide-3,j,k))
+        vort(ide,j,k)=vort(ide-1,j,k)+first+second
+      end do
+      if(jhs.eq.jds)then
+!       loser left corner
+        vort(ide,jds,k)=(vort(ide-1,jds,k)+ vort(ide-1,jds+1,k)+vort(ide,jds+1,k))/3.
+      endif
+      if(jhe.eq.jde)then
+!       upper right corner
+        vort(ide,jde,k)=(vort(ide-1,jde,k)+vort(ide-1,jde-1,k)+vort(ide,jde-1,k))/3.
+      endif
+    endif
+  end do
+  return
+  end subroutine calcvortdgrid
+end module calcvort_dgrid_mod

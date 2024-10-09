@@ -1,0 +1,94 @@
+module calcdxdy
+use chem_types_mod
+real(CHEM_KIND_R8), public, parameter :: RADIUS = 6.3712e+6 ! for GFS physics
+real(CHEM_KIND_R8), public, parameter :: PI     = 3.1415926535897931 ! for GFS physics
+real(CHEM_KIND_R8), public, parameter :: DEGTORAD=pi/180.
+contains
+ subroutine initdxdy(is,ie,js,je,londeg,latdeg,griddx,griddy)
+ integer,intent(in) :: is,ie,js,je
+ real(CHEM_KIND_R8) :: q1(2),q2(2)
+ real(CHEM_KIND_R8),intent(in) :: londeg(is:ie,js:je),latdeg(is:ie,js:je)
+ real(CHEM_KIND_R4),allocatable,dimension(:,:),intent(out) :: griddx,griddy
+ real(CHEM_KIND_R8) :: lon(is:ie,js:je),lat(is:ie,js:je)
+ integer ibar,jbar
+ ibar=(is+ie)/2
+ jbar=(js+je)/2
+ lon=londeg*degtorad
+ lat=latdeg*degtorad
+ allocate (griddx(is:ie,js:je),griddy(is:ie,js:je))
+ write(6,*)'is',is,ie,js,je,'lon',maxval(lon),minval(lon)
+ write(6,*)'lat',maxval(lat),minval(lat)
+ griddx=0.0
+ griddy=0.0
+ do j=js,je
+   do i=is+1,ie-1
+     q1(1)=lon(i-1,j)
+     q1(2)=lat(i-1,j)
+     q2(1)=lon(i+1,j)
+     q2(2)=lat(i+1,j)
+     griddx(i,j)=great_circle_distr(q1,q2)
+     if(j.eq.jbar)then
+       write(6,*)i,j,'q1',q1,'q2',q2,'griddx',griddx(i,j)
+     endif
+   end do
+   q1(1)=lon(is,j)
+   q1(2)=lat(is,j)
+   q2(1)=lon(is+1,j)
+   q2(2)=lat(is+1,j)
+   griddx(is,j)=great_circle_distr(q1,q2)
+   q1(1)=lon(ie-1,j)
+   q1(2)=lat(ie-1,j)
+   q2(1)=lon(ie,j)
+   q2(2)=lat(ie,j)
+   griddx(ie,j)=great_circle_distr(q1,q2)
+ end do
+ do i=is,ie
+   write(6,*)'i',i,jbar,griddx(i,jbar)
+ end do
+ do j=js+1,je-1
+   do i=is,ie
+     q1(1)=lon(i,j-1)
+     q1(2)=lat(i,j-1)
+     q2(1)=lon(i,j+1)
+     q2(2)=lat(i,j+1)
+     griddy(i,j)=great_circle_distr(q1,q2)
+   end do
+ end do
+ do i=is,ie
+   q1(1)=lon(i,js)
+   q1(2)=lat(i,js)
+   q2(1)=lon(i,js+1)
+   q2(2)=lat(i,js+1)
+   griddy(i,js)=great_circle_distr(q1,q2)
+   q1(1)=lon(i,je-1)
+   q1(2)=lat(i,je-1)
+   q2(1)=lon(i,je)
+   q2(2)=lat(i,je)
+   griddy(i,je)=great_circle_distr(q1,q2)
+ end do
+ write(6,*)'griddx ',maxval(griddx),minval(griddx)
+ write(6,*)'griddy ',maxval(griddy),minval(griddy)
+ end subroutine initdxdy
+ real function great_circle_distr( q1, q2 )
+! ajl 1 is lon 2 is lat
+! ajl q1 is end q2 is beginning
+   use chem_types_mod, only : CHEM_KIND_R8,CHEM_KIND_R4
+      real(CHEM_KIND_R8), intent(IN)           :: q1(2), q2(2)
+ 
+      real (CHEM_KIND_R8):: p1(2), p2(2)
+      real (CHEM_KIND_R8):: beta 
+      integer n
+
+      do n=1,2
+         p1(n) = q1(n)
+         p2(n) = q2(n)
+      enddo
+
+      beta = asin( sqrt( sin((p1(2)-p2(2))/2.)**2 + cos(p1(2))*cos(p2(2))*   &
+                         sin((p1(1)-p2(1))/2.)**2 ) ) * 2. 
+
+      great_circle_distr = radius * beta 
+
+  end function great_circle_distr
+end module calcdxdy
+

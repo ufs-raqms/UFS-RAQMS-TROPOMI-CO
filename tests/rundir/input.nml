@@ -1,0 +1,42 @@
+atparse 1,2
+&amip_interp_nml
+       interp_oi_sst = .true.
+       use_ncep_sst = .true.
+       use_ncep_ice = .false.
+       no_anom_sst = .false.
+       data_set = 'reynolds_oi',
+       date_out_of_range = 'climo',
+/
+
+&atmos_model_nml
+       blocksize = 32
+       chksum_debug = .false.
+       dycore_only = .false.
+PARSE[       fdiag = |@[FDIAG]|]
+@[FDIAG]evalaa
+1,2
+/
+
+&diag_manager_nml
+       prepend_date = .F.
+/
+
+&fms_io_nml
+       checksum_required   = .false.
+       max_files_r = 100,
+       max_files_w = 100,
+/
+
+&fms_nml
+       clock_grain = 'ROUTINE',
+       domains_stack_size = 3000000,
+       print_memory_usage = .false.
+/
+
+&fv_grid_nml
+       grid_file = 'INPUT/grid_spec.nc'
+/
+
+&fv_core_nml
+PARSE[       layout   = |@[INPES]|,@[JNPES]]
+@[INPES]evalaa

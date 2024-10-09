@@ -1,0 +1,223 @@
+
+c Biomass burning emissions now separate to allow different injection ht
+
+       if(doplumerise)then
+!         xbbco=emisco3d(i,j,lbot)
+c         don't inject above tropopause       JAA Dec 16, 2005
+         if(ltrop>nl.or.lbot>nl)then
+           ltrop=min(ltrop,nl)
+           lbot=min(lbot,nl)
+         endif
+         if (emisco3d(i,j,lbot).gt.0.) then
+           if(ip.eq.lbot.or.(ip>=ktopco(i,j).and.ip<=kbotco(i,j)))then
+             dz=(zgeoh(ip-1)-zgeoh(ip))*1.e5 ! make cm
+!             write(6,*)'chem emis',i,j,ip,emisco3d(i,j,ip),'dz',dz
+             if(emisco3d(i,j,ip)<0.0)then
+               write(6,*)'ktopco',ktopco(i,j),'emislbot',lbot,emisco3d(i,j,lbot)
+             endif
+             colemisco_chem(i,j)=colemisco_chem(i,j)+emisco3d(i,j,ip)*dt
+             xbbco=emisco3d(i,j,ip)/dz ! put back in now to be like gdschem and old raqms
+!             if(emisco3d(i,j,ip)/=0.0.and.ip==lbot-1)then
+!               write(6,*)'emissions at level 2',ip,'lbot',lbot
+!             endif
+!            plume rise now has emisco3d in molec/cm3/sec so don't need
+!            to divide by dz anymore per Brad 3/29/2022
+!            with fix now molec/cm2/sec
+             bbc = xbbco*bbefac(i,j,2)
+             bbno = xbbco*bbefac(i,j,1)
+             if(docofire85percent)then
+                sorcco = sorcco+.85*xbbco
+#ifdef COTRACERS
+                 sorcbbcod5025=.85*xbbco
+#endif
+                 sorcbbcod25=.85*xbbco
+             else 
+               sorcco = sorcco+xbbco
+
+#ifdef COTRACERS
+               sorcbbcod5025=xbbco
+#endif
+               sorcbbcod25=xbbco
+             endif
+!            check if bb_nox_adjustment
+             if(allocated(bb_nox_scale_factor))then
+               if(bb_nox_scale_factor(i,j)>-1.01)then
+!                 write(6,*)'bb_nox_scale_factor',i,j,bb_nox_scale_factor(i,j)
+                 bb_nox_adjust(i,j)=bb_nox_adjust(i,j)+bbno*bb_nox_scale_factor(i,j)
+                 bbno=bbno*(1.+bb_nox_scale_factor(i,j))
+               endif
+             endif
+             if(donofire85percent)then
+               sorcno = sorcno+.85*bbno
+             else
+               sorcno = sorcno+bbno
+             endif
+c            MNN,JAA 20060328 fix nmhc biomass burning emissions
+c            Emission ratios are carbon mass, so ER's for species treated as
+c            carbon-bond do NOT need multiplying by number of carbons while
+c            ER's for species treated explicitly NEED to be divided by # carbons
+c            sorcc2h6 = sorcc2h6+bbc*.00061
+             sorcc2h6 = sorcc2h6+bbc*.00061/2.
+c            biomass burning par(4butane+5pentane+propene)
+c            sorcpar = sorcpar+ (4.*bbc*.00005+
+c     1      5.*.00007*bbc+1.*.00066*bbc)
+             sorcpar = sorcpar+(bbc*.00005+bbc*.00007+bbc*.00066)
+c            sorceth = sorceth+.00123*bbc
+             sorceth = sorceth+.00123*bbc/2.
+             sorcolet = sorcolet+.00066*bbc
+c            sorcproppar = sorcproppar+3.0*bbc*.00019
+             sorcproppar = sorcproppar+bbc*.00019
+CCCMNN 20080605  HCN AND CH3CN  FROM BIOMASS BURNING
+CCCMNN       EMISSION RATIO WRT  CO FROM BIOMASS BURNING
+CCCMNN       USE XBBCO IF DAILYFIRES AND BBC OTHERWISE
+CCC
+             sorchcn = xbbco * 0.0027
+             sorcch3cn = xbbco * 0.002
+c
+             colemisoc(i,j)=colemisoc(i,j)+bbc*.018*8./9.*dz
+#ifdef AEROSOL_CARBON
+c
+c Simple assumptions for now: have assumed Eaero/Eco2=0.02 (Soja, Cofer)
+c  Assume nominal Eco2/Ecarbon=0.90, so Eaero/Ecarbon=.02*.90=0.018
+c  Following gocart, assume OC/BC = 8 (mole ratio)
+c  Following gocart, assume 80% of BC and 50% of OC emitted as hydrophobic
+c
+             bbc_aer = bbc*0.018
+             bbbc = bbc_aer*1./9.
+             bboc = bbc_aer*8./9.
+#ifdef AEROSOL_19CARBON
+             sorcbc1 = sorcbc1+0.1*bbbc !phobic
+             sorcbc2 = sorcbc2+0.9*bbbc  !philic
+             sorcoc1 = sorcoc1+0.1*bboc  !phobic
+             sorcoc2 = sorcoc2+0.9*bboc  !philic
+#else
+             sorcbc1 = sorcbc1+0.8*bbbc  !phobic
+             sorcbc2 = sorcbc2+0.2*bbbc  !philic
+             sorcoc1 = sorcoc1+0.5*bboc  !phobic
+             sorcoc2 = sorcoc2+0.5*bboc  !philic
+#endif
+#endif
+           endif
+         endif
+       else ! do plumerise false
+#ifdef DAILYFIRES
+c Burning emissions obtained from daily CO files
+!         write(6,*)'no plumeris usescale',usescale_factor
+
+         if(usescale_factor)then
+           if (kdn .gt. 0) then
+!            new code to use Brad's new scale_factor
+!            xbbco = bbco_d(i,j)
+             xbbco = bbco_d(i,j)*scale_factor(i,j)
+             xfirehtkm = firehtkm_d(i,j)
+           else
+!            xbbco = bbco_n(i,j)
+             xbbco = bbco_n(i,j)*scale_factor(i,j)
+             xfirehtkm = firehtkm_n(i,j)
+           endif
+         else
+           if (kdn .gt. 0) then
+!            new code to use Brad's new scale_factor
+             xbbco = bbco_d(i,j)
+             xfirehtkm = firehtkm_d(i,j)
+           else
+             xbbco = bbco_n(i,j)
+             xfirehtkm = firehtkm_n(i,j)
+           endif
+         endif
+c AJL new did not have in old code
+c JAA 20080829 Test, reduce bb emission height
+         if (xfirehtkm.gt.0.) xfirehtkm = xfirehtkm-1.
+c JAA 20080829 End
+       if (xbbco.gt.0.) then
+         emdepth = pblkm+xfirehtkm
+c don't inject above tropopause       JAA Dec 16, 2005
+         if(ltrop>nl.or.lbot>nl)then
+           ltrop=min(ltrop,nl)
+           lbot=min(lbot,nl)
+         endif
+         emdepth = min(emdepth,zgeo(ltrop)-zgeoh(lbot))
+         bbno = xbbco*bbefac(i,j,1)
+!       ajl this could be done before l, ip loop since won't change
+         bbc = xbbco*bbefac(i,j,2)
+#else
+c Burning emissions obtained from monthly NO climatology
+c CO emissions already include climatological burning emissions
+c
+c (JRO)  Retrieve sources for nmhc species
+c  Sources are read in as molec/cm(2)/s of the specified hydrocarbon
+c  Also, scale NMHC biomass burning source from NOx
+c  Convert NOx to total C burned: NOx*39=CO; CO/.0573=C)
+c
+       bbno = srcnbio(i,j,imon)
+       if (bbno.gt.0.) then
+         emdepth = pblkm
+         bbc=srcnbio(i,j,imon)*39./.0573
+         xbbco = 0.
+#endif
+         if (zlo.lt.emdepth .and. ip .gt. 1) then
+             zup = zgeoh(ip-1)-zgeoh(lbot)           !height above surface (km)
+             if (zup.le.emdepth) then
+               zscale = 1.0
+              else
+               zscale = (emdepth-zlo)/(zup-zlo)
+              endif
+c dz is now emission depth (cm) normalized by gridbox fraction within emdepth
+              dz = emdepth*1.e5/zscale
+c
+            if(docofire85percent)then
+              sorcco = sorcco+.85*xbbco/dz
+
+#ifdef COTRACERS
+              sorcbbcod5025=.85*xbbco/dz
+#endif
+              sorcbbcod25=.85*xbbco/dz
+            else
+              sorcco = sorcco+xbbco/dz
+
+#ifdef COTRACERS
+              sorcbbcod5025=xbbco/dz
+#endif
+              sorcbbcod25=xbbco/dz
+            endif
+!           check if bb_nox_adjustment
+            if(allocated(bb_nox_scale_factor))then
+              if(bb_nox_scale_factor(i,j)>-1.01)then
+                bbno=bbno*(1.+bb_nox_scale_factor(i,j))
+              endif
+            endif
+            if(donofire85percent)then
+              sorcno = sorcno+.85*bbno/dz
+            else
+              sorcno = sorcno+bbno/dz
+            endif
+c MNN,JAA 20060328 fix nmhc biomass burning emissions
+c  Emission ratios are carbon mass, so ER's for species treated as
+c  carbon-bond do NOT need multiplying by number of carbons while
+c  ER's for species treated explicitly NEED to be divided by # carbons
+c          sorcc2h6 = sorcc2h6+bbc*.00061/dz
+            sorcc2h6 = sorcc2h6+bbc*.00061/2./dz
+c biomass burning par(4butane+5pentane+propene)
+c          sorcpar = sorcpar+ (4.*bbc*.00005+
+c     1     5.*.00007*bbc+1.*.00066*bbc)/dz
+          sorcpar = sorcpar+(bbc*.00005+bbc*.00007+bbc*.00066)/dz
+c          sorceth = sorceth+.00123*bbc/dz
+          sorceth = sorceth+.00123*bbc/2./dz
+          sorcolet = sorcolet+.00066*bbc/dz
+c          sorcproppar = sorcproppar+3.0*bbc*.00019/dz
+          sorcproppar = sorcproppar+bbc*.00019/dz
+CCCMNN 20080605  HCN AND CH3CN  FROM BIOMASS BURNING
+CCCMNN    EMISSION RATIO WRT  CO FROM BIOMASS BURNING
+CCCMNN    USE XBBCO IF DAILYFIRES AND BBC OTHERWISE
+CCC
+#ifdef DAILYFIRES
+c
+      sorchcn = xbbco * 0.0027/dz
+      sorcch3cn = xbbco * 0.002/dz
+c
+#else
+c
+      sorchcn = bbc * 0.0573 * 0.0027/dz
+      sorcch3cn = bbc * 0.0573 * 0.002/dz
+c 
+#endif

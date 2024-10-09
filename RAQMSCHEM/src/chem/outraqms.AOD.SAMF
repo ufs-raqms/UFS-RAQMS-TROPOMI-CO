@@ -1,0 +1,92 @@
+diff -Bbw raqms/calcaodgsi.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/calcaodgsi.F90
+6c6
+<   use raqmschem_species_mod, only : idaod,nsolmax,idaodgsi
+---
+>   use raqmschem_species_mod, only : idaod,nsolmax
+42,54c42,43
+< !    if(n==6.or.n==7)then
+< !      write(6,*)'n',n,'idaod',idaod(n),'idaodgsi',idaodgsi(n)
+< !      if(idaod(n)>0)then
+< !        write(6,*)'tr3didaod',idaod(n),maxval(tr3d(:,:,:,idaod(n)))
+< !      endif
+< !      if(idaodgsi(n)>0)then
+< !        write(6,*)'tr3didaodgsi',idaodgsi(n),maxval(tr3d(:,:,:,idaodgsi(n)))
+< !      endif
+< !    endif
+< !    if(idaod(n)>0)then
+<     if(idaodgsi(n)>0)then
+< !      aero(:,:,:,n)=tr3d(:,:,:,idaod(n))
+<       aero(:,:,:,n)=tr3d(:,:,:,idaodgsi(n))
+---
+>     if(idaod(n)>0)then
+>       aero(:,:,:,n)=tr3d(:,:,:,idaod(n))
+62,65c51,52
+< !  if(idaod(12)>0)then ! conbine seas1 and seas2 both fine
+<   if(idaodgsi(12)>0)then ! conbine seas1 and seas2 both fine
+< !    aero(:,:,:,11)=aero(:,:,:,11)+tr3d(:,:,:,idaod(12))
+<     aero(:,:,:,11)=aero(:,:,:,11)+tr3d(:,:,:,idaodgsi(12))
+---
+>   if(idaod(12)>0)then ! conbine seas1 and seas2 both fine
+>     aero(:,:,:,11)=aero(:,:,:,11)+tr3d(:,:,:,idaod(12))
+68,69c55
+< !    aero(:,:,:,n)=tr3d(:,:,:,idaod(n+1))
+<     aero(:,:,:,n)=tr3d(:,:,:,idaodgsi(n+1))
+---
+>     aero(:,:,:,n)=tr3d(:,:,:,idaod(n+1))
+138,139d123
+< !    write(6,*)'ext_3dg gsi',n,maxval(data%ext_3dg(:,:,:,n))
+< !  end do
+Only in /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms: chemgsimod.F90
+diff -Bbw raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+79c79
+<   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+---
+>   character *256 gsiscratch,base_data_disk,pathdata
+110c110
+<   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+---
+>   save nsecsave,nsecgsi,base_data_disk
+175d174
+<     base_data_disk_tropomico=' '
+177,180d175
+<     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+<     if(iam==0)then
+<      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+<     endif
+775d769
+< !   call chemgsi(stateout,is,ie,js,je,nl
+937,940d930
+<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+<                   exist=.true.
+<                 endif
+954,956d943
+<         if(mype==0)then
+<         write(6,*)'exist',exist
+<         endif
+1001c988
+< !        ajl force some time for lustre
+---
+> !       set some time for lustre
+1134d1120
+<           call system(' sleep 5')
+1140,1147d1125
+<           if(.not.exist)then
+< !           try to wait longer
+<             call system(' sleep 10')
+<             inquire(file=trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<             if(.not.exist)then
+<               call system(' data ; ls -l '//trim(base_path)//'/GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc') 
+<             endif
+<           endif
+1152d1129
+<           call system(' sleep 5')
+1155,1162d1131
+<           if(.not.exist)then
+< !           try to wait longer
+<             call system(' sleep 10')
+<             inquire(file='../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc',exist=exist)
+<             if(.not.exist)then
+<               call system(' data ; ls -l '//'../../GSIINC/'//trim(cdatestart)//'/'//'inc.'//trim(cdateout)//'.tile'//ctile//'.nc')
+<             endif
+<           endif

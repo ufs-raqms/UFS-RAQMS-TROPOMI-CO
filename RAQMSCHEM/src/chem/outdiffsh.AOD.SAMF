@@ -1,0 +1,236 @@
+diff -bBw shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+638,639c638
+< !           path=trim(config % fireemi_inname), de=de,
+< !           recrange=recrange,varname='bb_co',rc=localrc)
+---
+> !           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='bb_co',rc=localrc)
+644a644
+> !          path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+656a657,658
+>           write(300+iam,*)'ebu_co',maxval(srcin),minval(srcin)
+>           call flush(300+iam)
+676a679
+>           write(300+iam,*)'plume',maxval(srcin),minval(srcin)
+908c911
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf
+---
+>     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot
+1131,1132c1134,1135
+<     real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc,ext_dust1
+<     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot,aod_dust1
+---
+>     real(chem_kind_r4),dimension(dims(1),dims(2),dims(3)) :: ext_tot,ext_bc,ext_oc
+>     real(chem_kind_r4),dimension(dims(1),dims(2)) :: aod_bcoc,aod_dust,aod_seasalt,aod_sulf,aod_tot
+1308,1309c1311,1312
+< !        write(200+iam,*)'emi_outname',trim(config%emi_outname)
+< !        call flush(200+iam)
+---
+>         write(200+iam,*)'emi_outname',trim(config%emi_outname)
+>         call flush(200+iam)
+1436d1438
+<           ext_dust1=0.0
+1438,1439c1440,1441
+< !         raqms 7 is dust1
+<           do m=7,10 ! change 7/6/2022 to test
+---
+> !         dust should be 6,10 for aodgsi
+>           do m=7,10
+1492d1493
+< !         shoule be 6,10 ajl
+1495a1497
+> !         change in samf 7/15/2022
+1498d1499
+< !            write(6,*)'ext_dust',m,maxval(data%ext_3dg(:,:,:,m))
+1500d1500
+<          ext_dust1=data%ext_3dg(:,:,:,6)
+1505d1504
+<           aod_dust1=0.0
+1513,1514d1511
+<             aod_tot(:,:)=aod_bcoc(:,:)+aod_seasalt(:,:)+aod_dust(:,:)+aod_sulf(:,:)
+<             aod_dust1(:,:)=aod_dust1(:,:)+ext_dust1(:,:,k)*dz(:,:,k)
+1516,1518c1513,1516
+< !          write(6,*)'aod_dust1',maxval(aod_dust1)
+< !          write(6,*)'aod_dust',maxval(aod_dust)
+< !          write(6,*)'maxvalaod',maxval(aod_tot),maxval(data%aodgsi)
+---
+>           aod_tot=aod_bcoc+aod_seasalt+aod_dust+aod_sulf
+>           write(6,*)'aod_tot',maxval(aod_tot),'aodg5',maxval(data%aodg5)
+>           aod_tot=aod_tot-data%aodg5
+>           write(6,*)'diffaod',maxval(aod_tot),minval(aod_tot)
+diff -bBw shr/raqmschem_io_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.F90
+148c148
+<   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread)
+---
+>   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,dowrite)
+153c153
+<     logical, optional :: doread
+---
+>     logical,optional, intent(in) :: dowrite
+156c156
+<     integer :: lstr
+---
+>     integer :: lstr,lstr2
+158c158
+<     logical :: exist
+---
+>     logical exist
+165c165
+< !    write(6,*)'ajl top file_name io_file_name',trim(filename),'lstr',lstr
+---
+> !    write(6,*)'io_file_name',trim(filename),'lstr',lstr
+169,172d168
+< !      write(6,*)'len',len(fname)
+< !      call flush(6)
+< !      write(6,*)'filename',lstr,trim(filename),tile
+< !      call flush(6)
+175,176d170
+< !         write(6,*)'tile',tile
+< !         call flush(6)
+202d195
+< !   check for read to see if file is there
+204c197
+<     if(exist.or. .not. present(doread))return
+---
+>     if(exist.or.present(dowrite))return
+295c287
+<       write(6,*)'error getting varid for variable',trim(varname),' file ',trim(datafile)
+---
+>       write(6,*)'error getting varid for ',trim(varname),' file ',trim(datafile)
+450a443
+>     write(6,*)'nf90_open datafile',trim(datafile)
+462a456,457
+>     write(6,*)'varname',varname
+>     call flush(6)
+577c572
+<       write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+---
+>       write(6,*)'error getting varid for ',trim(varname),' file ',trim(datafile)
+1885c1880
+<     logical :: localIOflag,exist,doread
+---
+>     logical :: localIOflag,exist
+1934c1929
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+1956,1957c1951,1952
+< !        write(6,*)'varname',varname,'shape',shape(buffer2d)
+< !        call flush(6)
+---
+>         write(6,*)'varname',varname,'shape',shape(buffer2d)
+>         call flush(6)
+1959a1955,1956
+>          write(6,*)'datafile',trim(datafile)
+>          call flush(6)
+1960a1958,1959
+>          write(6,*)'exist',exist,trim(datafile)
+>          call system('pwd')
+1961a1961,1962
+>            write(6,*)'chem_io_file_reaD_2d_nc',trim(varname),'datafile',trim(datafile)
+>            call flush(6)
+2046c2047
+<     logical :: localIOflag,doread
+---
+>     logical :: localIOflag
+2096c2097
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+2218c2219
+<     logical :: localIOflag,doread
+---
+>     logical :: localIOflag
+2262c2263
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,doread=doread)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+2345a2347,2348
+>     logical dowrite
+>     dowrite=.true.
+2420c2423
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2478a2482
+>     logical dowrite
+2494a2499
+>     dowrite=.true.
+2575c2580,2581
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+2624a2631
+>     logical,parameter :: dowrite=.true.
+2689c2696
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2728a2736
+>     logical,parameter :: dowrite=.true.
+2820c2828,2829
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, & 
+>        dowrite=dowrite)
+2896a2906
+>     logical,parameter :: dowrite=.true.
+2983c2993,2994
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>         dowrite=dowrite)
+3041a3053
+>     logical,parameter :: dowrite=.true.
+3124c3136,3137
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+3337a3351
+>     logical,parameter :: dowrite=.true.
+3412c3426,3427
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>       dowrite=dowrite)
+diff -bBw shr/raqmschem_species_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_species_mod.F90
+114,115c114,115
+<   integer idaod(nsolmax),idaodgsi(nsolmax)
+<   data idaod/15*-1/,idaodgsi/15*-1/
+---
+>   integer idaod(nsolmax)
+>   data idaod/15*-1/
+346d345
+<             idaodgsi(1)=p_sulf
+361d359
+<             idaodgsi(2)=p_bc1
+366d363
+<             idaodgsi(3)=p_bc2
+370d366
+<             idaodgsi(4)=p_oc1
+374d369
+<             idaodgsi(5)=p_oc2
+378,379d372
+<             idaodgsi(6)=p_dust1
+< !            write(6,*)'dust1',m,p_dust1
+383d375
+<             idaodgsi(7)=p_dust2
+387d378
+<             idaodgsi(8)=p_dust3
+391d381
+<             idaodgsi(9)=p_dust4
+395d384
+< !            write(6,*)'dsut5',m,p_dust5
+397d385
+<             idaodgsi(10)=p_dust5
+401d388
+<             idaodgsi(11)=p_seas1
+405d391
+<             idaodgsi(12)=p_seas2
+409d394
+<             idaodgsi(13)=p_seas3
+413d397
+<             idaodgsi(14)=p_seas4
+417d400
+<             idaodgsi(15)=p_seas5

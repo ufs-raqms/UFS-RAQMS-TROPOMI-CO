@@ -1,0 +1,45 @@
+
+16c16,18
+<   integer,          public, parameter :: NexportFields = 71
+---
+ !  integer,          public, parameter :: NexportFields = 71
+ !  integer,          public, parameter :: NexportFields = 75
+   integer,          public, parameter :: NexportFields = 76
+26a29,30
+        "inst_cldtau                              ", & 
+        "inst_vort                                ", & 
+27a32
+        "raqms_inst_tracer_mass_frac              ", &
+89c94,96
+<        "mean_fprec_rate                          " &
+---
+        "mean_fprec_rate                          ", &
+        "cm_drag                                  ", &
+        "ktop_kbot_cnv                            "  &
+107c114,115
+<        "i","l","i","l","l","l","l","l","t", &
+---
+ !       "i","l","i","l","l","l","l","l","l","t","t", &
+        "i","l","i","l","l","l","l","l","l","l","t","t", &
+115a124
+        ,"s","s"                             &
+124a134,135
+ !       .true. ,.true. ,                         &
+        .true. ,.true. ,.true.,                  &
+135a147
+        ,.true.,.true.                           &
+142c154,155
+<   integer,          public, parameter :: NimportFields = 16
+---
+ !  integer,          public, parameter :: NimportFields = 16
+   integer,          public, parameter :: NimportFields = 17
+146a160
+        "raqms_inst_tracer_mass_frac            ", &
+169c183
+<        "t",                                 &
+---
+        "t","t",                                 &
+177c191
+<        .true. ,                                 &
+---
+        .true. , .true. ,                        &

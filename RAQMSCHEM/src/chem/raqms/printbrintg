@@ -1,0 +1,767 @@
+
+CCCMNN0508      subroutine brintg (kdn,ktf,ihet_flag,drip,dens)
+#ifdef BRINTGLIN
+      subroutine brintg (kdn,ktf,ihet_flag,drip,dens,xbr,xbro,
+     1  xhbr,xbrno3,xhobr,xbrcl,xbr2,sice_br2,ss_br2)
+      use raqmschem_pmgrid_mod, only : iam,iatchem,jatchem,katchem,
+     *nstepat,iprn,jprn,kprn,tile,iprnin,jprnin,iamprn
+#ifdef DIAGBRINTG
+      use raqmschemcomm_mod, only : nper,sumper,numper,maxper,permax,sumbr2,sumpertot
+#endif
+#ifdef DOPERCENT
+      use raqmschemcomm_mod, only : izerobr,ismallbr,iadj
+#endif
+      use raqmschemcomm_mod, only : brintgsmall
+c
+      include 'comm_defs_24t.chem'
+      common /blk4_24/ r(ireac),hr(ihreac),phoj(iphot),dn(inum),
+     1              zeta,pur,sad,prodloss(13)
+      common/pceinfo/timinc,tdenom,save_clo,save_bro,
+     +       ipce_clno3,ipce_hocl,ipce_brno3,ipce_hobr,rbrobr
+     +       ,equil_fam
+      common/brx_com/pjbr2,rbr_ss,fr_hbrss,tau_ss,dvh,fctr_br
+C$OMP THREADPRIVATE (/blk4_24/)
+C$OMP THREADPRIVATE (/pceinfo/)
+C$OMP THREADPRIVATE (/brx_com/)
+      real*8 xhbrold,xbrno3old,xhobrold,xbrclold,xbr2old,xbroold
+      real*8 dtxhbr,dtxbrno3,dtxhobr,dtxbrcl,dtxbr2,dtxbro
+      real*8 xbrold,dtxbr,dt,dhobr,dhobrdt,phobr,term1,term2
+      real*8 ratiodt
+      character *3 ciam,cstep*4,clevel*1
+      real*8 dtmin,dtmax,dtadj,dtxmax,dlimit,znew,zold,zfin,xexp,dtlog
+!      real,parameter :: permax=.05
+!      real,parameter :: permax=.10
+      real,parameter :: permax=.50
+      real*8,parameter :: ONE=1.0
+      integer ibin,iadj,ncount
+      iadj=0
+      dtmin=.2
+      dtmax=10.
+
+
+c
+c
+c
+      t = 0.
+      n = 0
+      dt = dtmin
+c
+cccccc  DAYTIME
+cc
+!      if(isnan(xhbr).or.isnan(xhobr).or.isnan(xbrcl).or.isnan(xbr2).or.isnan(xbro).or.isnan(xbr))then
+!        write(6,*)'nan ',xhbr,xhobr,xbrcl,xbr2,xbro,xbr,'kdn',kdn
+!        call flush(6)
+!      endif
+      if (kdn .eq. 1) then
+10      continue
+!            if(isnan(dt))then
+!              write(6,*)'dt day nan permax',permax,'zold',zold,'znew',znew,'dlimit',dlimit,'zold',zold
+!              call flush(6)
+!            endif
+#ifdef CHECKCHEM
+          if(dt==0.0)then
+            write(6,*)'before dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+            call flush(6)
+          endif
+#endif
+        t = t+dt
+        n = n+1
+#ifdef CHECKCHEM
+        if(n>500)then 
+          write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+          write(6,*)'dt',dt,'n',n,'t',t,'timinc',timinc,'xhbr',xhbr
+          write(6,*)'xhobr',xhobr,'xbrcl',xbrcl,'xbr2',xbr2,'xbro',xbro,'xbr',xbr
+          call flush(6)
+        endif
+        if(n>1000)then
+          write(6,*)'iat',iatchem,jatchem,katchem,'tile',tile
+           write(6,*)'error n brintg',n,t,'dt',dt,'timinc',timinc
+           call flush(6)
+           call killit('brintg 10')
+        endif
+#endif
+        if (t .gt. timinc) then
+          t = t - dt
+          dt = timinc+0.1-t
+#ifdef CHECKCHEM
+          if(dt==0.0)then
+            write(6,*)'dont want dt zero ',dt,'timinc',timinc,'t',t,'n',n
+            call flush(6)
+          endif
+#endif
+          t = timinc + 0.1
+        endif
+        xhbrold=xhbr
+        xhobrold=xhobr
+        xbrclold=xbrcl
+        xbr2old=xbr2
+        xbroold=xbro
+        xbrno3old=xbrno3
+        xbrold=xbr
+        if(xbr<0.0)then
+          write(6,*)'input brintg xbr neg',xbr
+          call flush(6)
+          xbr=0.0
+        endif
+        if(xhobr<0.0)then
+          write(6,*)'input brintg xhobr neg',xhobr
+          xhobr=0.0
+        endif
+        if(xhbr<0.0)then
+          write(6,*)'input brintg xhbr neg',xhbr
+          xhbr=0.0
+        endif
+        if(xbrcl<0.0)then
+          write(6,*)'input brintg xbrcl neg',xbrcl
+          xbrcl=0.0
+        endif
+        if(xbr2<0.0)then
+          write(6,*)'input brintg xbr2 neg',xbr2
+          xbr2=0.0
+        endif
+        if(xbro<0.0)then
+          write(6,*)'input brintg xbro neg',xbro
+          xbro=0.0
+        endif
+        if(xbrno3<0.0)then
+          write(6,*)'input bring xbrno3 neg',xbrno3
+          xbrno3=0.0
+        endif 
+        if(dn(19)<0.0)then
+          write(6,*)'dn19 neg',dn(19)
+        endif
+
+c
+        pbr = (phoj(32)+r(97)*dn(2)+r(99)*dn(3)+
+     1       (r(101)+r(102))*dn(25)
+     1       +2.*0.85*r(104)*xbro)*xbro + r(105)*dn(9)*xhbr
+     1       +phoj(31)*xbrcl + phoj(34)*xhobr
+     1       +0.29*phoj(35)*xbrno3+ 2.0*pjbr2*xbr2
+        dbr = r(94)*dn(1)+r(95)*dn(10)+r(96)*dn(19)
+#ifdef CHECKCHEM
+        if(xbr<0.0)then
+           write(6,*)'top xbr neg',xbr,'n',n,'t',t
+           call flush(6)
+        endif
+        if(dn(3)>1.d24)then
+          write(6,*)'iat',iat,jat,kat,'tile',tile,'dn3 big',n,dn(3),'r99',r(99),'pbr',pbr,'dbr',dbr,'prod',r(99)*dn(3)
+          call flush(6)
+        endif
+        if(pbr/dbr>1.e15)then
+          write(6,*)'iat',iat,jat,kat,'tile',tile,'n',n,'t',t,'pbr',pbr,'dbr',dbr,'dn',dn(2),dn(3),dn(25)
+          write(6,*)'xbro',xbro,'dn9',dn(9),'xhbr',xhbr
+          write(6,*)'xvf2',xvf2,'xbrno3',xbrno3
+          write(6,*)'phoj',phoj(32),phoj(31),phoj(34),phoj(35)
+          call flush(6)
+        endif
+#endif
+c
+        pbro = r(94)*xbr*dn(1)+(r(63)*xbrcl+r(89)*xhobr)*dn(2)
+     1       +0.71*phoj(35)*xbrno3
+        dbro = phoj(32)+r(97)*dn(2)+r(98)*dn(10)+r(99)*dn(3)+
+     1       r(100)*dn(4)*dens+(r(101)+r(102)+r(103))*dn(25)
+     1       +2.*r(104)*xbro
+        phbr = (r(95)*dn(10)+r(96)*dn(19))*xbr 
+#ifdef CHECKCHEM
+        if(phbr<0.0)then
+          write(6,*)'phbr',phbr,'dn10',dn(10),'dn(19)',dn(19),'xbr',xbr,'r',r(95),r(96)
+          call flush(6)
+        endif
+#endif
+
+        dhbr = phoj(33)+r(105)*dn(9)+r(88)*dn(2)+hr(6)*xhobr+hr(8)*dn(38)
+     1       +drip+fr_hbrss/tau_ss
+c
+        phobr = r(98)*xbro*dn(10)+hr(9)*xbrno3*dn(13)
+        dhobr = phoj(34)+r(89)*dn(2)+hr(6)*xhbr+hr(7)*dn(14)
+CCCMNN0508    loss of hobr on seaice
+        dhobr = dhobr + dvh*fctr_br
+c
+        pbrno3 = r(100)*dn(4)*dens*xbro
+        dbrno3 = phoj(35)+hr(9)*dn(13)
+c
+c
+        pbrcl = r(103)*dn(25)*xbro+hr(7)*dn(14)*xhobr+
+     1        hr(8)*dn(38)*xhbr
+        dbrcl = phoj(31)+r(63)*dn(2)
+c
+        pbr2 = r(104)*0.15*xbro*xbro+hr(6)*xhobr*xhbr
+!CCMNN0508    Br2 source at seaice
+        pbr2 = pbr2 + dvh*fctr_br*xhobr
+!CCMNN0508    Br2 from seasalt within the PBL
+        if (xhobr .gt. dens*1.0e-15) then
+          pbr2 = pbr2 + rbr_ss
+          ss_br2 = ss_br2 + rbr_ss*dt/timinc
+        endif
+        dbr2 = pjbr2
+c
+!        if(isnan(sice_br2))then
+!          write(6,*)'before day sice_br2',sice_br2
+          !call flush(6)
+!        endif
+        sice_br2 = sice_br2+dvh*fctr_br*xhobr*dt/timinc
+!        if(isnan(sice_br2))then
+!          write(6,*)'after day sice_br2',sice_br2,'dvh',dvh,'fctr',fctr_br,'xhobr',xhobr,'dt',dt,'timinc',timinc
+!          call flush(6)
+!        endif
+c
+CCCMNN 0608
+        dtinv = 1.0/dt
+        if(dbr*dt>=brintgsmall)then
+          xbr=pbr/dbr + (xbr - pbr/dbr)*exp(-dbr*dt)
+        else
+          xbr=pbr*dt+xbr*(one-dbr*dt)
+        endif
+#ifdef CHECKCHEM
+        if(xbr<0.0)then
+           write(6,*)'xbrnegative',xbr,'dbr',dbr,'dt',dt,'prod',dbr*dt,'ratio',pbr/dbr,'old',xbrold
+           call flush(6)
+        endif
+#endif
+        if(dbro*dt>=brintgsmall)then
+          xbro=pbro/dbro + (xbro - pbro/dbro)*exp(-dbro*dt)
+        else
+          xbro=pbro*dt+xbro*(one-dbro*dt)
+        endif
+        xbrcl=pbrcl/dbrcl + (xbrcl-pbrcl/dbrcl)*exp(-dbrcl*dt)
+        if(dbr2*dt>=brintgsmall)then
+          xbr2=pbr2/dbr2 + (xbr2-pbr2/dbr2)*exp(-dbr2*dt)
+        elseif(dbr2==0.0)then
+          xbr2=xbr2+pbr2*dt
+        else
+          xbr2=xbr2*(one-dbr2*dt)+pbr2*dt
+        endif
+#if 0
+        if(isnan(xbr2))then
+          write(6,*)'dayxbr2',xbr2,'pbr2',pbr2,'dt',dt,'dbr2',dbr2
+          call flush(6)
+        endif
+#endif
+        xhbr=phbr/dhbr + (xhbr - phbr/dhbr)*exp(-dhbr*dt)
+#ifdef CHECKCHEM
+        if(xhbr<0.0)then
+          write(6,*)'xhbr neg',xhbr,'phbr',phbr,dhbr,'dt',dt,exp(-dhbr*dt)
+          write(6,*)'old',xhbrold
+          call flush(6)
+        endif
+#endif
+#ifdef DOPERCENT
+        if(dbr*dt<brintgsmall)then
+          if(dbr*dt==0.0)then
+            if(pbr/=0.0)then
+              izerobr(1,1)=izerobr(1,1)+1
+            endif
+          else
+            ismallbr(1,1)=ismallbr(1,12)+1
+          endif
+        endif
+        if(dbro*dt<brintgsmall)then
+          if(dbro*dt==0.0)then
+            if(pbro/=0.0)then
+              izerobr(2,1)=izerobr(2,1)+1
+            endif
+          else
+            ismallbr(2,1)=ismallbr(2,1)+1
+          endif
+        endif
+        if(dbrcl*dt<brintgsmall)then
+          if(dbrcl*dt==0.0)then
+            if(pbrcl/=0.0)then
+              izerobr(3,1)=izerobr(3,1)+1
+            endif
+          else
+            ismallbr(3,1)=ismallbr(3,1)+1
+          endif
+        endif
+        if(dbr2*dt<brintgsmall)then
+          if(dbr2*dt==0.0)then
+            if(pbr2/=0.0)then
+              izerobr(4,1)=izerobr(4,1)+1
+            endif
+          else
+            ismallbr(4,1)=ismallbr(4,1)+1
+          endif
+        endif
+        if(dhbr*dt<brintgsmall)then
+          if(dhbr*dt==0.0)then
+            if(phbr/=0.0)then
+              izerobr(5,1)=izerobr(5,1)+1
+            endif
+          else
+            ismallbr(5,1)=ismallbr(5,1)+1
+          endif
+        endif
+#endif
+        if(dhobr*dt>=brintgsmall)then
+          xhobr=phobr/dhobr + (xhobr - phobr/dhobr)*exp(-dhobr*dt)
+          xexp=exp(-dhobr*dt)
+        else ! ajl new
+#ifdef DOPERCENT
+          if(dhobr*dt==0.0)then
+            if(phobr/=0.0)then
+              izerobr(6,1)=izerobr(6,1)+1
+            endif
+          else
+            ismallbr(6,1)=ismallbr(6,1)+1
+          endif
+#endif
+          xhobr=xhobr*(one-dhobr*dt)+phobr*dt ! ajl new
+          xexp=exp(-dhobr*dt)
+        endif
+        if(dbrno3*dt>=brintgsmall)then ! ajl new
+          xtmp=pbrno3/dbrno3 + (xbrno3 - pbrno3/dbrno3)*exp(-dbrno3*dt)
+        else
+          xtmp=xbrno3*(one-dbrno3*dt)+pbrno3*dt
+#ifdef DOPERCENT
+          if(dbrno3*dt==0.0)then
+            if(pbrno3/=0.0)then
+              izerobr(7,1)=izerobr(7,1)+1
+            endif
+          else
+            ismallbr(7,1)=ismallbr(7,1)+1
+          endif
+#endif
+        endif
+        if ((xtmp-xbrno3)/dt .gt. dn(4)/timinc) then
+          xbrno3=xbrno3+dn(4)*dt/timinc
+        else
+          xbrno3 = xtmp
+        endif
+
+c
+        if (t .lt. timinc) then
+!         check if change is too big
+!#ifdef DODTXBR
+          dtxbr=abs(xbr-xbrold)/max(2.e4,xbrold)
+!          write(6,*)'xbr',xbr,'old',xbrold,'n',n,'dt',dt,'dtxbr',dtxbr
+          dtxhbr=abs(xhbr-xhbrold)/max(2.e4,xhbrold)
+!          write(6,*)'dtxhbr',dtxhbr
+          dtxbro=abs(xbro-xbroold)/max(2.e4,xbroold)
+          dtxbrcl=abs(xbrcl-xbrclold)/max(2.e4,xbrclold)
+          dtxbr2=abs(xbr2-xbr2old)/max(2.e4,xbr2old)
+!          write(6,'(i3,"dtxbr ",e10.3," dtxhbr ",e10.3)')n,dtxbr,dtxhbr
+!          write(91,'(i3,"dtxbr ",e10.3," dtxhbr ",e10.3)')n,dtxbr,dtxhbr
+!          call flush(91)
+!          write(91,'("dtxbro ",e10.3," dtxbrcl ",e10.3," dtxbr2 ",e10.3)')dtxbro,dtxbrcl,dtxbr2
+!          call flush(91)
+!          write(500+iam,*)'xhobr',xhobr,'old',xhobrold
+!          write(500+iam,*)'xbrno3',xbrno3,xbrno3old
+!          call flush(500+iam)
+          dtxhobr=abs(xhobr-xhobrold)/max(2.e4,xhobrold)
+          dtxbrno3=abs(xbrno3-xbrno3old)/max(2.e4,xbrno3old)
+!          write(6,*)'dtxbr',dtxbr,' dtxhbr ',dtxhbr,' dtxbro ',dtxbro,'n ',n
+!          write(6,*)'dtxbrcl ',dtxbrcl,' dtxbr2 ',dtxbr2
+!          write(100,'(i3,"hbr",f10.3," bro ",f10.3," brcl ",f10.3," br2 ",f10.3," hobr ",f10.3,
+!     *" brno3 ",f10.3," br *",f10.3)')n,dtxhbr,dtxbro,dtxbrcl,dtxbr2,dtxhobr,dtxbrno3,dtxbr
+       
+          if(dtxhbr>permax.or.dtxbro>permax.or.dtxbrcl>permax.or.dtxbr2>permax.or.
+     *      dtxhobr>permax.or.dtxbrno3>permax.or.dtxbr>permax)then
+            dtxmax=max(dtxhbr,dtxbro,dtxbrcl,dtxbr2,dtxhobr,dtxbrno3,dtxbr)
+!            write(6,*)'day dtxmax',dtxmax,'permax',permax
+            if(dtxhbr==dtxmax)then
+!              write(6,*)'hbr limit'
+              dlimit=dbr
+              znew=phbr/dhbr
+
+
+              zold=xhbrold
+              zfin=xhbr
+              ibin=5
+            elseif(dtxbro==dtxmax)then
+!              write(6,*)'bro limit'
+              dlimit=dbro
+              znew=pbro/dbro
+              zold=xbroold
+              zfin=xbro
+              ibin=2
+            elseif(dtxbrcl==dtxmax)then
+!              write(6,*)'brcl limit'
+              dlimit=dbrcl
+              znew=pbrcl/dbrcl
+              zold=xbrclold
+              zfin=xbrcl
+              ibin=3
+            elseif(dtxbr2==dtxmax)then
+!              write(6,*)'br2 limit'
+              dlimit=dbr2
+              znew=pbr2/dbr2
+              zold=xbr2old
+              zfin=xbr2
+              ibin=4
+            elseif(dtxhobr==dtxmax)then
+!              write(6,*)'hobr limit'
+              dlimit=dhobr
+              znew=phobr/dhobr
+              zold=xhobrold 
+              zfin=xhobr
+              ibin=6
+            elseif(dtxbrno3==dtxmax)then
+!              write(6,*)'brno3 limit'
+              dlimit=dbrno3
+              znew=pbrno3/dbrno3
+              zold=xbrno3old
+              zfin=xbrno3
+              ibin=7
+            elseif(dtxbr==dtxmax)then
+!              write(6,*)'br limit'
+              dlimit=dbr
+              znew=pbr/dbr
+              zold=xbrold
+              zfin=xbr
+              ibin=1
+            endif
+            if(abs(znew-zold)<1.e-10)then
+              if(abs(dlimit)<1.e-20)then
+                dt=-log(1.-permax*max(1.e4,zold)/1.e-10)/1.e-20/1.2
+              else
+                dt=-log(1.-permax*max(1.e4,zold)/1.e-10)/dlimit/1.2
+              endif
+              iadj=iadj+1
+            elseif(abs(dlimit)<1.e-20)then
+              ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+              if(ratiodt<1.e-5)then
+                dt=ratiodt/1.e-20/1.2
+              else
+                dt=-log(1.-permax*max(1.e4,zold)/abs(znew-zold))/1.e-20/1.2
+              endif
+              iadj=iadj+1
+            else
+              dtlog=1.-permax*max(1.e4,zold)/abs(znew-zold)
+              ratiodt=permax*max(1.e4,zold)/abs(znew-zold)
+              if(ratiodt<1.e-5)then
+                dt=ratiodt/dlimit/1.2
+                write(6,*)iatchem,jatchem,katchem,'new dt',dt,'ratiodt',ratiodt,'dlimit',dlimit
+                call flush(6)
+              else 
+                dt=-log(1.-permax*max(1.e4,zold)/abs(znew-zold))/dlimit/1.2
+              endif
+            endif
+!            if(isnan(dt))then
+
+!              write(6,*)'dt day nan permax',permax,'zold',zold,'znew',znew,'dlimit',dlimit,'zold',zold
+!              call flush(6)
+!            endif
+#ifdef DOPERCENT
+            iadj(ibin,1)=iadj(ibin,1)+1
+#endif
+            go to 10
+          endif !dtxmax
+!#endif
+          dt = dt*1.2
+          dt = min(dt,10.)
+          go to 10
+        endif
+c
+c
+cccccc     NIGHTTIME
+      else
+c
+        ncount=0
+20      continue
+        ncount=ncount+1
+#ifdef CHECKCHEM
+        if(ncount>1000)then
+            write(6,*)iatchem,jatchem,katchem,'ncount',ncouunt,'dt',dt,'t',t,'n',n
+            call flush(6)
+             call killit('bringg')
+        endif
+#endif
+        t = t+dt
+        n = n+1
+        if (t .gt. timinc) then
+          t = t - dt
+          dt = timinc+0.1-t
+          t = timinc + 0.1
+        endif
+c
+        xhobrold=xhobr
+        xhbrold=xhbr
+        xbroold=xbro
+        xbrno3old=xbrno3
+        xbrold=xbr
+        pbr = (r(99)*dn(3)+
+     1       (r(101)+r(102))*dn(25)
+     1       +2.*0.85*r(104)*xbro)*xbro + r(105)*dn(9)*xhbr
+        dbr = r(94)*dn(1)+r(95)*dn(10)+r(96)*dn(19)
+c
+        pbro = r(94)*xbr*dn(1)
+        dbro = r(98)*dn(10)+r(99)*dn(3)+
+     1       r(100)*dn(4)*dens+(r(101)+r(102)+r(103))*dn(25)
+     1       +2.*r(104)*xbro
+        phbr = (r(95)*dn(10)+r(96)*dn(19))*xbr
+        dhbr = r(105)*dn(9)+hr(6)*xhobr+hr(8)*dn(38)
+     1     +drip + fr_hbrss/tau_ss
+c
+c
+        phobr = r(98)*xbro*dn(10)+hr(9)*xbrno3*dn(13)
+        dhobr = hr(6)*xhbr+hr(7)*dn(14)
+CCCMNN0508     loss on seaice
+        dhobr = dhobr + dvh*fctr_br
+!        if(dhobr>0.0.and.dhobr<1.e-20)then
+!          write(6,*)'dhobr',dhobr,'dvn',dvn,'fctr_br',fctr_br
+!          write(6,*)'hr6',hr(6),'xhbr',xhbr,'hr7',hr(7),'dn14',dn(14)
+!          call flush(6)
+!        endif
+c
+        pbrno3 = r(100)*dn(4)*dens*xbro
+        dbrno3 = hr(9)*dn(13)
+c
+        pbr2 = r(104)*0.15*xbro*xbro+hr(6)*xhbr*xhobr
+CCCMNN0508     source on seaice
+        pbr2 = pbr2 + dvh*fctr_br*xhobr
+CCCMNN0508     Br2 from seasalt
+        if (xhobr .gt. dens*1.0e-15) then
+         pbr2  = pbr2 + rbr_ss
+         ss_br2 = ss_br2 + rbr_ss*dt/timinc
+        endif
+        dbr2=0.0
+c
+        pbrcl = r(103)*dn(25)*xbro+hr(7)*dn(14)*xhobr+
+     1        hr(8)*dn(38)*xhbr
+        dbrcl = 0.0
+c
+        sice_br2 = sice_br2+dvh*fctr_br*xhobr*dt/timinc
+!        if(isnan(sice_br2))then
+!          write(6,*)'after night sice_br2',sice_br2,'dvh',dvh,'fctr',fctr_br,'xhobr',xhobr,'dt',dt,'timinc',timinc
+!          call flush(6)
+!        endif
+c
+CCCMNN 0608
+        dtinv = 1.0/dt
+        if(dbr*dt>=brintgsmall)then
+          xbr=pbr/dbr + (xbr - pbr/dbr)*exp(-dbr*dt)
+        else
+          xbr=xbr*(one-dbr*dt)+pbr*dt
+        endif
+        if(xbr<0.0)then
+            write(6,*)'xbr neg night',xbr,pbr,dbr
+        endif
+        if(dbro*dt>brintgsmall)then
+          xbro=pbro/dbro + (xbro - pbro/dbro)*exp(-dbro*dt)
+        elseif(dbro==0.0)then
+          xbro=xbro+pbro*dt
+        else
+          xbro=xbro*(one-dbro*dt)+pbro*dt
+        endif
+        if (dhbr >= brintgsmall) then
+          xhbr=phbr/dhbr + (xhbr - phbr/dhbr)*exp(-dhbr*dt)
+        else
+          xhbr = xhbr*(one-dhbr*dt) + phbr*dt
+        endif
+        if (dhobr*dt >= brintgsmall) then
+          xhobr=phobr/dhobr + (xhobr - phobr/dhobr)*exp(-dhobr*dt)
+        elseif(dhobr==0.0)then
+          xhobr = xhobr + phobr*dt
+#ifdef DOPERCENT
+          if(phobr/=0.0)then
+            izerobr(6,2)=izerobr(6,2)+1
+          endif
+#endif
+        else
+          xhobr=xhobr*(one-dhobr*dt)+phobr*dt
+#ifdef DOPERCENT
+          ismallbr(6,2)=ismallbr(6,2)+1
+#endif
+        endif
+        if (dbrno3*dt >=brintgsmall) then
+          xtmp=pbrno3/dbrno3 + (xbrno3 - pbrno3/dbrno3)*exp(-dbrno3*dt)
+        elseif(dbrno3==0.0)then
+          xtmp = xbrno3 + pbrno3*dt
+#ifdef DOPERCENT
+          if(pbrno3/=0.0)then
+            izerobr(7,2)=izerobr(7,2)+1
+          endif
+#endif
+        else
+          xtmp = xbrno3*(one-dbrno3*dt) + pbrno3*dt
+#ifdef DOPERCENT
+            ismallbr(7,2)=ismallbr(7,2)+1
+#endif
+        endif
+        if ((xtmp-xbrno3)/dt .gt. dn(4)/timinc) then
+          xbrno3=xbrno3+dn(4)*dt/timinc
+        else
+          xbrno3=xtmp
+        endif
+
+        xbrcl = xbrcl + pbrcl * dt
+        xbr2 = xbr2 + pbr2 * dt
+#if 0
+        if(isnan(xbr2))then
+          write(6,*)'xbr2',xbr2,'pbr2',pbr2,'dt',dt
+          call flush(6)
+        endif
+#endif
+#ifdef DOPERCENT
+        if(dbr*dt<brintgsmall)then
+          if(dbr*dt==0.0)then
+            if(pbr/=0.0)then
+              izerobr(1,2)=izerobr(1,2)+1
+            endif
+          else
+            ismallbr(1,2)=ismallbr(1,2)+1
+          endif
+        endif
+        if(dbro*dt<brintgsmall)then
+          if(dbro*dt==0.0)then
+            if(pbro/=0.0)then
+              izerobr(2,2)=izerobr(2,2)+1
+            endif
+          else
+            ismallbr(2,2)=ismallbr(2,2)+1
+          endif
+        endif
+        if(dhbr*dt<brintgsmall)then
+          if(dhbr*dt==0.0)then
+            if(phbr/=0.0)then
+              izerobr(1,2)=izerobr(1,2)+1
+            endif
+          else
+            ismallbr(1,2)=ismallbr(1,2)+1
+          endif
+        endif
+#endif
+
+c
+        if (t .lt. timinc) then
+!         check if diff too big
+!#ifdef DODTXBR
+          dtxbr=abs(xbr-xbrold)/max(2.e4,xbrold)
+          dtxhbr=abs(xhbr-xhbrold)/max(2.e4,xhbrold)
+          dtxbro=abs(xbro-xbroold)/max(2.e4,xbroold)
+!          dtxbrcl=abs(xbrcl-xbrclold)/max(2.e4,xbrclold)
+!          dtxbr2=abs(xbr2-xbr2old)/max(2.e4,xbr2old)
+!          write(500+iam,*)'xhobr',xhobr,'old',xhobrold
+!          write(500+iam,*)'xbrno3',xbrno3,xbrno3old
+!          call flush(500+iam)
+          dtxhobr=abs(xhobr-xhobrold)/max(2.e4,xhobrold)
+          dtxbrno3=abs(xbrno3-xbrno3old)/max(2.e4,xbrno3old)
+!          write(500+iam,*)'dtxhobr',dtxhobr,dtxbrno3,iatchem,jatchem,katchem
+!          call flush(500+iam)
+!         real xhbrold,xbrno3old,xhobrold,xbrclold,xbr2old,xbroold
+!          dtxmax=max(dtxhbr,dtxbro,dtxbrcl,dtxbr2,dtxhobr,dtxbrno3,dtxbr)
+          if(dxbrno3>0.0)then
+            dtxmax=max(dtxhbr,dtxbro,dtxhobr,dtxbrno3,dtxbr)
+          else
+            dtxmax=max(dtxhbr,dtxbro,dtxhobr,dtxbr)
+          endif
+          if(dtxmax>permax)then
+!            write(6,*)'night dtxmax',dtxmax
+            if(dtxhbr==dtxmax)then
+!              write(6,*)'hbr limit'
+              dlimit=dbr
+              znew=phbr/dhbr
+              zold=xhbrold
+              zfin=xhbr
+              if(dlimit<1.e-15)then
+                write(6,*)'small dbr'
+              endif
+              ibin=5
+            elseif(dtxbro==dtxmax)then
+!              write(6,*)'bro limit'
+              dlimit=dbro
+              znew=pbro/dbro
+              zold=xbroold
+              if(dlimit<1.e-15)then
+                write(6,*)'small dbro'
+              endif
+              zfin=xbro
+              ibin=2
+!            elseif(dtxbrcl==dtxmax)then
+!              write(6,*)'brcl limit'
+!              dlimit=dbrcl
+!              znew=pbrcl/dbrcl
+!              zold=xbrclold
+!            elseif(dtxbr2==dtxmax)then
+!              write(6,*)'br2 limit'
+!              dlimit=dbr2
+!              znew=pbr2/dbr2
+!              zold=xbr2old
+            elseif(dtxhobr==dtxmax)then
+!              write(6,*)'hobr limit'
+              dlimit=dhobr
+              znew=phobr/dhobr
+              zold=xhobrold
+              zfin=xhobr
+              ibin=6
+            elseif(dtxbrno3==dtxmax)then
+!              write(6,*)'brno3 limit'
+              dlimit=dbrno3
+              znew=pbrno3/dbrno3
+              zold=xbrno3old
+              zfin=xbrno3
+              ibin=7
+            elseif(dtxbr==dtxmax)then
+!              write(6,*)'br limit'
+              dlimit=dbr
+              znew=pbr/dbr
+              zold=xbrold
+              zfin=xbr
+              ibin=1
+            endif
+            if(abs(znew-zold)<1.e-10)then
+              if(abs(dlimit)<1.e-20)then
+                dt=-log(1.-permax*max(1.e4,zold)/1.e-10)/1.e-20/1.2
+              else
+                dt=-log(1.-permax*max(1.e4,zold)/1.e-10)/dlimit/1.2
+              endif
+              iadj=iadj+1
+            elseif(abs(dlimit)<1.e-20)then
+              dt=-log(1.-permax*max(1.e4,zold)/abs(znew-zold))/1.e-20/1.2
+              iadj=iadj+1
+            else
+              dtlog=1.-permax*max(1.e4,zold)/abs(znew-zold)
+              dt=-log(1.-permax*max(1.e4,zold)/abs(znew-zold))/dlimit/1.2
+            endif
+!            if(isnan(dt))then
+!              write(6,*)'dt night nan permax',permax,'zold',zold,'znew',znew,'dlimit',dlimit,'zold',zold
+!              call flush(6)
+!            endif
+#ifdef DOPERCENT
+            iadj(ibin,2)=iadj(ibin,2)+1
+#endif
+            go to 20
+          endif ! dtxmax
+!#endif
+          dt = dt*1.2
+          dt = min(dt,10.)
+          go to 20
+        endif ! t lt
+c
+c
+      endif ! idn
+      if(iadj/=0)then
+         write(6,*)'brintg iadj'
+         call flush(6)
+      endif
+        if(xbr<0.0)then
+          write(6,*)'output brintg xbr neg',xbr
+          call flush(6)
+          xbr=0.0
+        endif
+        if(xhobr<0.0)then
+          write(6,*)'output brintg xhobr neg',xhobr
+          xhobr=0.0
+        endif
+        if(xhbr<0.0)then
+          write(6,*)'output brintg xhbr neg',xhbr
+          xhbr=0.0
+        endif
+        if(xbrcl<0.0)then
+          write(6,*)'output brintg xbrcl neg',xbrcl
+          xbrcl=0.0
+        endif
+        if(xbr2<0.0)then
+          write(6,*)'output brintg xbr2 neg',xbr2
+          xbr2=0.0
+        endif
+        if(xbro<0.0)then
+          write(6,*)'output brintg xbro neg',xbro
+          xbro=0.0
+        endif
+        if(xbrno3<0.0)then
+          write(6,*)'output bring xbrno3 neg',xbrno3
+          xbrno3=0.0
+        endif
+      return
+      end subroutine brintg

@@ -1,0 +1,9 @@
+#!/bin/bash
+module purge
+module load license_intel
+module load intel/18.0.4
+#module load impi
+module load hdf/4.2.14
+module load hdf5/1.8.21 netcdf4/4.6.2
+#module load hdf5/1.8.21 netcdf4/4.7.3
+module load udunits2 ncview

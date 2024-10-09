@@ -1,0 +1,6 @@
+# pack-refs with: peeled fully-peeled sorted 
+a56907a44461c7151e0ba266e160c8f1a1685882 refs/remotes/origin/dev/emc
+bdd4b81514406abf23182b1a2c0d74ada6b57107 refs/remotes/origin/dev/gfdl
+700a4f767b64b0a472f47bcde7641f817c869a2e refs/remotes/origin/gfsv16_physupdt
+19b48bc1f3c6a86ff7eb73fc9c219e8020220c58 refs/remotes/origin/master
+68bdef4da171b5beaeb2ed40bd82785e6d457e43 refs/remotes/origin/ufs_public_release

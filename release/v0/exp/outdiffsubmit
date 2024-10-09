@@ -1,0 +1,19 @@
+18,23c18,19
+< #source $HOME/.bashrc
+< #export BASEDIR=/home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM
+< #source $BASEDIR/setup18.0.4.esmf.8.0.0.bs47
+< source /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base.emc.dyn.fv3.esrl
+< source /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst.fv3.esrl
+< #cd /home/lenzen/EMC_FV3.cedsair/v91/EMC_FV3GFS-GSDCHEM/release/v0/exp
+---
+> source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.base.emc.dyn.fv3.esrl
+> source /home/lenzen/EMC_FV3/v91/EMC_FV3GFS-GSDCHEM/release/v0/scripts/config.fcst.fv3.esrl
+34,35d29
+< export CEDSAIR=YES
+< export CEDSAIR='CO NOx N2O'
+40d33
+< export CASECTL=C192
+206c199
+< export DIAG_TABLE=$FV3DIR_RELEASE/parm/chm_diag_table
+---
+> export DIAG_TABLE $FV3DIR_RELEASE/parm/chm_diag_table

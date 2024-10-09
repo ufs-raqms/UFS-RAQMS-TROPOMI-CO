@@ -1,0 +1,148 @@
+
+        file='tile'//ctile//'/emi_CO-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        if(iam==0)then
+        write(6,*)'nlevin',nlevin
+        call flush(6)
+        endif
+        read(10)altair
+        if(iam==0)then
+        write(6,*)'altair',altair
+        call flush(6)
+        endif
+        intaltair(0)=0
+        intaltair(1)=2.*altair(1)
+        do k=2,nlnair
+          intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+        end do
+        if(iam==0)then
+          do k=1,nlnair
+            write(6,*)k,altair(k),intaltair(k)
+          end do
+        endif
+        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srccoair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srccoair),minval(srccoair)
+        call flush(6)
+        endif
+        close(10)
+        file='tile'//ctile//'/emi_NOx-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        read(10)altair
+!        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srcnair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srcnair),minval(srcnair)
+        call flush(6)
+        endif
+
+        close(10)
+        if(.not.allocated(intcedsair).and.numcedsair/=0)then
+          allocate(intcedsair(ide-ids+1,jds:jde,0:nlnair,numcedsair))
+          intcedsair=0.0
+          allocate(ktopcedsair(ide-ids+1,jds:jde,numcedsair))
+          allocate(kbotcedsair(ide-ids+1,jds:jde,numcedsair))
+          ktopcedsair=1
+          kbotcedsair=1
+          do n=1,numcedsair
+            file='tile'//ctile//'/emi_'//trim(ccedsair(n))//'-AIR_molpercm2persec.dat'
+            open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+            convert='big_endian',form='unformatted')
+            read(10)nlevin
+            if(iam==75.and.n==1)then
+              write(6,*)'nlevin',nlevin
+              call flush(6)
+            endif
+            read(10)altair
+            if(iam==75.and.n==1)then
+              write(6,*)'altair',altair
+              call flush(6)
+            endif
+            if(n==1)then
+              intaltair(0)=0
+              intaltair(1)=2.*altair(1)
+              do k=2,nlnair
+                intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+              end do
+              if(iam==75)then
+                do k=1,nlnair
+                  write(6,*)k,altair(k),intaltair(k)
+                end do
+              endif
+              if(.not.allocated(air3d))then
+              allocate(air3d(192,192,nlnair))
+              endif
+            endif
+            read(10)air3d
+            do j=jds,jde
+             do i=ids,ide
+               ii=i-ids+1
+               do k=1,nlnair
+                 intcedsair(i-ids+1,j,k,n)=intcedsair(i-ids+1,j,k-1,n)+air3d(i,j,k)
+                 if(kbotcedsair(ii,j,n)==0.and.air3d(i,j,k)/=0.)then
+                   kbotcedsair(ii,j,n)=k
+                 endif
+                 if(air3d(i,j,k)/=0.0)then
+                   ktopcedsair(ii,j,n)=k
+                 endif
+#ifdef DIAGCEDSAIR
+!              if(iam==75.and.n==1.and.i==1.and.j==25)then
+              if(tile==5)then
+                if(air3d(i,j,k)/=0.0)then
+                   write(6,*)trim(ccedsair(n)),i,j,'k',k,'intcedsair','iloc',i-ids+1,intcedsair(i-ids+1,j,k,n),'air3d',air3d(i,j,k)
+                   flush(6)
+                endif
+              endif
+#endif
+               end do
+             end do
+            end do
+#ifdef DIAGCEDSAIR
+!            if(iam==75.or.iam==11)then
+             if(tile==5)then
+               write(6,*)'srccedsair',n,trim(ccedsair(n)),maxval(intcedsair(:,:,:,n))
+               call flush(6)
+            endif
+#endif
+            close(10)
+          end do ! n
+#ifdef DIAGCEDSAIR
+          if(iam==75.and.jds<=25.and.jde>=25)then
+!          if(tile==5)then
+            do k=1,maxval(ktopcedsair(:,:,1))
+              write(6,*)'75 intcedsair',k,maxval(intcedsair(:,:,k,1)),minval(intcedsair(:,:,k,1))
+            end do
+            write(6,*)'751,24 kbot',kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+            do k=kbotcedsair(1,25,1),ktopcedsair(1,25,1)
+              write(6,*)'75 intcedsair',k,intcedsair(1,25,k,1)
+            end do
+            
+          endif
+#endif
+ 
+        endif
+        if(.not.allocated(intcoair))then
+          allocate(intcoair(ide-ids+1,jds:jde,0:nlnair))
+          allocate(intnoxair(ide-ids+1,jds:jde,0:nlnair))
+          intcoair(:,:,0)=0.0
+          intnoxair(:,:,0)=0.0
+          do k=1,nlnair
+            intcoair(:,:,k)=intcoair(:,:,k-1)+srccoair(:,:,k)
+            intnoxair(:,:,k)=intnoxair(:,:,k-1)+srcnair(:,:,k)
+          end do
+        endif

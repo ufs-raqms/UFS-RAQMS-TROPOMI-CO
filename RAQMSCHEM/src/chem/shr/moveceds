@@ -1,0 +1,51 @@
+
+        file='tile'//ctile//'/emi_CO-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        if(iam==0)then
+        write(6,*)'nlevin',nlevin
+        call flush(6)
+        endif
+        read(10)altair
+        if(iam==0)then
+        write(6,*)'altair',altair
+        call flush(6)
+        endif
+        intaltair(0)=0
+        intaltair(1)=2.*altair(1)
+        do k=2,nlnair
+          intaltair(k)=altair(k)+(altair(k)-intaltair(k-1))
+        end do
+        if(iam==0)then
+          do k=1,nlnair
+            write(6,*)k,altair(k),intaltair(k)
+          end do
+        endif
+        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srccoair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srccoair),minval(srccoair)
+        call flush(6)
+        endif
+        close(10)
+        file='tile'//ctile//'/emi_NOx-AIR_molpercm2persec.dat'
+        open(10,file=trim(config % cedsemi_inname)//trim(cmonth2(1))//'/'//trim(file), &
+        convert='big_endian',form='unformatted')
+        read(10)nlevin
+        read(10)altair
+!        allocate(air3d(192,192,nlnair))
+        read(10)air3d
+        do j=jds,jde
+          do i=ids,ide
+            srcnair(i-ids+1,j,:)=air3d(i,j,:)
+          end do
+        end do
+        if(iam==0)then
+        write(6,*)'srccoair',maxval(srcnair),minval(srcnair)
+        call flush(6)

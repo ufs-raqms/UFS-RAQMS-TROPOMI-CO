@@ -1,0 +1,19 @@
+location of GSI code
+/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/
+source code for GSI
+/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/sorc/gsi.fd/src/gsi
+run scripta for GSI
+/home/lenzen/GSI/GSI.PRODGSI.16b.CO.GEOAOD/sorc/gsi.fd/run
+location of GSI DATA inputs
+1.)VIIRS AOD
+   rungsi.FV3GFS.GSI.VIIRS.AOD.SEAS12.sh
+2.) GEO AOD
+   rungsi.FV3GFS.GSI.geostationary.AOD.55km.sh 
+3.)TROPOMI CO NUCAPS CO
+   run_gsi_NUCAPS.TROPOMI.CO.ak.ksh
+4.)OMPS OZONE
+  run_gsi_FV3GFS.OMPS.OZONE.ksh
+  A.)LP
+
+  B.)NM
+

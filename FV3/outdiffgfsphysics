@@ -1,0 +1,167 @@
+Binary files gfsphysics/aerclm_def.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/aerclm_def.mod differ
+Only in gfsphysics: aer_cloud.i
+Binary files gfsphysics/aer_cloud.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/aer_cloud.mod differ
+Common subdirectories: gfsphysics/CCPP_layer and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/CCPP_layer
+Only in gfsphysics: cires_ugwp_initialize.i90
+Only in gfsphysics: cires_ugwp_module.i90
+Binary files gfsphysics/cires_ugwp_module.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/cires_ugwp_module.mod differ
+Only in gfsphysics: cires_ugwp_solvers.i90
+Only in gfsphysics: cires_ugwp_triggers.i90
+Only in gfsphysics: cires_ugwp_utils.i90
+Only in gfsphysics: cires_vert_lsatdis.i90
+Only in gfsphysics: cires_vert_orodis.i90
+Only in gfsphysics: cires_vert_wmsdis.i90
+Only in gfsphysics: cldmacro.i
+Binary files gfsphysics/cldmacro.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/cldmacro.mod differ
+Only in gfsphysics: cldwat2m_micro.i
+Binary files gfsphysics/cldwat2m_micro.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/cldwat2m_micro.mod differ
+Binary files gfsphysics/co2c_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/co2c_mod.mod differ
+Binary files gfsphysics/co2pro_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/co2pro_mod.mod differ
+Only in gfsphysics: cs_conv.i90
+Binary files gfsphysics/cs_conv.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/cs_conv.mod differ
+Binary files gfsphysics/date_def.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/date_def.mod differ
+diff -Bbw gfsphysics/depend /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/depend
+123d122
+< ./physics/samfchem.o : ./physics/samfchem.f ./physics/machine.o ./physics/physcons.o  
+Binary files gfsphysics/efield.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/efield.mod differ
+Binary files gfsphysics/funcphys.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/funcphys.mod differ
+Only in gfsphysics: gcycle.i90
+Only in gfsphysics: gfdl_cloud_microphys.i90
+Binary files gfsphysics/gfdl_cloud_microphys_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfdl_cloud_microphys_mod.mod differ
+Only in gfsphysics: GFDL_parse_tracers.i90
+Binary files gfsphysics/gfs_abort.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_abort.mod differ
+Only in gfsphysics: GFS_abstraction_layer.i90
+Only in gfsphysics: GFS_debug.i90
+Only in gfsphysics: GFS_diagnostics.i90
+Binary files gfsphysics/gfs_diagnostics.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_diagnostics.mod differ
+Binary files gfsphysics/gfs_diagtoscreen.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_diagtoscreen.mod differ
+Binary files gfsphysics/gfs_driver.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_driver.mod differ
+Binary files gfsphysics/gfs_fv3_needs.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_fv3_needs.mod differ
+Common subdirectories: gfsphysics/GFS_layer and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/GFS_layer
+Only in gfsphysics: gfs_phy_tracer_config.i
+Binary files gfsphysics/gfs_phy_tracer_config.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_phy_tracer_config.mod differ
+Only in gfsphysics: GFS_restart.i90
+Binary files gfsphysics/gfs_restart.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_restart.mod differ
+Only in gfsphysics: GFS_typedefs.i90
+Binary files gfsphysics/gfs_typedefs.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/gfs_typedefs.mod differ
+Binary files gfsphysics/h2ocm.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/h2ocm.mod differ
+Binary files gfsphysics/h2o_def.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/h2o_def.mod differ
+Binary files gfsphysics/iccn_def.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/iccn_def.mod differ
+Binary files gfsphysics/ideaca_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ideaca_mod.mod differ
+Binary files gfsphysics/idea_composition.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/idea_composition.mod differ
+Binary files gfsphysics/idea_solar.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/idea_solar.mod differ
+Binary files gfsphysics/idea_tracer_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/idea_tracer_mod.mod differ
+Binary files gfsphysics/libgfsphys.a and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/libgfsphys.a differ
+Only in gfsphysics: machine.i
+Binary files gfsphysics/machine.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/machine.mod differ
+diff -Bbw gfsphysics/makefile /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/makefile
+136d135
+< 	   ./physics/samfchem.f                                                      \
+Binary files gfsphysics/mersenne_twister.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/mersenne_twister.mod differ
+Only in gfsphysics: micro_mg2_0.i90
+Binary files gfsphysics/micro_mg2_0.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/micro_mg2_0.mod differ
+Only in gfsphysics: micro_mg3_0.i90
+Binary files gfsphysics/micro_mg3_0.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/micro_mg3_0.mod differ
+Only in gfsphysics: micro_mg_utils.i90
+Binary files gfsphysics/micro_mg_utils.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/micro_mg_utils.mod differ
+Only in gfsphysics: m_micro_driver.i90
+Binary files gfsphysics/module_iounitdef.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_iounitdef.mod differ
+Binary files gfsphysics/module_microphysics.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_microphysics.mod differ
+Only in gfsphysics: module_mp_radar.i90
+Binary files gfsphysics/module_mp_radar.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_mp_radar.mod differ
+Only in gfsphysics: module_mp_thompson_gfs.i90
+Binary files gfsphysics/module_mp_thompson.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_mp_thompson.mod differ
+Only in gfsphysics: module_mp_wsm6_fv3.i90
+Binary files gfsphysics/module_mp_wsm6.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_mp_wsm6.mod differ
+Binary files gfsphysics/module_nst_parameters.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_nst_parameters.mod differ
+Binary files gfsphysics/module_nst_water_prop.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_nst_water_prop.mod differ
+Binary files gfsphysics/module_physics_driver.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_physics_driver.mod differ
+Binary files gfsphysics/module_progtm.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_progtm.mod differ
+Binary files gfsphysics/module_radiation_aerosols.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_aerosols.mod differ
+Binary files gfsphysics/module_radiation_astronomy.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_astronomy.mod differ
+Binary files gfsphysics/module_radiation_clouds.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_clouds.mod differ
+Binary files gfsphysics/module_radiation_driver.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_driver.mod differ
+Binary files gfsphysics/module_radiation_gases.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_gases.mod differ
+Binary files gfsphysics/module_radiation_surface.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radiation_surface.mod differ
+Binary files gfsphysics/module_radlw_avplank.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_avplank.mod differ
+Binary files gfsphysics/module_radlw_cldprlw.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_cldprlw.mod differ
+Binary files gfsphysics/module_radlw_kgb01.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb01.mod differ
+Binary files gfsphysics/module_radlw_kgb02.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb02.mod differ
+Binary files gfsphysics/module_radlw_kgb03.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb03.mod differ
+Binary files gfsphysics/module_radlw_kgb04.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb04.mod differ
+Binary files gfsphysics/module_radlw_kgb05.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb05.mod differ
+Binary files gfsphysics/module_radlw_kgb06.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb06.mod differ
+Binary files gfsphysics/module_radlw_kgb07.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb07.mod differ
+Binary files gfsphysics/module_radlw_kgb08.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb08.mod differ
+Binary files gfsphysics/module_radlw_kgb09.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb09.mod differ
+Binary files gfsphysics/module_radlw_kgb10.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb10.mod differ
+Binary files gfsphysics/module_radlw_kgb11.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb11.mod differ
+Binary files gfsphysics/module_radlw_kgb12.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb12.mod differ
+Binary files gfsphysics/module_radlw_kgb13.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb13.mod differ
+Binary files gfsphysics/module_radlw_kgb14.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb14.mod differ
+Binary files gfsphysics/module_radlw_kgb15.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb15.mod differ
+Binary files gfsphysics/module_radlw_kgb16.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_kgb16.mod differ
+Binary files gfsphysics/module_radlw_main.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_main.mod differ
+Binary files gfsphysics/module_radlw_parameters.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_parameters.mod differ
+Binary files gfsphysics/module_radlw_ref.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radlw_ref.mod differ
+Binary files gfsphysics/module_radsw_cldprtb.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_cldprtb.mod differ
+Binary files gfsphysics/module_radsw_kgb16.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb16.mod differ
+Binary files gfsphysics/module_radsw_kgb17.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb17.mod differ
+Binary files gfsphysics/module_radsw_kgb18.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb18.mod differ
+Binary files gfsphysics/module_radsw_kgb19.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb19.mod differ
+Binary files gfsphysics/module_radsw_kgb20.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb20.mod differ
+Binary files gfsphysics/module_radsw_kgb21.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb21.mod differ
+Binary files gfsphysics/module_radsw_kgb22.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb22.mod differ
+Binary files gfsphysics/module_radsw_kgb23.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb23.mod differ
+Binary files gfsphysics/module_radsw_kgb24.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb24.mod differ
+Binary files gfsphysics/module_radsw_kgb25.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb25.mod differ
+Binary files gfsphysics/module_radsw_kgb26.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb26.mod differ
+Binary files gfsphysics/module_radsw_kgb27.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb27.mod differ
+Binary files gfsphysics/module_radsw_kgb28.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb28.mod differ
+Binary files gfsphysics/module_radsw_kgb29.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_kgb29.mod differ
+Binary files gfsphysics/module_radsw_main.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_main.mod differ
+Binary files gfsphysics/module_radsw_parameters.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_parameters.mod differ
+Binary files gfsphysics/module_radsw_ref.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_ref.mod differ
+Binary files gfsphysics/module_radsw_sflux.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_radsw_sflux.mod differ
+Binary files gfsphysics/module_rascnv.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_rascnv.mod differ
+Binary files gfsphysics/module_ras.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_ras.mod differ
+Binary files gfsphysics/module_sfc_cice.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_cice.mod differ
+Binary files gfsphysics/module_sfc_diag.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_diag.mod differ
+Binary files gfsphysics/module_sfc_diff.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_diff.mod differ
+Binary files gfsphysics/module_sfc_drv.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_drv.mod differ
+Binary files gfsphysics/module_sfc_nst.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_nst.mod differ
+Binary files gfsphysics/module_sfc_ocean.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_ocean.mod differ
+Binary files gfsphysics/module_sfc_sice.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sfc_sice.mod differ
+Binary files gfsphysics/module_sf_noahmp_glacier.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sf_noahmp_glacier.mod differ
+Binary files gfsphysics/module_sf_noahmplsm.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_sf_noahmplsm.mod differ
+Binary files gfsphysics/module_wrf_utl.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/module_wrf_utl.mod differ
+Binary files gfsphysics/namelist_soilveg.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/namelist_soilveg.mod differ
+Binary files gfsphysics/noahmp_glacier_globals.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/noahmp_glacier_globals.mod differ
+Binary files gfsphysics/noahmp_glacier_routines.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/noahmp_glacier_routines.mod differ
+Binary files gfsphysics/noahmp_tables.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/noahmp_tables.mod differ
+Binary files gfsphysics/nst_module.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/nst_module.mod differ
+Only in gfsphysics: num_parthds.i
+Binary files gfsphysics/ozne_def.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ozne_def.mod differ
+Binary files gfsphysics/parse_tracers.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/parse_tracers.mod differ
+Only in gfsphysics: physcons.i90
+Binary files gfsphysics/physcons.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/physcons.mod differ
+Common subdirectories: gfsphysics/physics and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/physics
+Binary files gfsphysics/physics_abstraction_layer.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/physics_abstraction_layer.mod differ
+Binary files gfsphysics/physparam.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/physparam.mod differ
+Binary files gfsphysics/qnir_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/qnir_mod.mod differ
+Binary files gfsphysics/sfccyc_module.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/sfccyc_module.mod differ
+Only in gfsphysics: sfcsub.i
+Binary files gfsphysics/sso_coorde.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/sso_coorde.mod differ
+Only in gfsphysics: surface_perturbation.i90
+Binary files gfsphysics/surface_perturbation.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/surface_perturbation.mod differ
+Binary files gfsphysics/tracer_const.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/tracer_const.mod differ
+Binary files gfsphysics/ugwp_common.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_common.mod differ
+Binary files gfsphysics/ugwp_conv_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_conv_init.mod differ
+Binary files gfsphysics/ugwp_fjet_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_fjet_init.mod differ
+Binary files gfsphysics/ugwp_lsatdis_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_lsatdis_init.mod differ
+Binary files gfsphysics/ugwp_okw_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_okw_init.mod differ
+Binary files gfsphysics/ugwp_oro_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_oro_init.mod differ
+Binary files gfsphysics/ugwp_wmsdis_init.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/ugwp_wmsdis_init.mod differ
+Binary files gfsphysics/wam_f107_kp_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/wam_f107_kp_mod.mod differ
+Only in gfsphysics: wv_saturation.i
+Binary files gfsphysics/wv_saturation.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.CHEMGSI/EMC_FV3GFS-GSDCHEM/FV3/gfsphysics/wv_saturation.mod differ

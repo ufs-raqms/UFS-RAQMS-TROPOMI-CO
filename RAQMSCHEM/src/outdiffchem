@@ -1,0 +1,161 @@
+diff -rBbw chem/raqms/raqms_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/raqms/raqms_model_mod.F90
+79c79
+<   character *256 gsiscratch,base_data_disk,pathdata,base_data_disk_tropomico
+---
+>   character *256 gsiscratch,base_data_disk,pathdata
+110c110
+<   save nsecsave,nsecgsi,base_data_disk,base_data_disk_tropomico
+---
+>   save nsecsave,nsecgsi,base_data_disk
+175d174
+<     base_data_disk_tropomico=' '
+177,178d175
+<     call getenv('base_data_disk_tropomico',base_data_disk_tropomico) 
+<      write(6,*)'base_data_disk_tropomico',trim(base_data_disk_tropomico)
+934,937d930
+<                 write(6,*)'gsicem',gsicem(n),'base_data_disk_tropomico',base_data_disk_tropomico
+<                 if(gsicem(n).eq.'co'.and.base_data_disk_tropomico/=' ')then
+<                   exist=.true.
+<                 endif
+951,953d943
+<         if(mype==0)then
+<         write(6,*)'exist',exist
+<         endif
+diff -rBbw chem/shr/raqmschem_iodata_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.F90
+634a635,641
+>         if(inquire_file_var('ebu_co.tile1.nc','ebu_co',trim(config%fireemi_inname)))then
+> !          write(6,*)'use ebu_co'
+>           call chem_io_read(file,srcin,  &
+> !           path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='bb_co',rc=localrc)
+>            path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+>         elseif(inquire_file_var('ebu_co.tile1.nc','bb_co',trim(config%fireemi_inname)))then
+> !          write(6,*)'use bb_co'
+636a644,647
+> !          path=trim(config % fireemi_inname), de=de, recrange=recrange,varname='ebu_co',rc=localrc)
+>         else
+>           write(6,*)'neither ebu_co nor bb_co in file ebu_co.nc'
+>         endif
+645a657,658
+>           write(300+iam,*)'ebu_co',maxval(srcin),minval(srcin)
+>           call flush(300+iam)
+665a679
+>           write(300+iam,*)'plume',maxval(srcin),minval(srcin)
+1297,1298c1311,1312
+< !        write(200+iam,*)'emi_outname',trim(config%emi_outname)
+< !        call flush(200+iam)
+---
+>         write(200+iam,*)'emi_outname',trim(config%emi_outname)
+>         call flush(200+iam)
+Binary files chem/shr/raqmschem_iodata_mod.mod and /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_iodata_mod.mod differ
+diff -rBbw chem/shr/raqmschem_io_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_io_mod.F90
+148c148
+<   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,doread)
+---
+>   subroutine raqmschem_io_file_name(fullname, filename, tile, pathname,dowrite)
+153c153
+<     logical, optional :: doread
+---
+>     logical,optional, intent(in) :: dowrite
+156c156
+<     integer :: lstr
+---
+>     integer :: lstr,lstr2
+158c158
+<     logical :: exist
+---
+>     logical exist
+196c196,208
+< 
+---
+>     inquire(file=fullname,exist=exist)
+>     if(exist.or.present(dowrite))return
+>     lstr = len_trim(fullname)
+>     if (fullname(lstr-3:lstr) == '.dat')then
+>       fullname(lstr-3:lstr-1)='.nc'
+>       inquire(file=fullname,exist=exist)
+>       if(exist)return
+>       write(6,*)'neither .dat nor .nc are there',fullname
+>       call killit('neither')
+>     elseif(fullname(lstr-2:lstr)=='.nc')then
+>       write(6,*)'.nc not there',fullname
+> !      call killit('.nc')
+>     endif
+430a443
+>     write(6,*)'nf90_open datafile',trim(datafile)
+442a456,457
+>     write(6,*)'varname',varname
+>     call flush(6)
+445c460
+<       write(6,*)'error getting varid for ',trim(varname),' file ',trim(datafile)
+---
+>       write(6,*)'error getting varid for variable ',trim(varname),' file ',trim(datafile)
+1936,1937c1951,1952
+< !        write(6,*)'varname',varname,'shape',shape(buffer2d)
+< !        call flush(6)
+---
+>         write(6,*)'varname',varname,'shape',shape(buffer2d)
+>         call flush(6)
+1939a1955,1956
+>          write(6,*)'datafile',trim(datafile)
+>          call flush(6)
+1940a1958,1959
+>          write(6,*)'exist',exist,trim(datafile)
+>          call system('pwd')
+1941a1961,1962
+>            write(6,*)'chem_io_file_reaD_2d_nc',trim(varname),'datafile',trim(datafile)
+>            call flush(6)
+2325a2347,2348
+>     logical dowrite
+>     dowrite=.true.
+2400c2423
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2458a2482
+>     logical dowrite
+2474a2499
+>     dowrite=.true.
+2555c2580,2581
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+2604a2631
+>     logical,parameter :: dowrite=.true.
+2669c2696
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path,dowrite=dowrite)
+2708a2736
+>     logical,parameter :: dowrite=.true.
+2800c2828,2829
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, & 
+>        dowrite=dowrite)
+2876a2906
+>     logical,parameter :: dowrite=.true.
+2963c2993,2994
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>         dowrite=dowrite)
+3021a3053
+>     logical,parameter :: dowrite=.true.
+3104c3136,3137
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>        dowrite=dowrite)
+3317a3351
+>     logical,parameter :: dowrite=.true.
+3392c3426,3427
+<       call raqmschem_io_file_name(datafile, filename, tile, pathname=path)
+---
+>       call raqmschem_io_file_name(datafile, filename, tile, pathname=path, &
+>       dowrite=dowrite)
+diff -rBbw chem/shr/raqmschem_model_mod.F90 /home/lenzen/FV3GFS-GSDCHEM.0.9.0.SAMFCHEM/EMC_FV3GFS-GSDCHEM/RAQMSCHEM/src/chem/shr/raqmschem_model_mod.F90
+99c99
+<          write(10,'(i10)')cdateat
+---
+>          write(10,'(a10)')cdateat
